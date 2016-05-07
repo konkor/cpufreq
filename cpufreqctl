@@ -1,0 +1,26 @@
+#!/bin/bash
+
+cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
+
+FLROOT=/sys/devices/system/cpu
+
+if [ $# -lt 2 ]
+then
+	echo "Usage: cpufreqctl.sh {gov} {value}"
+	echo "display available governors"
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+	echo "display current cpu0 governor"
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+	exit
+fi
+if [ $1 = "gov" ]
+then
+	i=0
+	while [ $i -ne $cpucount ]
+	do
+		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
+		echo "Setting $FLNM to " $2
+		echo $2 > $FLNM
+		i=`expr $i + 1`
+	done
+fi

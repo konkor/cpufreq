@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+        "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+
+        <vendor>Kostiantyn Korienkov</vendor>
+        <vendor_url>http://github.com/konkor</vendor_url>
+
+        <action id="konkor.cpufreq.setcpufreq">
+                <description>Set a new CPU Frequency to governor</description>
+                <message>No Authorization required to set cpu governors.</message>
+                <defaults>
+                        <allow_any>yes</allow_any>
+                        <allow_inactive>yes</allow_inactive>
+                        <allow_active>yes</allow_active>
+                </defaults>
+                <annotate key="org.freedesktop.policykit.exec.path">/home/kapa/.local/share/gnome-shell/extensions/cpufreq@kkorienkov@gmail.com/cpufreqctl</annotate>
+        </action>
+
+</policyconfig>
