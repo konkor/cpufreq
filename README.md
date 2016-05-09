@@ -15,7 +15,7 @@ This is lightweight gnome-extension for CPU scaling monitor and power governors'
 cd ~/.local/share/gnome-shell/extensions/cpufreq@konkor
 chmod 0755 cpufreqctl
 ```
-### If you want change governors without asking root password each time You need edit user home folder in konkor.cpufreq.policy and install it. Change 'USERNAME' to user's real name. 
+If you want change governors without asking root password each time You need edit user home folder in konkor.cpufreq.policy and install it. Change 'USERNAME' to user's real name. 
 ```
 gedit konkor.cpufreq.policy
 sudo cp konkor.cpufreq.policy /usr/share/polkit-1/actions/
@@ -27,7 +27,7 @@ sudo chown root:root ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufre
 git clone https://github.com/konkor/cpufreq
 cd cpufreq
 ```
-### Edit user home folder in konkor.cpufreq.policy
+Edit user home folder in konkor.cpufreq.policy
 ```
 gedit konkor.cpufreq.policy
 
