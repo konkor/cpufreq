@@ -27,7 +27,6 @@ const FrequencyIndicator = new Lang.Class({
 
        this.governorchanged = false;
        this.util_present = false;
-       this.selector_present = true;
        
        this.cpuFreqInfoPath = GLib.find_program_in_path('cpufreq-info');
         if(this.cpuFreqInfoPath){
@@ -37,11 +36,6 @@ const FrequencyIndicator = new Lang.Class({
         this.cpuPowerPath = GLib.find_program_in_path('cpupower');
         if(this.cpuPowerPath){
             this.util_present = true;
-        }
-
-        this.cpuFreqSelectorPath = GLib.find_program_in_path('cpufreq-set');
-        if(!this.cpuFreqSelectorPath){
-            this.selector_present = false;
         }
 
         this._build_ui();
@@ -118,14 +112,11 @@ const FrequencyIndicator = new Lang.Class({
                         this.activeg.label.text = governor[0];
                     }
                     
-                    if(this.selector_present){
+                    if(this.util_present){
                         governorItem.connect('activate', Lang.bind(this, function() {
                             let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
 		                    global.log(cmd);
 		                    Util.trySpawnCommandLine(cmd);
-                            /*for (let i = 0 ;i < this._get_cpu_number();i++){
-                                this.governorchanged=GLib.spawn_command_line_async(this.cpuFreqSelectorPath+" -g "+governorItem.label.text+" -c "+i);
-                            }*/
                         }));
                     }
                     i = i + 1;
@@ -134,7 +125,7 @@ const FrequencyIndicator = new Lang.Class({
         }
     
         if(!this.util_present){
-            let errorItem = new PopupMenu.PopupMenuItem("Please install cpufreq-utils");
+            let errorItem = new PopupMenu.PopupMenuItem("Please install cpufrequtils or cpupower");
             this.menu.addMenuItem(errorItem);
         }
     },
