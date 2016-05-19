@@ -26,12 +26,17 @@ const FrequencyIndicator = new Lang.Class({
        this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
 
        this.governorchanged = false;
-       this.util_present = true;
+       this.util_present = false;
        this.selector_present = true;
        
        this.cpuFreqInfoPath = GLib.find_program_in_path('cpufreq-info');
-        if(!this.cpuFreqInfoPath){
-            this.util_present = false;
+        if(this.cpuFreqInfoPath){
+            this.util_present = true;
+        }
+
+        this.cpuPowerPath = GLib.find_program_in_path('cpupower');
+        if(this.cpuPowerPath){
+            this.util_present = true;
         }
 
         this.cpuFreqSelectorPath = GLib.find_program_in_path('cpufreq-set');
@@ -62,17 +67,16 @@ const FrequencyIndicator = new Lang.Class({
             if (this.cpuFreqInfoPath){
                 let cpufreq_output = GLib.spawn_command_line_sync(this.cpuFreqInfoPath+" -fm");
                 if(cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n", 1)[0];
-                if (freqInfo){
-                    this.title=freqInfo;
-                }
             }
             
             if (this.cpuPowerPath){
                 let cpupower_output = GLib.spawn_command_line_sync(this.cpuPowerPath+" frequency-info -fm");
                 if(cpupower_output[0]) freqInfo = cpupower_output[1].toString().split("\n")[1];
-                if (freqInfo){
-                    this.title=freqInfo;
-                }
+                if (freqInfo) freqInfo = new RegExp('\\d.*Hz').exec(freqInfo).toString();
+            }
+
+            if (freqInfo){
+                this.title=freqInfo;
             }
         }
         else{
