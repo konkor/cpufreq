@@ -1,9 +1,17 @@
 # cpufreq
 Gnome Shell 3.14+ CPU Frequency Monitor and Governor Manager.
+https://extensions.gnome.org/extension/1082/cpufreq/
 
 ![](/data/screenshots.png?raw=true)
 
-This is lightweight gnome-extension for CPU scaling monitor and power governors's management. The extension is using standart cpufrequtils package to collect information and manage governors. It's need root permission to able changing governors or install policy for pkexec.
+This is lightweight gnome-extension for CPU scaling monitor and power governor's management. The extension is using standard cpufrequtils package to collect information and manage governors. It's need root permission to able changing governors or install policy for pkexec.
+
+Please install cpufreq-utils:
+
+* Debian/Ubuntu
+```
+sudo apt-get install cpufrequtils
+```
 
 ## Install
 ### Dependencies
@@ -15,7 +23,7 @@ This is lightweight gnome-extension for CPU scaling monitor and power governors'
 cd ~/.local/share/gnome-shell/extensions/cpufreq@konkor
 chmod 0755 cpufreqctl
 ```
-If you want change governors without asking root password each time You need edit user home folder in konkor.cpufreq.policy and install it. Change 'USERNAME' to user's real name. 
+If you want change governors without asking root password each time You need edit user home folder in konkor.cpufreq.policy and install it. Change 'USERNAME' to user's real name.
 ```
 gedit konkor.cpufreq.policy
 sudo cp konkor.cpufreq.policy /usr/share/polkit-1/actions/
@@ -42,4 +50,4 @@ Last rows are to able change governors without asking super user password when y
 
 ### Source and packages
 * [GitHub](https://github.com/konkor/cpufreq)
-
+* [Gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
