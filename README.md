@@ -7,6 +7,8 @@ https://extensions.gnome.org/extension/1082/cpufreq/
 
 This is lightweight gnome-extension for CPU scaling monitor and power governor's management. The extension is using standard cpufrequtils (cpupower) package to collect information and manage governors. It's need root permission to able changing governors or install policy for pkexec.
 
+[Phoronix Benchmarks](http://www.phoronix.com/scan.php?page=article&item=linux-47-schedutil&num=1)
+
 Please install cpufrequtils or cpupower:
 
 * Debian/Ubuntu
