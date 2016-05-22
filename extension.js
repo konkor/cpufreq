@@ -159,14 +159,21 @@ const FrequencyIndicator = new Lang.Class({
                 governors.push(governortemp);
             }
         }
-        if(this.cpuPowerPath){
+
+        if (this.cpuPowerPath){
              //get the list of available governors
-            let cpupower_output1 = GLib.spawn_command_line_sync(this.cpuPowerPath+" frequency-info -g");
-            if(cpupower_output1[0]) governorslist = cpupower_output1[1].toString().split("\n", 2)[1].split(" ");
+            let cpupower_g_output = GLib.spawn_command_line_sync(this.cpuPowerPath+" frequency-info -g");
+            if (cpupower_g_output[0]) {
+                let matches = new RegExp('.* governors: (.*).*').exec(cpupower_g_output[1])
+                governorslist = matches[1].split(' ')
+            }
             
             //get the actual governor
-            let cpupower_output2 = GLib.spawn_command_line_sync(this.cpuPowerPath+" frequency-info -p");
-            if(cpupower_output2[0]) governoractual = cpupower_output2[1].toString().split("\n", 2)[1].split(" ")[2].toString();
+            let cpupower_p_output = GLib.spawn_command_line_sync(this.cpuPowerPath+" frequency-info -p");
+            if(cpupower_p_output[0]) {
+                let matches = new RegExp('.*The governor "(.*)" .*').exec(cpupower_p_output[1])
+                governoractual = matches[1]
+            }
             
             for each (let governor in governorslist){
                 let governortemp;
