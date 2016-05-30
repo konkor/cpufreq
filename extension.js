@@ -3,14 +3,15 @@ const Main = imports.ui.main;
 const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Slider = imports.ui.slider;
 const GLib = imports.gi.GLib;
 const Util = imports.misc.util;
 const Mainloop = imports.mainloop;
 
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq'
 const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const EXTENSIONDIR = Me.dir.get_path();
+const Me = ExtensionUtils.getCurrentExtension ();
+const EXTENSIONDIR = Me.dir.get_path ();
 
 let event = null;
 
@@ -19,34 +20,43 @@ const FrequencyIndicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function () {
-       this.parent(0.0, "CPU Frequency Indicator", false);
-       this.statusLabel = new St.Label ({text: "Hz"});
-       this.actor.add_actor (this.statusLabel);
-       this.pkexec_path = GLib.find_program_in_path ('pkexec');
-       this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
+        this.parent(0.0, "CPU Frequency Indicator", false);
+        this.statusLabel = new St.Label ({text: "Hz"});
+        this.actor.add_actor (this.statusLabel);
+        this.pkexec_path = GLib.find_program_in_path ('pkexec');
+        this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
 
-       this.governorchanged = false;
-       this.util_present = false;
-       
-       this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
-       if(this.cpuFreqInfoPath){
-           this.util_present = true;
-       }
+        this.governorchanged = false;
+        this.util_present = false;
+        this.pstate_present = false;
 
-       this.cpuPowerPath = GLib.find_program_in_path ('cpupower');
-       if(this.cpuPowerPath){
-           this.util_present = true;
-       }
+        this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
+        if (this.cpuFreqInfoPath){
+            this.util_present = true;
+        }
 
-       this._build_ui();
+        this.cpuPowerPath = GLib.find_program_in_path ('cpupower');
+        if (this.cpuPowerPath) {
+            this.util_present = true;
+        }
+
+        this._build_ui ();
         
-       if (this.util_present) {
-           event = GLib.timeout_add_seconds(0, 1, Lang.bind (this, function () {
-               this._update_freq ();
-               this._update_popup ();
-               return true;
-           }));
-       }
+        if (this.util_present) {
+            var freqInfo = null;
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " driver");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                if (freqInfo == 'intel_pstate') {
+                    this.pstate_present = true;
+                }
+            }
+            event = GLib.timeout_add_seconds(0, 1, Lang.bind (this, function () {
+                this._update_freq ();
+                this._update_popup ();
+                return true;
+            }));
+        }
     },
     
     _build_ui: function () {
@@ -97,7 +107,7 @@ const FrequencyIndicator = new Lang.Class({
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
             this.menu.addMenuItem (separator1);
 
-            if (this.governors.length > 0){
+            if (this.governors.length > 0) {
                 for each (let governor in this.governors){
                     if (governor[1] == true) {
                         this.activeg.label.text = governor[0];
@@ -132,6 +142,44 @@ const FrequencyIndicator = new Lang.Class({
                         }));
                     }                    
                 }
+            }
+            if (this.pstate_present) {
+                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
+                this.menu.addMenuItem (separator1);
+                let turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
+                this.menu.addMenuItem (turbo_switch);
+                turbo_switch.connect ('toggled', Lang.bind (that, function (item) {
+                    if (item.state) {
+                        _turbo (1);
+                    } else {
+                        _turbo (0);
+                    }
+                }));
+                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
+                let label_min = new St.Label ({text: this._get_min().toString() + "%"});
+                title_min.actor.add_child (this.label_min, {align:St.Align.END});
+                this.menu.addMenuItem (title_min);
+                let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
+                let slider_min = new Slider.Slider (this._get_min () / 100);
+                menu_min.actor.add (this.slider_min.actor, {expand: true});
+                this.menu.addMenuItem (menu_min);
+                slider_min.connect('value-changed', Lang.bind (that, function (item) {
+                    this.label_min.set_text (Math.floor (item.value * 100).toString() + "%");
+                    this._set_min (Math.floor (item.value * 100)); 
+                }));
+                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
+                let label_max = new St.Label ({text: this._get_max().toString() + "%"});
+                title_max.actor.add_child (this.label_max, {align:St.Align.END});
+                this.menu.addMenuItem (title_max);
+                let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
+                let slider_max = new Slider.Slider (this._get_max () / 100);
+                menu_max.actor.add (this.slider_max.actor, {expand: true});
+                this.menu.addMenuItem (menu_max);
+                slider_max.connect('value-changed', Lang.bind (that, function (item) {
+                    this.label_max.set_text (Math.floor (item.value * 100).toString() + "%");
+                    this._set_max (Math.floor (item.value * 100)); 
+                }));
+                
             }
         } else {
             let errorItem = new PopupMenu.PopupMenuItem ("Please install cpufrequtils or cpupower");
@@ -186,6 +234,62 @@ const FrequencyIndicator = new Lang.Class({
             }
         }
         return frequences;
+    },
+
+    _get_turbo: function () {
+        var freqInfo = null;
+        if (this.util_present) {
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                if (freqInfo == '0') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
+
+    _turbo: function (state) {
+        if (this.util_present) {
+            GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo " + state.toString());
+        }
+    },
+
+    _get_min: function () {
+        var freqInfo = null;
+        if (this.util_present) {
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " min");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                return parseInt (freqInfo);
+            }
+        }
+        return 0;
+    },
+
+    _set_min: function (minimum) {
+        if (this.util_present) {
+            GLib.spawn_command_line_sync (this.cpufreqctl_path + " min " + minimum.toString());
+        }
+    },
+
+    _get_max: function () {
+        var freqInfo = null;
+        if (this.util_present) {
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " max");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                return parseInt (freqInfo);
+            }
+        }
+        return 0;
+    },
+
+    _set_max: function (maximum) {
+        if (this.util_present) {
+            GLib.spawn_command_line_sync (this.cpufreqctl_path + " max " + maximum.toString());
+        }
     }
 });
 
