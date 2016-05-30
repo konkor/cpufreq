@@ -4,17 +4,22 @@ cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 
 FLROOT=/sys/devices/system/cpu
 
-if [ $# -lt 2 ]
+if [ $# -lt 1 ]
 then
-	echo "Usage: cpufreqctl.sh {gov} {value}"
-	echo "display available governors"
+	echo "Usage: cpufreqctl.sh [gov|list|driver|info|freq|set] [value]"
+	echo "available governors"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-	echo "display current cpu0 governor"
+	echo "current cpu0 governor"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 	exit
 fi
 if [ $1 = "gov" ]
 then
+	if [ $# = 1 ]
+	then
+		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+		exit
+	fi
 	i=0
 	while [ $i -ne $cpucount ]
 	do
@@ -23,4 +28,46 @@ then
 		echo $2 > $FLNM
 		i=`expr $i + 1`
 	done
+	exit
 fi
+if [ $1 = "list" ]
+then
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+	exit
+fi
+if [ $1 = "driver" ]
+then
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
+	exit
+fi
+if [ $1 = "info" ]
+then
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+	exit
+fi
+if [ $1 = "freq" ]
+then
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+	exit
+fi
+if [ $1 = "set" ]
+then
+	if [ $# = 1 ]
+	then
+		echo "available frequences"
+		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+		echo "current cpu frequence"
+		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+		exit
+	fi
+	i=0
+	while [ $i -ne $cpucount ]
+	do
+		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_setspeed"
+		echo "Setting $FLNM to " $2
+		echo $2 > $FLNM
+		i=`expr $i + 1`
+	done
+	exit
+fi
+

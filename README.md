@@ -20,6 +20,10 @@ sudo apt-get install cpufrequtils
 ```
 sudo pacman -S cpupower
 ```
+* Fedora
+```
+yum install kernel-tools
+```
 
 ## Install
 ### Dependencies
