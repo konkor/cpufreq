@@ -4,6 +4,7 @@ const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
+const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Util = imports.misc.util;
 const Mainloop = imports.mainloop;
@@ -21,7 +22,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _init: function () {
         this.parent(0.0, "CPU Frequency Indicator", false);
-        this.statusLabel = new St.Label ({text: "Hz"});
+        this.statusLabel = new St.Label ({text: "Hz", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
         this.actor.add_actor (this.statusLabel);
         this.pkexec_path = GLib.find_program_in_path ('pkexec');
         this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
