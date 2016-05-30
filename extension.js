@@ -40,8 +40,6 @@ const FrequencyIndicator = new Lang.Class({
             this.util_present = true;
         }
 
-        this._build_ui ();
-        
         if (this.util_present) {
             var freqInfo = null;
             var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " driver");
@@ -51,6 +49,11 @@ const FrequencyIndicator = new Lang.Class({
                     this.pstate_present = true;
                 }
             }
+        }
+
+        this._build_ui ();
+        
+        if (this.util_present) {
             event = GLib.timeout_add_seconds(0, 1, Lang.bind (this, function () {
                 this._update_freq ();
                 this._update_popup ();
@@ -72,7 +75,7 @@ const FrequencyIndicator = new Lang.Class({
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 if (freqInfo.length > 6) {
-                    this.title = (parseInt(freqInfo)/1000000).toFixed(1).toString() + " GHz";
+                    this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " GHz";
                 } else {
                     this.title = (parseInt(freqInfo)/1000).toFixed(0).toString() + " MHz";
                 }
@@ -119,7 +122,7 @@ const FrequencyIndicator = new Lang.Class({
                             let f = freq;
                             var s = '';
                             if (freq.length > 6) {
-                                s = (parseInt(freq)/1000000).toFixed(2).toString() + " GHz";
+                                s = (parseInt(freq)/1000000).toFixed(3).toString() + " GHz";
                             } else {
                                 s = (parseInt(freq)/1000).toFixed(0).toString() + " MHz";
                             }
@@ -148,7 +151,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (separator1);
                 let turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
                 this.menu.addMenuItem (turbo_switch);
-                turbo_switch.connect ('toggled', Lang.bind (that, function (item) {
+                turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (item.state) {
                         _turbo (1);
                     } else {
@@ -157,29 +160,28 @@ const FrequencyIndicator = new Lang.Class({
                 }));
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
                 let label_min = new St.Label ({text: this._get_min().toString() + "%"});
-                title_min.actor.add_child (this.label_min, {align:St.Align.END});
+                title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 let slider_min = new Slider.Slider (this._get_min () / 100);
-                menu_min.actor.add (this.slider_min.actor, {expand: true});
+                menu_min.actor.add (slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
-                slider_min.connect('value-changed', Lang.bind (that, function (item) {
-                    this.label_min.set_text (Math.floor (item.value * 100).toString() + "%");
+                slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                    label_min.set_text (Math.floor (item.value * 100).toString() + "%");
                     this._set_min (Math.floor (item.value * 100)); 
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
                 let label_max = new St.Label ({text: this._get_max().toString() + "%"});
-                title_max.actor.add_child (this.label_max, {align:St.Align.END});
+                title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 let slider_max = new Slider.Slider (this._get_max () / 100);
-                menu_max.actor.add (this.slider_max.actor, {expand: true});
+                menu_max.actor.add (slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
-                slider_max.connect('value-changed', Lang.bind (that, function (item) {
-                    this.label_max.set_text (Math.floor (item.value * 100).toString() + "%");
+                slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                    label_max.set_text (Math.floor (item.value * 100).toString() + "%");
                     this._set_max (Math.floor (item.value * 100)); 
                 }));
-                
             }
         } else {
             let errorItem = new PopupMenu.PopupMenuItem ("Please install cpufrequtils or cpupower");
