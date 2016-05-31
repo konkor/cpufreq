@@ -22,7 +22,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _init: function () {
         this.parent(0.0, "CPU Frequency Indicator", false);
-        this.statusLabel = new St.Label ({text: "Hz", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
+        this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
         this.actor.add_actor (this.statusLabel);
         this.pkexec_path = GLib.find_program_in_path ('pkexec');
         this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
@@ -94,7 +94,7 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
         } else {
-            this.title = "!"
+            this.title = "\u26A0";
         }
         
         this.statusLabel.set_text (this.title);
@@ -106,7 +106,7 @@ const FrequencyIndicator = new Lang.Class({
             if (this.governors.length > 0) {
                 for each (let governor in this.governors) {
                     if (governor[1] == true) {
-                        this.activeg.label.text = governor[0];
+                        this.activeg.label.text = "\u26A1 " + governor[0];
                     }
                 }
             }
