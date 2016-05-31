@@ -30,6 +30,7 @@ const FrequencyIndicator = new Lang.Class({
         this.governorchanged = false;
         this.util_present = false;
         this.pstate_present = false;
+        this.boost_present = false;
 
         this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
         if (this.cpuFreqInfoPath){
@@ -49,6 +50,17 @@ const FrequencyIndicator = new Lang.Class({
                 if (freqInfo == 'intel_pstate') {
                     this.pstate_present = true;
                 }
+            }
+            var default_boost = this._get_boost ();
+            if (default_boost == false) {
+                this._set_boost ('1');
+                var new_state = this._get_boost ();
+                if (default_boost != new_state) {
+                    this.boost_present = true;
+                    this._set_boost ('0');
+                }
+            } else {
+                this.boost_present = true;
             }
         }
 
@@ -154,9 +166,9 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (turbo_switch);
                 turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (item.state) {
-                        _turbo (1);
+                        this._turbo (0);
                     } else {
-                        _turbo (0);
+                        this._turbo (1);
                     }
                 }));
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
@@ -182,6 +194,18 @@ const FrequencyIndicator = new Lang.Class({
                 slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     label_max.set_text (Math.floor (item.value * 100).toString() + "%");
                     this._set_max (Math.floor (item.value * 100)); 
+                }));
+            } else if (this.boost_present) {
+                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
+                this.menu.addMenuItem (separator1);
+                let boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
+                this.menu.addMenuItem (boost_switch);
+                boost_switch.connect ('toggled', Lang.bind (this, function (item) {
+                    if (item.state) {
+                        this._set_boost ('1');
+                    } else {
+                        this._set_boost ('0');
+                    }
                 }));
             }
         } else {
@@ -253,9 +277,9 @@ const FrequencyIndicator = new Lang.Class({
         return false;
     },
 
-    _turbo: function (state) {
+    _set_turbo: function (state) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo " + state.toString());
+            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " turbo " + state.toString());
         }
     },
 
@@ -273,7 +297,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_min: function (minimum) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.cpufreqctl_path + " min " + minimum.toString());
+            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString());
         }
     },
 
@@ -291,7 +315,27 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_max: function (maximum) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.cpufreqctl_path + " max " + maximum.toString());
+            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString());
+        }
+    },
+    
+    _get_boost: function () {
+        var freqInfo = null;
+        if (this.util_present) {
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " boost");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                if (freqInfo == '1') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
+
+    _set_boost: function (state) {
+        if (this.util_present) {
+            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' boost ' + state.toString());
         }
     }
 });

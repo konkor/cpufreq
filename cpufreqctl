@@ -6,7 +6,7 @@ FLROOT=/sys/devices/system/cpu
 
 if [ $# -lt 1 ]
 then
-	echo "Usage: cpufreqctl.sh [gov|list|driver|info|freq|set|turbo|min|max] [value]"
+	echo "Usage: cpufreqctl.sh [gov|list|driver|info|freq|set|turbo|min|max|boost] [value]"
 	echo "current driver"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
 	echo "available governors"
@@ -103,6 +103,17 @@ then
 	fi
 	echo "Setting MAX to " $2
 	echo $2 > /sys/devices/system/cpu/intel_pstate/max_perf_pct
+	exit
+fi
+if [ $1 = "boost" ]
+then
+	if [ $# = 1 ]
+	then
+		cat /sys/devices/system/cpu/cpufreq/boost
+		exit
+	fi
+	echo "Setting BOOST to " $2
+	echo $2 > /sys/devices/system/cpu/cpufreq/boost
 	exit
 fi
 
