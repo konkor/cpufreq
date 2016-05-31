@@ -88,9 +88,9 @@ const FrequencyIndicator = new Lang.Class({
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 if (freqInfo.length > 6) {
-                    this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " GHz";
+                    this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
                 } else {
-                    this.title = (parseInt(freqInfo)/1000).toFixed(0).toString() + " MHz";
+                    this.title = (parseInt(freqInfo)/1000).toFixed(0).toString() + "  \u3392";
                 }
             }
         } else {
