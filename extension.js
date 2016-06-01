@@ -65,7 +65,7 @@ const FrequencyIndicator = new Lang.Class({
         }
 
         this._build_ui ();
-        
+
         if (this.util_present) {
             event = GLib.timeout_add_seconds(0, 1, Lang.bind (this, function () {
                 this._update_freq ();
@@ -74,11 +74,10 @@ const FrequencyIndicator = new Lang.Class({
             }));
         }
     },
-    
+
     _build_ui: function () {
         this._update_freq ();
         this._build_popup ();
-        
     },
 
     _update_freq: function () {
@@ -96,12 +95,11 @@ const FrequencyIndicator = new Lang.Class({
         } else {
             this.title = "\u26A0";
         }
-        
         this.statusLabel.set_text (this.title);
     },
-    
+
     _update_popup: function () {
-        if (this.util_present){  
+        if (this.util_present) {
             this.governors = this._get_governors ();
             if (this.governors.length > 0) {
                 for each (let governor in this.governors) {
@@ -122,7 +120,14 @@ const FrequencyIndicator = new Lang.Class({
             this.menu.addMenuItem (this.activeg);
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
             this.menu.addMenuItem (separator1);
+            let slider_min = null;
+            let slider_max = null;
+            let slider_lock = false;
 
+            if (this.pstate_present) {
+                slider_min = new Slider.Slider (this._get_min () / 100);
+                slider_max = new Slider.Slider (this._get_max () / 100);
+            }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
                     if (governor[1] == true) {
@@ -154,9 +159,15 @@ const FrequencyIndicator = new Lang.Class({
                         governorItem.connect ('activate', Lang.bind (this, function () {
                             let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
 		                    global.log (cmd);
-		                    Util.trySpawnCommandLine (cmd);
+		                    GLib.spawn_command_line_sync (cmd);
+		                    if (this.pstate_present) {
+		                        slider_lock = true;
+                                slider_min.setValue (this._get_min () / 100);
+                                slider_max.setValue (this._get_max () / 100);
+                                slider_lock = false;
+                            }
                         }));
-                    }                    
+                    }
                 }
             }
             if (this.pstate_present) {
@@ -166,9 +177,9 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (turbo_switch);
                 turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (item.state) {
-                        this._turbo (0);
+                        this._set_turbo ('0');
                     } else {
-                        this._turbo (1);
+                        this._set_turbo ('1');
                     }
                 }));
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
@@ -176,24 +187,26 @@ const FrequencyIndicator = new Lang.Class({
                 title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                let slider_min = new Slider.Slider (this._get_min () / 100);
                 menu_min.actor.add (slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
                 slider_min.connect('value-changed', Lang.bind (this, function (item) {
-                    label_min.set_text (Math.floor (item.value * 100).toString() + "%");
-                    this._set_min (Math.floor (item.value * 100)); 
+                    if (slider_lock == false) {
+                        label_min.set_text (Math.floor (item.value * 100).toString() + "%");
+                        this._set_min (Math.floor (item.value * 100));
+                    }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
                 let label_max = new St.Label ({text: this._get_max().toString() + "%"});
                 title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                let slider_max = new Slider.Slider (this._get_max () / 100);
                 menu_max.actor.add (slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
                 slider_max.connect('value-changed', Lang.bind (this, function (item) {
-                    label_max.set_text (Math.floor (item.value * 100).toString() + "%");
-                    this._set_max (Math.floor (item.value * 100)); 
+                    if (slider_lock == false) {
+                        label_max.set_text (Math.floor (item.value * 100).toString() + "%");
+                        this._set_max (Math.floor (item.value * 100));
+                    }
                 }));
             } else if (this.boost_present) {
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
@@ -227,11 +240,11 @@ const FrequencyIndicator = new Lang.Class({
             //get the list of available governors
             var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
             if (cpufreq_output1[0]) governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
-            
+
             //get the actual governor
             var cpufreq_output2 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
             if (cpufreq_output2[0]) governoractual = cpufreq_output2[1].toString().split("\n")[0].toString();
-            
+
             for each (let governor in governorslist){
                 let governortemp;
                 if(governoractual == governor)
@@ -297,7 +310,8 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_min: function (minimum) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString());
+            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
+            Util.trySpawnCommandLine (cmd);
         }
     },
 
@@ -315,10 +329,11 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_max: function (maximum) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString());
+            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
+            Util.trySpawnCommandLine (cmd);
         }
     },
-    
+
     _get_boost: function () {
         var freqInfo = null;
         if (this.util_present) {
