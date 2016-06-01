@@ -25,6 +25,11 @@ sudo pacman -S cpupower
 yum install kernel-tools
 ```
 
+## Features
+* Compatible with old cpufreq tools and modern cpupower;
+* Boost supporting;
+* Utilize userspace and pstate abilities.
+
 ## Install
 ### Dependencies
 * Gnome Shell >= 3.14+
