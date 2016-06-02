@@ -21,7 +21,7 @@ const FrequencyIndicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function () {
-        this.parent(0.0, "CPU Frequency Indicator", false);
+        this.parent (0.0, "CPU Frequency Indicator", false);
         this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
         this.actor.add_actor (this.statusLabel);
         this.pkexec_path = GLib.find_program_in_path ('pkexec');
@@ -31,6 +31,7 @@ const FrequencyIndicator = new Lang.Class({
         this.util_present = false;
         this.pstate_present = false;
         this.boost_present = false;
+        this.installed = false;
 
         this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
         if (this.cpuFreqInfoPath){
@@ -41,8 +42,24 @@ const FrequencyIndicator = new Lang.Class({
         if (this.cpuPowerPath) {
             this.util_present = true;
         }
+        
+        if(GLib.file_test ("/usr/share/polkit-1/actions/konkor.cpufreq.policy", GLib.FileTest.EXISTS)) {
+            this.installed = true;
+        }
 
-        if (this.util_present) {
+        if (this.pkexec_path == null) {
+            this.installed = false;
+        }
+
+        this._check_extensions ();
+
+        this._build_ui ();
+
+        this._add_event ();
+    },
+
+    _check_extensions: function () {
+        if (this.util_present && this.installed) {
             var freqInfo = null;
             var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " driver");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
@@ -63,11 +80,11 @@ const FrequencyIndicator = new Lang.Class({
                 this.boost_present = true;
             }
         }
-
-        this._build_ui ();
-
+    },
+    
+     _add_event: function () {
         if (this.util_present) {
-            event = GLib.timeout_add_seconds(0, 1, Lang.bind (this, function () {
+            event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
                 this._update_freq ();
                 this._update_popup ();
                 return true;
@@ -147,24 +164,30 @@ const FrequencyIndicator = new Lang.Class({
                             let u_item = new PopupMenu.PopupMenuItem (s);
                             sm.menu.addMenuItem (u_item);
                             u_item.connect ('activate', Lang.bind (this, function () {
-                                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov userspace');
-                                let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + f;
-	    	                    global.log (cmd);
-		                        Util.trySpawnCommandLine (cmd);
+                                if (this.installed) {
+                                    GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov userspace');
+                                    let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + f;
+	    	                        global.log (cmd);
+		                            Util.trySpawnCommandLine (cmd);
+		                        }
                             }));
                         }
                     } else {
                         let governorItem = new PopupMenu.PopupMenuItem (governor[0]);
                         this.menu.addMenuItem (governorItem);
                         governorItem.connect ('activate', Lang.bind (this, function () {
-                            let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
-		                    global.log (cmd);
-		                    GLib.spawn_command_line_sync (cmd);
-		                    if (this.pstate_present) {
-		                        slider_lock = true;
-                                slider_min.setValue (this._get_min () / 100);
-                                slider_max.setValue (this._get_max () / 100);
-                                slider_lock = false;
+                            if (this.installed) {
+                                let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
+		                        global.log (cmd);
+		                        GLib.spawn_command_line_sync (cmd);
+		                        if (this.pstate_present) {
+		                            slider_lock = true;
+                                    slider_min.setValue (this._get_min () / 100);
+                                    slider_max.setValue (this._get_max () / 100);
+                                    slider_lock = false;
+                                }
+                            } else {
+                                this._install ();
                             }
                         }));
                     }
@@ -176,10 +199,12 @@ const FrequencyIndicator = new Lang.Class({
                 let turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
                 this.menu.addMenuItem (turbo_switch);
                 turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
-                    if (item.state) {
-                        this._set_turbo ('0');
-                    } else {
-                        this._set_turbo ('1');
+                    if (this.installed) {
+                        if (item.state) {
+                            this._set_turbo ('0');
+                        } else {
+                            this._set_turbo ('1');
+                        }
                     }
                 }));
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
@@ -190,9 +215,11 @@ const FrequencyIndicator = new Lang.Class({
                 menu_min.actor.add (slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
                 slider_min.connect('value-changed', Lang.bind (this, function (item) {
-                    if (slider_lock == false) {
-                        label_min.set_text (Math.floor (item.value * 100).toString() + "%");
-                        this._set_min (Math.floor (item.value * 100));
+                    if (this.installed) {
+                        if (slider_lock == false) {
+                            label_min.set_text (Math.floor (item.value * 100).toString() + "%");
+                            this._set_min (Math.floor (item.value * 100));
+                        }
                     }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
@@ -203,9 +230,11 @@ const FrequencyIndicator = new Lang.Class({
                 menu_max.actor.add (slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
                 slider_max.connect('value-changed', Lang.bind (this, function (item) {
-                    if (slider_lock == false) {
-                        label_max.set_text (Math.floor (item.value * 100).toString() + "%");
-                        this._set_max (Math.floor (item.value * 100));
+                    if (this.installed) {
+                        if (slider_lock == false) {
+                            label_max.set_text (Math.floor (item.value * 100).toString() + "%");
+                            this._set_max (Math.floor (item.value * 100));
+                        }
                     }
                 }));
             } else if (this.boost_present) {
@@ -214,15 +243,28 @@ const FrequencyIndicator = new Lang.Class({
                 let boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
                 this.menu.addMenuItem (boost_switch);
                 boost_switch.connect ('toggled', Lang.bind (this, function (item) {
-                    if (item.state) {
-                        this._set_boost ('1');
-                    } else {
-                        this._set_boost ('0');
+                    if (this.installed) {
+                        if (item.state) {
+                            this._set_boost ('1');
+                        } else {
+                            this._set_boost ('0');
+                        }
+                    }
+                }));
+            }
+            if (!this.installed) {
+                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
+                this.menu.addMenuItem (separator1);
+                let mi_install = new PopupMenu.PopupMenuItem ("\u26a0 Install...");
+                this.menu.addMenuItem (mi_install);
+                mi_install.connect ('activate', Lang.bind (this, function () {
+                    if (!this.installed) {
+                        this._install ();
                     }
                 }));
             }
         } else {
-            let errorItem = new PopupMenu.PopupMenuItem ("Please install cpufrequtils or cpupower");
+            let errorItem = new PopupMenu.PopupMenuItem ("\u26a0 Please install cpufrequtils or cpupower");
             this.menu.addMenuItem (errorItem);
         }
     },
@@ -259,6 +301,27 @@ const FrequencyIndicator = new Lang.Class({
             }
         }
         return governors;
+    },
+
+    _install: function () {
+        if (this.pkexec_path == null) {
+            return;
+        }
+        var cmd = "sed -i \"s/USERNAME/" + GLib.get_user_name() + "/\" " + EXTENSIONDIR + "/konkor.cpufreq.policy";
+        //global.log (cmd);
+        GLib.spawn_command_line_sync (cmd);
+        cmd = this.pkexec_path + " cp " + EXTENSIONDIR + '/konkor.cpufreq.policy /usr/share/polkit-1/actions/';
+		Util.trySpawnCommandLine (cmd);
+        GLib.usleep (2000000);
+        if(GLib.file_test ("/usr/share/polkit-1/actions/konkor.cpufreq.policy", GLib.FileTest.EXISTS)) {
+            this.installed = true;
+        } else {
+            return;
+        }
+        Mainloop.source_remove (event);
+        this._check_extensions ();
+        this._build_popup ();
+        this._add_event ();
     },
 
     _get_frequences: function () {
