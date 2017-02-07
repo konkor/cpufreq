@@ -6,6 +6,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
 const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
 const Mainloop = imports.mainloop;
 
@@ -33,16 +34,16 @@ const FrequencyIndicator = new Lang.Class({
         this.boost_present = false;
         this.installed = false;
 
-        this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
+        this.cpuFreqInfoPath = [GLib.find_program_in_path ('cpufreq-info')];
         if (this.cpuFreqInfoPath){
             this.util_present = true;
         }
 
-        this.cpuPowerPath = GLib.find_program_in_path ('cpupower');
+        this.cpuPowerPath = [GLib.find_program_in_path ('cpupower')];
         if (this.cpuPowerPath) {
             this.util_present = true;
         }
-        
+
         if(GLib.file_test ("/usr/share/polkit-1/actions/konkor.cpufreq.policy", GLib.FileTest.EXISTS)) {
             this.installed = true;
         }
@@ -81,11 +82,49 @@ const FrequencyIndicator = new Lang.Class({
             }
         }
     },
-    
+
+    _cpuFreqInfoReadStdout: function(){
+        this._cpuFreqInfoDataStdout.fill_async(-1, GLib.PRIORITY_DEFAULT, null, Lang.bind(this, function(stream, result) {
+            if (stream.fill_finish(result) == 0){
+                try{
+                    this._cpuFreqInfoOutput = stream.peek_buffer().toString();
+                    this._update_freq(this._cpuFreqInfoOutput);
+                }catch(e){
+                    global.log(e.toString());
+                }
+                this._cpuFreqInfoStdout.close(null);
+                return;
+            }
+
+            stream.set_buffer_size(2 * stream.get_buffer_size());
+            this._cpuFreqInfoReadStdout();
+        }));
+    },
+
+    _queryCpuFreqInfo: function(){
+        try{
+            let [exit, pid, stdin, stdout, stderr] =
+               GLib.spawn_async_with_pipes(null, /* cwd */
+                                          [this.cpufreqctl_path, " info"], /* args */
+                                          null, /* env */
+                                          GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                                          null /* child_setup */);
+
+          this._cpuFreqInfoStdout = new Gio.UnixInputStream({fd: stdout, close_fd: true});
+          this._cpuFreqInfoDataStdout = new Gio.DataInputStream({base_stream: this._cpuFreqInfoStdout});
+          new Gio.UnixOutputStream({fd: stdin, close_fd: true}).close(null);
+          new Gio.UnixInputStream({fd: stderr, close_fd: true}).close(null);
+
+          this._cpuFreqInfoReadStdout();
+       } catch(e){
+           global.log(e.toString());
+       }
+    },
+
      _add_event: function () {
         if (this.util_present) {
-            event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                this._update_freq ();
+            event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+                this._queryCpuFreqInfo ();
                 this._update_popup ();
                 return true;
             }));
@@ -93,15 +132,14 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _build_ui: function () {
-        this._update_freq ();
+        this._queryCpuFreqInfo ();
         this._build_popup ();
     },
 
-    _update_freq: function () {
+    _update_freq: function (cpufreq_output) {
         let freqInfo = null;
         if (this.util_present) {
-            let cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " info");
-            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = cpufreq_output.split("\n")[0];
             if (freqInfo) {
                 if (freqInfo.length > 6) {
                     this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
