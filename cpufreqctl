@@ -44,7 +44,19 @@ then
 fi
 if [ $1 = "info" ]
 then
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+	i=0
+	V=0
+	M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+	while [ $i -ne $cpucount ]
+	do
+	    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+	    if [[ $V > $M ]]
+	    then
+	        M=$V
+	    fi
+		i=`expr $i + 1`
+	done
+	echo "$M"
 	exit
 fi
 if [ $1 = "freq" ]

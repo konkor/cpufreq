@@ -14,6 +14,7 @@ const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq'
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension ();
 const EXTENSIONDIR = Me.dir.get_path ();
+const CpufreqUtil = Me.imports.cpufreqUtil;
 
 let event = null;
 
@@ -24,7 +25,21 @@ const FrequencyIndicator = new Lang.Class({
     _init: function () {
         this.parent (0.0, "CPU Frequency Indicator", false);
         this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
-        this.actor.add_actor (this.statusLabel);
+        let _box = new St.BoxLayout();
+        _box.add_actor(this.statusLabel);
+        this.actor.add_actor(_box);
+        this.actor.connect('button-press-event', Lang.bind(this, function () {
+            if (this.util_present) {
+                this.governors = this._get_governors ();
+                if (this.governors.length > 0) {
+                    for each (let governor in this.governors) {
+                        if (governor[1] == true) {
+                            this.activeg.label.text = "\u26A1 " + governor[0];
+                        }
+                    }
+                }
+            }
+        }));
         this.pkexec_path = GLib.find_program_in_path ('pkexec');
         this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
 
@@ -33,13 +48,14 @@ const FrequencyIndicator = new Lang.Class({
         this.pstate_present = false;
         this.boost_present = false;
         this.installed = false;
+        this.governorslist = [];
 
-        this.cpuFreqInfoPath = [GLib.find_program_in_path ('cpufreq-info')];
+        this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
         if (this.cpuFreqInfoPath){
             this.util_present = true;
         }
 
-        this.cpuPowerPath = [GLib.find_program_in_path ('cpupower')];
+        this.cpuPowerPath = GLib.find_program_in_path ('cpupower');
         if (this.cpuPowerPath) {
             this.util_present = true;
         }
@@ -83,64 +99,36 @@ const FrequencyIndicator = new Lang.Class({
         }
     },
 
-    _cpuFreqInfoReadStdout: function(){
-        this._cpuFreqInfoDataStdout.fill_async(-1, GLib.PRIORITY_DEFAULT, null, Lang.bind(this, function(stream, result) {
-            if (stream.fill_finish(result) == 0){
-                try{
-                    this._cpuFreqInfoOutput = stream.peek_buffer().toString();
-                    this._update_freq(this._cpuFreqInfoOutput);
-                }catch(e){
-                    global.log(e.toString());
-                }
-                this._cpuFreqInfoStdout.close(null);
-                return;
-            }
-
-            stream.set_buffer_size(2 * stream.get_buffer_size());
-            this._cpuFreqInfoReadStdout();
-        }));
-    },
-
-    _queryCpuFreqInfo: function(){
-        try{
-            let [exit, pid, stdin, stdout, stderr] =
-               GLib.spawn_async_with_pipes(null, /* cwd */
-                                          [this.cpufreqctl_path, " info"], /* args */
-                                          null, /* env */
-                                          GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-                                          null /* child_setup */);
-
-          this._cpuFreqInfoStdout = new Gio.UnixInputStream({fd: stdout, close_fd: true});
-          this._cpuFreqInfoDataStdout = new Gio.DataInputStream({base_stream: this._cpuFreqInfoStdout});
-          new Gio.UnixOutputStream({fd: stdin, close_fd: true}).close(null);
-          new Gio.UnixInputStream({fd: stderr, close_fd: true}).close(null);
-
-          this._cpuFreqInfoReadStdout();
-       } catch(e){
-           global.log(e.toString());
-       }
-    },
-
      _add_event: function () {
         if (this.util_present) {
             event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
-                this._queryCpuFreqInfo ();
-                this._update_popup ();
+                if (this._cur_freq && this._cur_freq.available) {
+                    this._cur_freq.execute(Lang.bind(this, function() {
+                        this._update_freq();
+                    }));
+                }
                 return true;
             }));
         }
     },
 
     _build_ui: function () {
-        this._queryCpuFreqInfo ();
+        this._cur_freq = new CpufreqUtil.CpufreqUtil();
+        this._update_freq ();
+        //get the list of available governors
+        var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
+        if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
         this._build_popup ();
     },
 
-    _update_freq: function (cpufreq_output) {
+    _update_freq: function () {
         let freqInfo = null;
         if (this.util_present) {
-            if (cpufreq_output[0]) freqInfo = cpufreq_output.split("\n")[0];
+            if (this._cur_freq && this._cur_freq.available)
+                freqInfo = this._cur_freq.freq;
+            //if (cpufreq_output[0]) freqInfo = cpufreq_output.split("\n")[0];
             if (freqInfo) {
+                //global.log (freqInfo);
                 if (freqInfo.length > 6) {
                     this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
                 } else {
@@ -151,19 +139,6 @@ const FrequencyIndicator = new Lang.Class({
             this.title = "\u26A0";
         }
         this.statusLabel.set_text (this.title);
-    },
-
-    _update_popup: function () {
-        if (this.util_present) {
-            this.governors = this._get_governors ();
-            if (this.governors.length > 0) {
-                for each (let governor in this.governors) {
-                    if (governor[1] == true) {
-                        this.activeg.label.text = "\u26A1 " + governor[0];
-                    }
-                }
-            }
-        }
     },
 
     _build_popup: function () {
@@ -314,18 +289,13 @@ const FrequencyIndicator = new Lang.Class({
 
     _get_governors: function () {
         let governors = new Array();
-        let governorslist = new Array();
         let governoractual = '';
         if (this.util_present) {
-            //get the list of available governors
-            var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
-            if (cpufreq_output1[0]) governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
-
             //get the actual governor
             var cpufreq_output2 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
             if (cpufreq_output2[0]) governoractual = cpufreq_output2[1].toString().split("\n")[0].toString();
 
-            for each (let governor in governorslist){
+            for each (let governor in this.governorslist){
                 let governortemp;
                 if(governoractual == governor)
                     governortemp = [governor, true];
