@@ -86,6 +86,9 @@ const FrequencyIndicator = new Lang.Class({
         save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
 
         this._build_ui ();
+        
+        if (save) this._load_settings ();
+
         this._add_event ();
     },
 
@@ -155,6 +158,18 @@ const FrequencyIndicator = new Lang.Class({
         this.statusLabel.set_text (this.title);
     },
 
+    _load_settings: function () {
+        if (!this.util_present) return;
+        var gov = this._settings.get_string (GOVERNOR_KEY);
+        var freq = this._settings.get_string (CPU_FREQ_KEY);
+        let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + gov;
+        GLib.spawn_command_line_sync (cmd);
+		if (gov == 'userspace') {
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + freq;
+	    	Util.trySpawnCommandLine (cmd);
+        }
+    }, 
+
     _build_popup: function () {
         this.menu.removeAll ();
         if (this.util_present) {
@@ -196,6 +211,9 @@ const FrequencyIndicator = new Lang.Class({
                                     let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + f;
 	    	                        global.log (cmd);
 		                            Util.trySpawnCommandLine (cmd);
+		                            if (save) {
+		                                this._settings.set_string(GOVERNOR_KEY, 'userspace');
+		                                this._settings.set_string(CPU_FREQ_KEY, f.toString ());		                            }
 		                        }
                             }));
                         }
@@ -207,6 +225,7 @@ const FrequencyIndicator = new Lang.Class({
                                 let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
 		                        global.log (cmd);
 		                        GLib.spawn_command_line_sync (cmd);
+		                        if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
 		                        if (this.pstate_present) {
 		                            slider_lock = true;
                                     slider_min.setValue (this._get_min () / 100);
@@ -231,7 +250,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
-                let label_min = new St.Label ({text: this._get_min().toString() + "%"});
+                let label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
@@ -241,12 +260,12 @@ const FrequencyIndicator = new Lang.Class({
                     if (this.installed) {
                         if (slider_lock == false) {
                             label_min.set_text (Math.floor (item.value * 100).toString() + "%");
-                            this._set_min (Math.floor (item.value * 100));
+                            this._set_min_pstate (Math.floor (item.value * 100));
                         }
                     }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
-                let label_max = new St.Label ({text: this._get_max().toString() + "%"});
+                let label_max = new St.Label ({text: this._get_max_pstate().toString() + "%"});
                 title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
@@ -256,7 +275,7 @@ const FrequencyIndicator = new Lang.Class({
                     if (this.installed) {
                         if (slider_lock == false) {
                             label_max.set_text (Math.floor (item.value * 100).toString() + "%");
-                            this._set_max (Math.floor (item.value * 100));
+                            this._set_max_pstate (Math.floor (item.value * 100));
                         }
                     }
                 }));
@@ -396,9 +415,14 @@ const FrequencyIndicator = new Lang.Class({
         return false;
     },
 
-    _get_min: function () {
+    _get_min_pstate: function () {
         var freqInfo = null;
+        var minf = 0;
         if (this.util_present) {
+            if (save) {
+                minf = this._settings.get_int(MIN_FREQ_PSTATE_KEY);
+                return this._set_min_pstate (minf);
+            }
             var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " min");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
@@ -408,30 +432,41 @@ const FrequencyIndicator = new Lang.Class({
         return 0;
     },
 
-    _set_min: function (minimum) {
+    _set_min_pstate: function (minimum) {
         if (this.util_present) {
             var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
             Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
+            return minimum;
         }
+        return 0;
     },
 
-    _get_max: function () {
+    _get_max_pstate: function () {
         var freqInfo = null;
+        var maxf = 100;
         if (this.util_present) {
+            if (save) {
+                maxf = this._settings.get_int(MAX_FREQ_PSTATE_KEY);
+                return this._set_max_pstate (maxf);
+            }
             var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " max");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
             }
         }
-        return 0;
+        return 100;
     },
 
-    _set_max: function (maximum) {
+    _set_max_pstate: function (maximum) {
         if (this.util_present) {
             var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
             Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
+            return maximum;
         }
+        return 100;
     },
 
     _get_boost: function () {
