@@ -184,8 +184,8 @@ const FrequencyIndicator = new Lang.Class({
             let slider_lock = false;
 
             if (this.pstate_present) {
-                slider_min = new Slider.Slider (this._get_min () / 100);
-                slider_max = new Slider.Slider (this._get_max () / 100);
+                slider_min = new Slider.Slider (this._get_min_pstate () / 100);
+                slider_max = new Slider.Slider (this._get_max_pstate () / 100);
             }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
@@ -228,8 +228,8 @@ const FrequencyIndicator = new Lang.Class({
 		                        if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
 		                        if (this.pstate_present) {
 		                            slider_lock = true;
-                                    slider_min.setValue (this._get_min () / 100);
-                                    slider_max.setValue (this._get_max () / 100);
+                                    slider_min.setValue (this._get_min_pstate () / 100);
+                                    slider_max.setValue (this._get_max_pstate () / 100);
                                     slider_lock = false;
                                 }
                             } else {
