@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions-cpufreq-daemon">
+
+  <schema id="org.gnome.shell.extensions.cpufreq" path="/org/gnome/shell/extensions/cpufreq/">
+
+    <key type="b" name="save-settings">
+      <default>false</default>
+      <summary>Save last settings</summary>
+      <description>Save settings for restore</description>
+    </key>
+
+    <key type="b" name="turbo-boost">
+      <default>true</default>
+      <summary>Processor boosting control</summary>
+      <description>Processor boosting control</description>
+    </key>
+
+    <key type="s" name="governor">
+      <default>'ondemand'</default>
+      <summary>CPU governor</summary>
+      <description>Current CPU governor</description>
+    </key>
+
+    <key type="i" name="cpu-freq">
+      <default>0</default>
+      <summary>CPU Frequency</summary>
+      <description>CPU Frequency for userspace mode</description>
+    </key>
+
+    <key type="i" name="min-freq">
+      <default>0</default>
+      <summary>Minimum CPU Frequency</summary>
+      <description>Minimum CPU Frequency</description>
+    </key>
+
+    <key type="i" name="max-freq">
+      <default>100</default>
+      <summary>Maximum CPU Frequency</summary>
+      <description>Maximum CPU Frequency</description>
+    </key>
+
+    <key type="i" name="min-freq-pstate">
+      <default>0</default>
+      <summary>Minimum CPU Frequency</summary>
+      <description>Minimum CPU Frequency</description>
+    </key>
+
+    <key type="i" name="max-freq-pstate">
+      <default>100</default>
+      <summary>Maximum CPU Frequency</summary>
+      <description>Maximum CPU Frequency</description>
+    </key>
+
+    <key type="as" name="profiles">
+        <default>[ ]</default>
+        <summary>Profiles</summary>
+        <description>User profiles</description>
+    </key>
+
+  </schema>
+</schemalist>

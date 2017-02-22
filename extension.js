@@ -10,20 +10,33 @@ const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
 const Mainloop = imports.mainloop;
 
-const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq'
+const SAVE_SETTINGS_KEY = 'save-settings';
+const TURBO_BOOST_KEY = 'turbo-boost';
+const GOVERNOR_KEY = 'governor';
+const CPU_FREQ_KEY = 'cpu-freq';
+const MIN_FREQ_KEY = 'min-freq';
+const MAX_FREQ_KEY = 'max-freq';
+const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
+const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
+const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension ();
 const EXTENSIONDIR = Me.dir.get_path ();
 const CpufreqUtil = Me.imports.cpufreqUtil;
+const Convenience = Me.imports.convenience;
 
 let event = null;
+let save = false;
 
 const FrequencyIndicator = new Lang.Class({
-    Name: 'FrequencyIndicator',
+    Name: 'Cpufreq',
     Extends: PanelMenu.Button,
 
     _init: function () {
         this.parent (0.0, "CPU Frequency Indicator", false);
+
+        this._settings = Convenience.getSettings();
+        
         this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
         let _box = new St.BoxLayout();
         _box.add_actor(this.statusLabel);
@@ -69,9 +82,10 @@ const FrequencyIndicator = new Lang.Class({
         }
 
         this._check_extensions ();
+        
+        save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
 
         this._build_ui ();
-
         this._add_event ();
     },
 
@@ -87,11 +101,11 @@ const FrequencyIndicator = new Lang.Class({
             }
             var default_boost = this._get_boost ();
             if (default_boost == false) {
-                this._set_boost ('1');
+                this._set_boost (true);
                 var new_state = this._get_boost ();
                 if (default_boost != new_state) {
                     this.boost_present = true;
-                    this._set_boost ('0');
+                    this._set_boost (false);
                 }
             } else {
                 this.boost_present = true;
@@ -213,11 +227,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (turbo_switch);
                 turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (this.installed) {
-                        if (item.state) {
-                            this._set_turbo ('0');
-                        } else {
-                            this._set_turbo ('1');
-                        }
+                        this._set_turbo (item.state);
                     }
                 }));
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
@@ -257,11 +267,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (boost_switch);
                 boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (this.installed) {
-                        if (item.state) {
-                            this._set_boost ('1');
-                        } else {
-                            this._set_boost ('0');
-                        }
+                        this._set_boost (item.state);
                     }
                 }));
             }
@@ -274,6 +280,17 @@ const FrequencyIndicator = new Lang.Class({
                     if (!this.installed) {
                         this._install ();
                     }
+                }));
+            } else {
+                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
+                this.menu.addMenuItem (separator1);
+                let sm = new PopupMenu.PopupSubMenuMenuItem('Preferences', false);
+                this.menu.addMenuItem (sm);
+                let save_switch = new PopupMenu.PopupSwitchMenuItem('Save settings', save);
+                sm.menu.addMenuItem (save_switch);
+                save_switch.connect ('toggled', Lang.bind (this, function (item) {
+                    save = item.state;
+                    this._settings.set_boolean(SAVE_SETTINGS_KEY, item.state);
                 }));
             }
         } else {
@@ -349,7 +366,12 @@ const FrequencyIndicator = new Lang.Class({
 
     _get_turbo: function () {
         var freqInfo = null;
+        var turbo = true;
         if (this.util_present) {
+            if (save) {
+                turbo = this._settings.get_boolean(TURBO_BOOST_KEY);
+                return this._set_turbo (turbo);
+            }
             var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
@@ -363,8 +385,15 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_turbo: function (state) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " turbo " + state.toString());
+            if (state) {
+                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " turbo 0");
+            } else {
+                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " turbo 1");
+            }
+            if (save) this._settings.set_boolean(TURBO_BOOST_KEY, state);
+            return state;
         }
+        return false;
     },
 
     _get_min: function () {
@@ -407,7 +436,12 @@ const FrequencyIndicator = new Lang.Class({
 
     _get_boost: function () {
         var freqInfo = null;
+        var turbo = true;
         if (this.util_present) {
+            if (save) {
+                turbo = this._settings.get_boolean(TURBO_BOOST_KEY);
+                return this._set_boost (turbo);
+            }
             var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " boost");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
@@ -421,8 +455,15 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_boost: function (state) {
         if (this.util_present) {
-            GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' boost ' + state.toString());
+            if (state) {
+                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' boost 1');
+            } else {
+                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' boost 0');
+            }
+            if (save) this._settings.set_boolean(TURBO_BOOST_KEY, state);
+            return state;
         }
+        return false;
     }
 });
 
