@@ -305,7 +305,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (separator1);
                 let sm = new PopupMenu.PopupSubMenuMenuItem('Preferences', false);
                 this.menu.addMenuItem (sm);
-                let save_switch = new PopupMenu.PopupSwitchMenuItem('Save settings', save);
+                let save_switch = new PopupMenu.PopupSwitchMenuItem('Remember settings', save);
                 sm.menu.addMenuItem (save_switch);
                 save_switch.connect ('toggled', Lang.bind (this, function (item) {
                     save = item.state;
