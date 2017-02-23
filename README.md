@@ -66,10 +66,12 @@ cd cpufreq
 ```
 Edit user home folder in konkor.cpufreq.policy
 ```
-gedit konkor.cpufreq.policy
+unzip cpufreq-master.zip
+gedit cpufreq-master/konkor.cpufreq.policy
 
 mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
-cp cpufreqctl cpufreqUtil.js commandLineUtil.js extension.js metadata.json konkor.cpufreq.policy ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
+cd cpufreq-master/
+cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
 chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 
 sudo cp konkor.cpufreq.policy /usr/share/polkit-1/actions/
