@@ -176,13 +176,14 @@ const FrequencyIndicator = new Lang.Class({
         if (this.util_present) {
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
-            this.activeg = new PopupMenu.PopupMenuItem ("unknown");
+            this.activeg = new PopupMenu.PopupSubMenuMenuItem('Governors', false);
             this.menu.addMenuItem (this.activeg);
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-            this.menu.addMenuItem (separator1);
+            //this.menu.addMenuItem (separator1);
             let slider_min = null;
             let slider_max = null;
             let slider_lock = false;
+            let userspace = null;
 
             if (this.pstate_present) {
                 slider_min = new Slider.Slider (this._get_min_pstate () / 100);
@@ -197,8 +198,7 @@ const FrequencyIndicator = new Lang.Class({
                         this.activeg.label.text = governor[0];
                     }
                     if ((governor[0] == 'userspace') && (this.frequences.length > 0)) {
-                        let sm = new PopupMenu.PopupSubMenuMenuItem('userspace', false);
-                        this.menu.addMenuItem (sm);
+                        userspace = new PopupMenu.PopupSubMenuMenuItem('userspace', false);
                         for each (let freq in this.frequences){
                             let f = freq;
                             var s = '';
@@ -208,7 +208,7 @@ const FrequencyIndicator = new Lang.Class({
                                 s = (parseInt(freq)/1000).toFixed(0).toString() + " MHz";
                             }
                             let u_item = new PopupMenu.PopupMenuItem (s);
-                            sm.menu.addMenuItem (u_item);
+                            userspace.menu.addMenuItem (u_item);
                             u_item.connect ('activate', Lang.bind (this, function () {
                                 if (this.installed) {
                                     GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov userspace');
@@ -223,7 +223,7 @@ const FrequencyIndicator = new Lang.Class({
                         }
                     } else {
                         let governorItem = new PopupMenu.PopupMenuItem (governor[0]);
-                        this.menu.addMenuItem (governorItem);
+                        this.activeg.menu.addMenuItem (governorItem);
                         governorItem.connect ('activate', Lang.bind (this, function () {
                             if (this.installed) {
                                 let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
@@ -243,7 +243,8 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }
             }
-            if (this.boost_present || this.pstate_present || (this.frequences.length > 0)) {
+            if (userspace != null) this.menu.addMenuItem (userspace);
+            if (this.boost_present || this.pstate_present) {
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
                 this.menu.addMenuItem (separator1);
             }
@@ -255,6 +256,8 @@ const FrequencyIndicator = new Lang.Class({
                         this._set_turbo (item.state);
                     }
                 }));
+                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
+                this.menu.addMenuItem (separator1);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
                 let label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
@@ -294,7 +297,9 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             }
-            if (!this.pstate_present || (this.frequences.length > 0)) {
+            if (!this.pstate_present || (this.frequences.length > 1)) {
+                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
+                this.menu.addMenuItem (separator1);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
                 let label_min = new St.Label ({text: this._get_min_label ()});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
