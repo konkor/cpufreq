@@ -6,12 +6,13 @@ FLROOT=/sys/devices/system/cpu
 
 if [ $# -lt 1 ]
 then
-	echo "Usage: cpufreqctl.sh [gov|list|driver|info|freq|set|turbo|min|max|boost] [value]"
-	echo "current driver"
+	echo "USAGE: cpufreqctl [OPTION] [VALUE]"
+	echo "OPTIONS [gov|list|driver|info|freq|set|turbo|min|max|boost|minf|maxf]"
+	echo "Current driver"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
-	echo "available governors"
+	echo "Available governors"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-	echo "current cpu0 governor"
+	echo "Current cpu0 governor"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 	exit
 fi
@@ -126,6 +127,40 @@ then
 	fi
 	echo "Setting BOOST to " $2
 	echo $2 > /sys/devices/system/cpu/cpufreq/boost
+	exit
+fi
+if [ $1 = "minf" ]
+then
+	if [ $# = 1 ]
+	then
+		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+		exit
+	fi
+	i=0
+	while [ $i -ne $cpucount ]
+	do
+		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_min_freq"
+		echo "Setting $FLNM to " $2
+		echo $2 > $FLNM
+		i=`expr $i + 1`
+	done
+	exit
+fi
+if [ $1 = "maxf" ]
+then
+	if [ $# = 1 ]
+	then
+		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+		exit
+	fi
+	i=0
+	while [ $i -ne $cpucount ]
+	do
+		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_max_freq"
+		echo "Setting $FLNM to " $2
+		echo $2 > $FLNM
+		i=`expr $i + 1`
+	done
 	exit
 fi
 

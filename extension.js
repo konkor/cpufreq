@@ -62,6 +62,7 @@ const FrequencyIndicator = new Lang.Class({
         this.boost_present = false;
         this.installed = false;
         this.governorslist = [];
+        this.frequences = [];
 
         this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
         if (this.cpuFreqInfoPath){
@@ -186,6 +187,9 @@ const FrequencyIndicator = new Lang.Class({
             if (this.pstate_present) {
                 slider_min = new Slider.Slider (this._get_min_pstate () / 100);
                 slider_max = new Slider.Slider (this._get_max_pstate () / 100);
+            } else if (this.frequences.length > 0) {
+                slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
+                slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
             }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
@@ -239,9 +243,11 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }
             }
-            if (this.pstate_present) {
+            if (this.boost_present || this.pstate_present || (this.frequences.length > 0)) {
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
                 this.menu.addMenuItem (separator1);
+            }
+            if (this.pstate_present) {
                 let turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
                 this.menu.addMenuItem (turbo_switch);
                 turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
@@ -280,13 +286,45 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             } else if (this.boost_present) {
-                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-                this.menu.addMenuItem (separator1);
                 let boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
                 this.menu.addMenuItem (boost_switch);
                 boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (this.installed) {
                         this._set_boost (item.state);
+                    }
+                }));
+            }
+            if (!this.pstate_present || (this.frequences.length > 0)) {
+                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
+                let label_min = new St.Label ({text: this._get_min_label ()});
+                title_min.actor.add_child (label_min, {align:St.Align.END});
+                this.menu.addMenuItem (title_min);
+                let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
+                menu_min.actor.add (slider_min.actor, {expand: true});
+                this.menu.addMenuItem (menu_min);
+                slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                    if (this.installed) {
+                        if (slider_lock == false) {
+                            var f = this._get_freq (Math.floor (item.value * 100));
+                            label_min.set_text (this._get_label (f));
+                            this._set_min (f);
+                        }
+                    }
+                }));
+                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
+                let label_max = new St.Label ({text: this._get_max_label ()});
+                title_max.actor.add_child (label_max, {align:St.Align.END});
+                this.menu.addMenuItem (title_max);
+                let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
+                menu_max.actor.add (slider_max.actor, {expand: true});
+                this.menu.addMenuItem (menu_max);
+                slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                    if (this.installed) {
+                        if (slider_lock == false) {
+                            var f = this._get_freq (Math.floor (item.value * 100));
+                            label_max.set_text (this._get_label (f));
+                            this._set_max (f);
+                        }
                     }
                 }));
             }
@@ -376,11 +414,26 @@ const FrequencyIndicator = new Lang.Class({
             if (cpufreq_output1[0]) frequenceslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
             for each (let freq in frequenceslist){
                 if (freq.length > 0) {
-                    frequences.push (freq);
+                    frequences.unshift (freq);
                 }
             }
         }
         return frequences;
+    },
+
+    _get_freq: function (num) {
+        var n = this.frequences.length;
+        var step = Math.round ((100 - (100 % n)) / n);
+        var i = Math.round (num / step);
+        if (i == n) i--;
+        return parseInt (this.frequences[i]);
+    },
+
+    _get_pos: function (num) {
+        var m = parseFloat (this.frequences[this.frequences.length -1]) - parseFloat (this.frequences[0]);
+        var p = (parseFloat (num) - parseFloat (this.frequences[0]))/m;
+        //global.log ('num=' + num.toString() + ' m=' + m.toString() + ' p=' + p.toString());
+        return p;
     },
 
     _get_turbo: function () {
@@ -467,6 +520,76 @@ const FrequencyIndicator = new Lang.Class({
             return maximum;
         }
         return 100;
+    },
+
+    _get_label: function (num) {
+        if (num >= 1000000) {
+            return (num/1000000).toFixed(3).toString() + " \u3393";
+        } else {
+            return (num/1000).toFixed(0).toString() + " \u3392";
+        }
+    },
+
+    _get_min_label: function () {
+        return this._get_label (this._get_min ());
+    },
+
+    _get_max_label: function () {
+        return this._get_label (this._get_max ());
+    },
+
+    _get_min: function () {
+        var freqInfo = null;
+        var minf = 0;
+        if (this.util_present) {
+            if (save) {
+                minf = parseInt (this._settings.get_string (MIN_FREQ_KEY));
+                if (minf > 0) return this._set_min (minf);
+            }
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " minf");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                return parseInt (freqInfo);
+            }
+        }
+        return minf;
+    },
+
+    _set_min: function (minimum) {
+        if (this.util_present) {
+            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
+            Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
+            return minimum;
+        }
+        return 0;
+    },
+
+    _get_max: function () {
+        var freqInfo = null;
+        var maxf = 0;
+        if (this.util_present) {
+            if (save) {
+                maxf = parseInt (this._settings.get_string (MAX_FREQ_KEY));
+                if (maxf > 0) return this._set_max (maxf);
+            }
+            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " maxf");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                return parseInt (freqInfo);
+            }
+        }
+        return maxf;
+    },
+
+    _set_max: function (maximum) {
+        if (this.util_present) {
+            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
+            Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
+            return maximum;
+        }
+        return 0;
     },
 
     _get_boost: function () {
