@@ -188,7 +188,7 @@ const FrequencyIndicator = new Lang.Class({
             if (this.pstate_present) {
                 slider_min = new Slider.Slider (this._get_min_pstate () / 100);
                 slider_max = new Slider.Slider (this._get_max_pstate () / 100);
-            } else if (this.frequences.length > 0) {
+            } else if (this.frequences.length > 1) {
                 slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
                 slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
             }
@@ -297,7 +297,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             }
-            if (!this.pstate_present || (this.frequences.length > 1)) {
+            if (!this.pstate_present && (this.frequences.length > 1)) {
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
                 this.menu.addMenuItem (separator1);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
