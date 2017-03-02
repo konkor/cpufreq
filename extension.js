@@ -63,6 +63,8 @@ const FrequencyIndicator = new Lang.Class({
         this.installed = false;
         this.governorslist = [];
         this.frequences = [];
+        this.minimum_freq = -1;
+        this.maximum_freq = -1;
 
         this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
         if (this.cpuFreqInfoPath){
@@ -182,6 +184,8 @@ const FrequencyIndicator = new Lang.Class({
             //this.menu.addMenuItem (separator1);
             let slider_min = null;
             let slider_max = null;
+            let label_min = null;
+            let label_max = null;
             let slider_lock = false;
             let userspace = null;
 
@@ -236,6 +240,17 @@ const FrequencyIndicator = new Lang.Class({
                                     slider_max.setValue (this._get_max_pstate () / 100);
                                     slider_lock = false;
                                 }
+                                if (slider_min && (this.minimum_freq != -1)) {
+                                    if (governorItem.label.text == 'powersave') {
+                                        slider_min.setValue (0);
+                                        label_min.set_text (this._get_label (this.minimum_freq));
+                                        this._set_min (this.minimum_freq);
+                                    } else if (governorItem.label.text == 'performance') {
+                                        slider_max.setValue (1);
+                                        label_max.set_text (this._get_label (this.maximum_freq));
+                                        this._set_max (this.maximum_freq);
+                                    }
+                                }
                             } else {
                                 this._install ();
                             }
@@ -259,7 +274,7 @@ const FrequencyIndicator = new Lang.Class({
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
                 this.menu.addMenuItem (separator1);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
-                let label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
+                label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
@@ -274,7 +289,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
-                let label_max = new St.Label ({text: this._get_max_pstate().toString() + "%"});
+                label_max = new St.Label ({text: this._get_max_pstate().toString() + "%"});
                 title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
@@ -301,13 +316,14 @@ const FrequencyIndicator = new Lang.Class({
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
                 this.menu.addMenuItem (separator1);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
-                let label_min = new St.Label ({text: this._get_min_label ()});
+                label_min = new St.Label ({text: this._get_min_label ()});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_min.actor.add (slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
                 slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                    global.log ("value-changed");
                     if (this.installed) {
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
@@ -317,7 +333,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
-                let label_max = new St.Label ({text: this._get_max_label ()});
+                label_max = new St.Label ({text: this._get_max_label ()});
                 title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
@@ -421,6 +437,10 @@ const FrequencyIndicator = new Lang.Class({
                 if (freq.length > 0) {
                     frequences.unshift (freq);
                 }
+            }
+            if (frequences.length > 0) {
+                this.minimum_freq = frequences[0];
+                this.maximum_freq = frequences[frequences.length - 1];
             }
         }
         return frequences;
