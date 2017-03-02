@@ -323,7 +323,6 @@ const FrequencyIndicator = new Lang.Class({
                 menu_min.actor.add (slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
                 slider_min.connect('value-changed', Lang.bind (this, function (item) {
-                    global.log ("value-changed");
                     if (this.installed) {
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
