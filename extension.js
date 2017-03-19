@@ -122,11 +122,12 @@ const FrequencyIndicator = new Lang.Class({
      _add_event: function () {
         if (this.util_present) {
             event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
-                if (this._cur_freq && this._cur_freq.available) {
-                    this._cur_freq.execute(Lang.bind(this, function() {
-                        this._update_freq();
-                    }));
-                }
+                //if (this._cur_freq && this._cur_freq.available) {
+                //    this._cur_freq.execute(Lang.bind(this, function() {
+                //        this._update_freq();
+                //    }));
+                //}
+                this._update_freq();
                 return true;
             }));
         }
@@ -143,12 +144,23 @@ const FrequencyIndicator = new Lang.Class({
 
     _update_freq: function () {
         let freqInfo = null;
+        let s;
+        let len = GLib.get_num_processors ();
+        let m = 0, n = 0;
         if (this.util_present) {
-            if (this._cur_freq && this._cur_freq.available)
-                freqInfo = this._cur_freq.freq;
-            //if (cpufreq_output[0]) freqInfo = cpufreq_output.split("\n")[0];
-            if (freqInfo) {
-                //global.log (freqInfo);
+            //if (this._cur_freq && this._cur_freq.available)
+            //    freqInfo = this._cur_freq.freq;
+            for (let key = 0; key < len; key++) {
+                s = this._read_line("/sys/devices/system/cpu/cpu" + key.toString() + "/cpufreq/scaling_cur_freq");
+                if (s) {
+                    n = parseInt (s);
+                    if (n > m) {
+                        m = n;
+                        freqInfo = s;
+                    }
+                }
+            }
+            if (freqInfo != null) {
                 if (freqInfo.length > 6) {
                     this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
                 } else {
@@ -171,7 +183,19 @@ const FrequencyIndicator = new Lang.Class({
             cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + freq;
 	    	Util.trySpawnCommandLine (cmd);
         }
-    }, 
+    },
+    
+    _read_line: function (fname) {
+		if (GLib.file_test(fname, GLib.FileTest.EXISTS) == false) return null;
+		let f = Gio.file_new_for_path (fname);
+		try {
+		    let dis = Gio.DataInputStream.new (f.read (null));
+		    var [line, length] = dis.read_line (null);
+		} catch (e) {
+    		print("Error: ", e.message);
+		}
+		return line;
+	},
 
     _build_popup: function () {
         this.menu.removeAll ();
@@ -374,11 +398,6 @@ const FrequencyIndicator = new Lang.Class({
             let errorItem = new PopupMenu.PopupMenuItem ("\u26a0 Please install cpufrequtils or cpupower");
             this.menu.addMenuItem (errorItem);
         }
-    },
-
-    _get_cpu_number: function () {
-        let ret = GLib.spawn_command_line_sync ("grep -c processor /proc/cpuinfo");
-        return ret[1].toString().split("\n", 1)[0];
     },
 
     _get_governors: function () {

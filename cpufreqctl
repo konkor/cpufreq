@@ -60,6 +60,20 @@ then
 	echo "$M"
 	exit
 fi
+if [ $1 = "info_avg" ]
+then
+	i=1
+	V=0
+	M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+	while [ $i -ne $cpucount ]
+	do
+	    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+	    M=`expr $M + $V`
+	    i=`expr $i + 1`
+	done
+	echo `expr $M / $cpucount`
+	exit
+fi
 if [ $1 = "freq" ]
 then
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
