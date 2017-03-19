@@ -22,7 +22,7 @@ const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension ();
 const EXTENSIONDIR = Me.dir.get_path ();
-const CpufreqUtil = Me.imports.cpufreqUtil;
+//const CpufreqUtil = Me.imports.cpufreqUtil;
 const Convenience = Me.imports.convenience;
 
 let event = null;
@@ -123,18 +123,18 @@ const FrequencyIndicator = new Lang.Class({
         if (this.util_present) {
             event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 //if (this._cur_freq && this._cur_freq.available) {
-                //    this._cur_freq.execute(Lang.bind(this, function() {
-                //        this._update_freq();
+                //    this._cur_freq.execute (Lang.bind (this, function () {
+                //        this._update_freq ();
                 //    }));
                 //}
-                this._update_freq();
+                this._update_freq ();
                 return true;
             }));
         }
     },
 
     _build_ui: function () {
-        this._cur_freq = new CpufreqUtil.CpufreqUtil();
+        //this._cur_freq = new CpufreqUtil.CpufreqUtil();
         this._update_freq ();
         //get the list of available governors
         var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
@@ -160,7 +160,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }
             }
-            if (freqInfo != null) {
+            if (freqInfo) {
                 if (freqInfo.length > 6) {
                     this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
                 } else {
@@ -186,7 +186,7 @@ const FrequencyIndicator = new Lang.Class({
     },
     
     _read_line: function (fname) {
-		if (GLib.file_test(fname, GLib.FileTest.EXISTS) == false) return null;
+		//if (GLib.file_test(fname, GLib.FileTest.EXISTS) == false) return null;
 		let f = Gio.file_new_for_path (fname);
 		try {
 		    let dis = Gio.DataInputStream.new (f.read (null));
