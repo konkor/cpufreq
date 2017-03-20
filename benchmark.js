@@ -5,10 +5,13 @@ const Gio = imports.gi.Gio;
 
 function _read_line (fname) {
 		//if (GLib.file_test(fname, GLib.FileTest.EXISTS) == false) return null;
-		//let f = Gio.file_new_for_path (fname);
+		let f = Gio.file_new_for_path (fname);
+		let line, res, dis;
 		try {
-		    //let dis = Gio.DataInputStream.new (Gio.file_new_for_path (fname).read (null));
-		    var [line, length] = Gio.DataInputStream.new (Gio.file_new_for_path (fname).read (null)).read_line (null);
+		    dis = Gio.DataInputStream.new (f.read (null));
+		    [line,res] = dis.read_line (null);
+		    dis.close (null);
+		    
 		} catch (e) {
     		print("Error: ", e.message);
 		}
@@ -44,12 +47,12 @@ if (GLib.file_test(cpufreqctl_path, GLib.FileTest.EXISTS) == false) {
 print ("cpufreqctl path:", cpufreqctl_path);
 let freqInfo = null;
 let s;
-let len = GLib.get_num_processors (), tlen = 100;
-let m = 0, n = 0;
+let len = GLib.get_num_processors (), tlen = 100000;
+let m = 0, n = 0, key;
 print("Gio start...");
 var t0 = Date.now();
 for (let i=0; i<tlen; i++)
-for (let key=0; key<len; key++) {
+for (key=0; key<len; key++) {
 	s = this._read_line("/sys/devices/system/cpu/cpu" + key.toString() + "/cpufreq/scaling_cur_freq");
     if (s) {
         n = parseInt (s);
@@ -65,7 +68,7 @@ print("Gio test end. " + (t1 - t0) + " milliseconds.");
 
 print("GLib processing start...");
 var cpufreq_output = null;
-tlen = 100;
+tlen = 1000;
 t0 = Date.now();
 for (let i=0; i<tlen; i++) {
 try {
