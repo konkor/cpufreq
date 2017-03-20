@@ -2,40 +2,54 @@
 
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
+//const System = imports.system; System.gc();
 
-function _read_line (fname) {
-		//if (GLib.file_test(fname, GLib.FileTest.EXISTS) == false) return null;
-		let f = Gio.file_new_for_path (fname);
-		let line, res, dis;
-		try {
-		    dis = Gio.DataInputStream.new (f.read (null));
-		    [line,res] = dis.read_line (null);
-		    dis.close (null);
-		    
-		} catch (e) {
-    		print("Error: ", e.message);
-		}
-		return line;
+let streams = [];
+
+function _init_streams () {
+    let len = GLib.get_num_processors ();
+    streams = [];
+    for (let key = 0; key < len; key++) {
+        let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key +
+            '/cpufreq/scaling_cur_freq');
+        streams.push (new Gio.DataInputStream ({ base_stream: f.read(null) }));
+    }
+}
+
+function _read_line (dis) {
+    let line;
+	try {
+	    dis.seek (0, GLib.SeekType.SET, null); 
+        [line,] = dis.read_line (null);
+	} catch (e) {
+    	print ("Error: ", e.message);
+    	_init_streams ();
+	}
+	return line;
 }
 
 let freqInfo = null;
-let s;
-let len = GLib.get_num_processors (), tlen = 100000;
-let m = 0, n = 0, key;
-print("Gio start...");
-var t0 = Date.now();
-for (let i=0; i<tlen; i++)
-for (key=0; key<len; key++) {
-	s = this._read_line("/sys/devices/system/cpu/cpu" + key.toString() + "/cpufreq/scaling_cur_freq");
-    if (s) {
-        n = parseInt (s);
-        if (n > m) {
-            m = n;
-            freqInfo = s;
+let tlen = 1000;
+let s, m, n;
+//init fs...
+_init_streams ();
+print ("Gio start...");
+var t0 = Date.now ();
+for (let i = 0; i < tlen; i++) {
+    m = 0; n = 0;
+    streams.forEach (stream => {
+        s = _read_line (stream);
+        if (s) {
+            n = parseInt (s);
+            if (n > m) {
+                m = n;
+                freqInfo = s;
+            }
         }
-    }
+    });
 }
-var t1 = Date.now();
-print("Gio test end in " + (t1 - t0) + " milliseconds.");
+
+var t1 = Date.now ();
+print ("Gio test end in " + (t1 - t0) + " milliseconds.");
 
 

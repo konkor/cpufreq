@@ -27,6 +27,7 @@ const Convenience = Me.imports.convenience;
 
 let event = null;
 let save = false;
+let streams = [];
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -121,7 +122,7 @@ const FrequencyIndicator = new Lang.Class({
 
      _add_event: function () {
         if (this.util_present) {
-            event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+            event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
                 //if (this._cur_freq && this._cur_freq.available) {
                 //    this._cur_freq.execute (Lang.bind (this, function () {
                 //        this._update_freq ();
@@ -135,6 +136,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _build_ui: function () {
         //this._cur_freq = new CpufreqUtil.CpufreqUtil();
+        this._init_streams ();
         this._update_freq ();
         //get the list of available governors
         var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
@@ -144,14 +146,12 @@ const FrequencyIndicator = new Lang.Class({
 
     _update_freq: function () {
         let freqInfo = null;
-        let s;
-        let len = GLib.get_num_processors ();
-        let m = 0, n = 0;
+        let s, m = 0, n = 0;
         if (this.util_present) {
             //if (this._cur_freq && this._cur_freq.available)
             //    freqInfo = this._cur_freq.freq;
-            for (let key = 0; key < len; key++) {
-                s = this._read_line("/sys/devices/system/cpu/cpu" + key.toString() + "/cpufreq/scaling_cur_freq");
+            streams.forEach (stream => {
+                s = this._read_line (stream);
                 if (s) {
                     n = parseInt (s);
                     if (n > m) {
@@ -159,7 +159,7 @@ const FrequencyIndicator = new Lang.Class({
                         freqInfo = s;
                     }
                 }
-            }
+            });
             if (freqInfo) {
                 if (freqInfo.length > 6) {
                     this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
@@ -185,18 +185,27 @@ const FrequencyIndicator = new Lang.Class({
         }
     },
     
-    _read_line: function (fname) {
-		//if (GLib.file_test(fname, GLib.FileTest.EXISTS) == false) return null;
-		let f = Gio.file_new_for_path (fname);
-		try {
-		    let dis = Gio.DataInputStream.new (f.read (null));
-		    var [line, length] = dis.read_line (null);
-		    dis.close (null);
-		} catch (e) {
-    		print("Error: ", e.message);
-		}
-		return line;
-	},
+    _init_streams: function () {
+        let len = GLib.get_num_processors ();
+        streams = [];
+        for (let key = 0; key < len; key++) {
+            let f = Gio.File.new_for_path('/sys/devices/system/cpu/cpu' + key +
+                '/cpufreq/scaling_cur_freq');
+            streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
+        }
+    },
+
+    _read_line: function (dis) {
+        let line;
+	    try {
+	        dis.seek (0, GLib.SeekType.SET, null); 
+            [line,] = dis.read_line (null);
+	    } catch (e) {
+    	    print ("Error: ", e.message);
+    	    this._init_streams ();
+	    }
+	    return line;
+    },
 
     _build_popup: function () {
         this.menu.removeAll ();
