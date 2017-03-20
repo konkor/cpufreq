@@ -191,6 +191,7 @@ const FrequencyIndicator = new Lang.Class({
 		try {
 		    let dis = Gio.DataInputStream.new (f.read (null));
 		    var [line, length] = dis.read_line (null);
+		    dis.close (null);
 		} catch (e) {
     		print("Error: ", e.message);
 		}
