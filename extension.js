@@ -37,7 +37,7 @@ const FrequencyIndicator = new Lang.Class({
         this.parent (0.0, "CPU Frequency Indicator", false);
 
         this._settings = Convenience.getSettings();
-        
+
         this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
         let _box = new St.BoxLayout();
         _box.add_actor(this.statusLabel);
@@ -86,11 +86,11 @@ const FrequencyIndicator = new Lang.Class({
         }
 
         this._check_extensions ();
-        
+
         save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
 
         this._build_ui ();
-        
+
         if (save) this._load_settings ();
 
         this._add_event ();
@@ -184,7 +184,7 @@ const FrequencyIndicator = new Lang.Class({
 	    	Util.trySpawnCommandLine (cmd);
         }
     },
-    
+
     _init_streams: function () {
         let len = GLib.get_num_processors ();
         streams = [];
@@ -197,14 +197,14 @@ const FrequencyIndicator = new Lang.Class({
 
     _read_line: function (dis) {
         let line;
-	    try {
-	        dis.seek (0, GLib.SeekType.SET, null); 
+        try {
+            dis.seek (0, GLib.SeekType.SET, null);
             [line,] = dis.read_line (null);
-	    } catch (e) {
-    	    print ("Error: ", e.message);
-    	    this._init_streams ();
-	    }
-	    return line;
+        } catch (e) {
+            print ("Error: ", e.message);
+            this._init_streams ();
+        }
+        return line;
     },
 
     _build_popup: function () {

@@ -17,14 +17,14 @@ function _init_streams () {
 
 function _read_line (dis) {
     let line;
-	try {
-	    dis.seek (0, GLib.SeekType.SET, null); 
+    try {
+        dis.seek (0, GLib.SeekType.SET, null);
         [line,] = dis.read_line (null);
-	} catch (e) {
-    	print ("Error: ", e.message);
-    	_init_streams ();
-	}
-	return line;
+    } catch (e) {
+        print ("Error: ", e.message);
+        _init_streams ();
+    }
+    return line;
 }
 
 function getCurrentFile () {
@@ -57,6 +57,7 @@ let freqInfo = null;
 let tlen = 100;
 let s, m, n, key;
 print ("Gio start...");
+_init_streams ();
 var t0 = Date.now ();
 for (let i = 0; i < tlen; i++) {
     m = 0; n = 0;

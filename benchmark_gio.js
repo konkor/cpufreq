@@ -18,20 +18,19 @@ function _init_streams () {
 
 function _read_line (dis) {
     let line;
-	try {
-	    dis.seek (0, GLib.SeekType.SET, null); 
+    try {
+        dis.seek (0, GLib.SeekType.SET, null);
         [line,] = dis.read_line (null);
-	} catch (e) {
-    	print ("Error: ", e.message);
-    	_init_streams ();
-	}
-	return line;
+    } catch (e) {
+        print ("Error: ", e.message);
+        _init_streams ();
+    }
+    return line;
 }
 
 let freqInfo = null;
 let tlen = 1000;
 let s, m, n;
-//init fs...
 _init_streams ();
 print ("Gio start...");
 var t0 = Date.now ();
@@ -51,5 +50,3 @@ for (let i = 0; i < tlen; i++) {
 
 var t1 = Date.now ();
 print ("Gio test end in " + (t1 - t0) + " milliseconds.");
-
-
