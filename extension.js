@@ -22,7 +22,6 @@ const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension ();
 const EXTENSIONDIR = Me.dir.get_path ();
-//const CpufreqUtil = Me.imports.cpufreqUtil;
 const Convenience = Me.imports.convenience;
 
 let event = null;
@@ -123,11 +122,6 @@ const FrequencyIndicator = new Lang.Class({
      _add_event: function () {
         if (this.util_present) {
             event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                //if (this._cur_freq && this._cur_freq.available) {
-                //    this._cur_freq.execute (Lang.bind (this, function () {
-                //        this._update_freq ();
-                //    }));
-                //}
                 this._update_freq ();
                 return true;
             }));
@@ -135,10 +129,8 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _build_ui: function () {
-        //this._cur_freq = new CpufreqUtil.CpufreqUtil();
         this._init_streams ();
         this._update_freq ();
-        //get the list of available governors
         var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
         if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
         this._build_popup ();
@@ -148,8 +140,6 @@ const FrequencyIndicator = new Lang.Class({
         let freqInfo = null;
         let s, m = 0, n = 0;
         if (this.util_present) {
-            //if (this._cur_freq && this._cur_freq.available)
-            //    freqInfo = this._cur_freq.freq;
             streams.forEach (stream => {
                 s = this._read_line (stream);
                 if (s) {
@@ -215,7 +205,6 @@ const FrequencyIndicator = new Lang.Class({
             this.activeg = new PopupMenu.PopupSubMenuMenuItem('Governors', false);
             this.menu.addMenuItem (this.activeg);
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-            //this.menu.addMenuItem (separator1);
             let slider_min = null;
             let slider_max = null;
             let label_min = null;
@@ -414,6 +403,9 @@ const FrequencyIndicator = new Lang.Class({
         let governors = new Array();
         let governoractual = '';
         if (this.util_present) {
+            //getting the governors list
+            var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
+            if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
             //get the actual governor
             var cpufreq_output2 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
             if (cpufreq_output2[0]) governoractual = cpufreq_output2[1].toString().split("\n")[0].toString();
@@ -485,7 +477,6 @@ const FrequencyIndicator = new Lang.Class({
     _get_pos: function (num) {
         var m = parseFloat (this.frequences[this.frequences.length -1]) - parseFloat (this.frequences[0]);
         var p = (parseFloat (num) - parseFloat (this.frequences[0]))/m;
-        //global.log ('num=' + num.toString() + ' m=' + m.toString() + ' p=' + p.toString());
         return p;
     },
 
