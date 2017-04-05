@@ -131,8 +131,6 @@ const FrequencyIndicator = new Lang.Class({
     _build_ui: function () {
         this._init_streams ();
         this._update_freq ();
-        var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
-        if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
         this._build_popup ();
     },
 
