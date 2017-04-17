@@ -66,6 +66,7 @@ const FrequencyIndicator = new Lang.Class({
         this.pstate_present = false;
         this.boost_present = false;
         this.installed = false;
+        this.updated = true;
         this.governorslist = [];
         this.frequences = [];
         this.minimum_freq = -1;
@@ -97,6 +98,7 @@ const FrequencyIndicator = new Lang.Class({
         this.pkexec_path = GLib.find_program_in_path ('pkexec');
         this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
         this.installed = false;
+        this.updated = true;
         if (!this.cpufreqctl_path) {
             this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
         } else {
@@ -108,6 +110,37 @@ const FrequencyIndicator = new Lang.Class({
         if (!this.pkexec_path) {
             this.installed = false;
         }
+        if (this.installed) {
+            let localctl = null, globalctl = null;
+            cpufreq_output = GLib.spawn_command_line_sync ("/usr/bin/cpufreqctl version");
+            if (cpufreq_output[0]) globalctl = cpufreq_output[1].toString().split("\n")[0];
+            cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl version");
+            if (cpufreq_output[0]) localctl = cpufreq_output[1].toString().split("\n")[0];
+            if (localctl != globalctl) {
+                this.updated = false;
+            }
+        }
+    },
+
+    _install: function () {
+        cmd = this.pkexec_path + " " + EXTENSIONDIR + '/cpufreqctl install';
+        Util.trySpawnCommandLine (cmd);
+        if (install_event) {
+            Mainloop.source_remove (install_event);
+        }
+        install_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+            this._check_install ();
+            if (this.installed && this.updated) {
+                try {
+                    Mainloop.source_remove (event);
+                    ExtensionSystem.reloadExtension(Me);
+                    print ("Reloading completed");
+                } catch (e) {
+                    print ("Error reloading extension", e.message);
+                }
+            }
+            return (!this.installed || !this.updated);
+        }));
     },
 
     _check_extensions: function () {
@@ -384,15 +417,15 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             }
-            if (!this.installed) {
+            if (!this.installed || !this.updated) {
+                let updates_txt = "";
+                if (!this.updated) updates_txt = " updates";
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
                 this.menu.addMenuItem (separator1);
-                let mi_install = new PopupMenu.PopupMenuItem ("\u26a0 Install...");
+                let mi_install = new PopupMenu.PopupMenuItem ("\u26a0 Install" + updates_txt + "...");
                 this.menu.addMenuItem (mi_install);
                 mi_install.connect ('activate', Lang.bind (this, function () {
-                    if (!this.installed) {
-                        this._install ();
-                    }
+                    this._install ();
                 }));
             } else {
                 separator1 = new PopupMenu.PopupSeparatorMenuItem ();
@@ -437,27 +470,6 @@ const FrequencyIndicator = new Lang.Class({
             }
         }
         return governors;
-    },
-
-    _install: function () {
-        cmd = this.pkexec_path + " " + EXTENSIONDIR + '/cpufreqctl install';
-        Util.trySpawnCommandLine (cmd);
-        if (install_event) {
-            Mainloop.source_remove (install_event);
-        }
-        install_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
-            this._check_install ();
-            if (this.installed) {
-                try {
-                    Mainloop.source_remove (event);
-                    ExtensionSystem.reloadExtension(Me);
-                    print ("Reloading completed");
-                } catch (e) {
-                    print ("Error reloading extension", e.message);
-                }
-            }
-            return !this.installed;
-        }));
     },
 
     _get_frequences: function () {
