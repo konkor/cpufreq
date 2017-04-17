@@ -27,6 +27,9 @@ const Convenience = Me.imports.convenience;
 let event = null;
 let save = false;
 let streams = [];
+let freqInfo = null;
+let cpufreq_output = null;
+let cmd = null;
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -97,18 +100,18 @@ const FrequencyIndicator = new Lang.Class({
 
     _check_extensions: function () {
         if (this.util_present && this.installed) {
-            var freqInfo = null;
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " driver");
+            freqInfo = null;
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " driver");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 if (freqInfo == 'intel_pstate') {
                     this.pstate_present = true;
                 }
             }
-            var default_boost = this._get_boost ();
+            let default_boost = this._get_boost ();
             if (default_boost == false) {
                 this._set_boost (true);
-                var new_state = this._get_boost ();
+                let new_state = this._get_boost ();
                 if (default_boost != new_state) {
                     this.boost_present = true;
                     this._set_boost (false);
@@ -135,7 +138,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _update_freq: function () {
-        let freqInfo = null;
+        freqInfo = null;
         let s, m = 0, n = 0;
         if (this.util_present) {
             streams.forEach (stream => {
@@ -165,7 +168,7 @@ const FrequencyIndicator = new Lang.Class({
         if (!this.util_present) return;
         var gov = this._settings.get_string (GOVERNOR_KEY);
         var freq = this._settings.get_string (CPU_FREQ_KEY);
-        let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + gov;
+        cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + gov;
         GLib.spawn_command_line_sync (cmd);
 		if (gov == 'userspace') {
             cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + freq;
@@ -402,11 +405,11 @@ const FrequencyIndicator = new Lang.Class({
         let governoractual = '';
         if (this.util_present) {
             //getting the governors list
-            var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
+            let cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
             if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
             //get the actual governor
-            var cpufreq_output2 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
-            if (cpufreq_output2[0]) governoractual = cpufreq_output2[1].toString().split("\n")[0].toString();
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
+            if (cpufreq_output[0]) governoractual = cpufreq_output[1].toString().split("\n")[0].toString();
 
             for each (let governor in this.governorslist){
                 let governortemp;
@@ -428,7 +431,7 @@ const FrequencyIndicator = new Lang.Class({
         if (this.pkexec_path == null) {
             return;
         }
-        var cmd = "sed -i \"s/USERNAME/" + GLib.get_user_name() + "/\" " + EXTENSIONDIR + "/konkor.cpufreq.policy";
+        cmd = "sed -i \"s/USERNAME/" + GLib.get_user_name() + "/\" " + EXTENSIONDIR + "/konkor.cpufreq.policy";
         //global.log (cmd);
         GLib.spawn_command_line_sync (cmd);
         cmd = this.pkexec_path + " cp " + EXTENSIONDIR + '/konkor.cpufreq.policy /usr/share/polkit-1/actions/';
@@ -449,8 +452,8 @@ const FrequencyIndicator = new Lang.Class({
         let frequences = new Array();
         let frequenceslist = new Array();
         if (this.util_present) {
-            var cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " freq");
-            if (cpufreq_output1[0]) frequenceslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " freq");
+            if (cpufreq_output[0]) frequenceslist = cpufreq_output[1].toString().split("\n")[0].split(" ");
             for each (let freq in frequenceslist){
                 if (freq.length > 0) {
                     frequences.unshift (freq);
@@ -465,28 +468,26 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_freq: function (num) {
-        var n = this.frequences.length;
-        var step = Math.round ((100 - (100 % n)) / n);
-        var i = Math.round (num / step);
+        let n = this.frequences.length;
+        let step = Math.round ((100 - (100 % n)) / n);
+        let i = Math.round (num / step);
         if (i == n) i--;
         return parseInt (this.frequences[i]);
     },
 
     _get_pos: function (num) {
-        var m = parseFloat (this.frequences[this.frequences.length -1]) - parseFloat (this.frequences[0]);
-        var p = (parseFloat (num) - parseFloat (this.frequences[0]))/m;
+        let m = parseFloat (this.frequences[this.frequences.length -1]) - parseFloat (this.frequences[0]);
+        let p = (parseFloat (num) - parseFloat (this.frequences[0]))/m;
         return p;
     },
 
     _get_turbo: function () {
-        var freqInfo = null;
-        var turbo = true;
+        freqInfo = null;
         if (this.util_present) {
             if (save) {
-                turbo = this._settings.get_boolean(TURBO_BOOST_KEY);
-                return this._set_turbo (turbo);
+                return this._set_turbo (this._settings.get_boolean(TURBO_BOOST_KEY));
             }
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 if (freqInfo == '0') {
@@ -511,14 +512,12 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_min_pstate: function () {
-        var freqInfo = null;
-        var minf = 0;
+        freqInfo = null;
         if (this.util_present) {
             if (save) {
-                minf = this._settings.get_int(MIN_FREQ_PSTATE_KEY);
-                return this._set_min_pstate (minf);
+                return this._set_min_pstate (this._settings.get_int(MIN_FREQ_PSTATE_KEY));
             }
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " min");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " min");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
@@ -529,7 +528,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_min_pstate: function (minimum) {
         if (this.util_present) {
-            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
             Util.trySpawnCommandLine (cmd);
             if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
             return minimum;
@@ -538,14 +537,12 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_max_pstate: function () {
-        var freqInfo = null;
-        var maxf = 100;
+        freqInfo = null;
         if (this.util_present) {
             if (save) {
-                maxf = this._settings.get_int(MAX_FREQ_PSTATE_KEY);
-                return this._set_max_pstate (maxf);
+                return this._set_max_pstate (this._settings.get_int(MAX_FREQ_PSTATE_KEY));
             }
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " max");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " max");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
@@ -556,7 +553,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_max_pstate: function (maximum) {
         if (this.util_present) {
-            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
             Util.trySpawnCommandLine (cmd);
             if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
             return maximum;
@@ -581,14 +578,12 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_min: function () {
-        var freqInfo = null;
-        var minf = 0;
+        freqInfo = null;
         if (this.util_present) {
             if (save) {
-                minf = parseInt (this._settings.get_string (MIN_FREQ_KEY));
-                if (minf > 0) return this._set_min (minf);
+                return this._set_min (parseInt (this._settings.get_string (MIN_FREQ_KEY)));
             }
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " minf");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " minf");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
@@ -598,8 +593,9 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_min: function (minimum) {
+        if (minimum <= 0) return 0;
         if (this.util_present) {
-            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
             Util.trySpawnCommandLine (cmd);
             if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
             return minimum;
@@ -608,14 +604,12 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_max: function () {
-        var freqInfo = null;
-        var maxf = 0;
+        freqInfo = null;
         if (this.util_present) {
             if (save) {
-                maxf = parseInt (this._settings.get_string (MAX_FREQ_KEY));
-                if (maxf > 0) return this._set_max (maxf);
+                return this._set_max (parseInt (this._settings.get_string (MAX_FREQ_KEY)));
             }
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " maxf");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " maxf");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
@@ -625,8 +619,9 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_max: function (maximum) {
+        if (maximum <= 0) return 0;
         if (this.util_present) {
-            var cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
             Util.trySpawnCommandLine (cmd);
             if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
             return maximum;
@@ -635,14 +630,12 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_boost: function () {
-        var freqInfo = null;
-        var turbo = true;
+        freqInfo = null;
         if (this.util_present) {
             if (save) {
-                turbo = this._settings.get_boolean(TURBO_BOOST_KEY);
-                return this._set_boost (turbo);
+                return this._set_boost (this._settings.get_boolean(TURBO_BOOST_KEY));
             }
-            var cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " boost");
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " boost");
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 if (freqInfo == '1') {
