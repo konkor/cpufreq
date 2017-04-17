@@ -1,11 +1,12 @@
 #!/bin/bash
 
+VERSION='10'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
-
 FLROOT=/sys/devices/system/cpu
 
 if [ $# -lt 1 ]
 then
+    echo "Package version: "$VERSION
 	echo "USAGE: cpufreqctl [OPTION] [VALUE]"
 	echo "OPTIONS [gov|list|driver|info|freq|set|turbo|min|max|boost|minf|maxf]"
 	echo "Current driver"
@@ -185,4 +186,8 @@ then
 	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
 	exit
 fi
-
+if [ $1 = "version" ]
+then
+    echo $VERSION
+	exit
+fi
