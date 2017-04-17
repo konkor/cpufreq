@@ -14,7 +14,7 @@
                         <allow_inactive>yes</allow_inactive>
                         <allow_active>yes</allow_active>
                 </defaults>
-                <annotate key="org.freedesktop.policykit.exec.path">/home/USERNAME/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl</annotate>
+                <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/cpufreqctl</annotate>
         </action>
 
 </policyconfig>

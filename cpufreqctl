@@ -177,4 +177,12 @@ then
 	done
 	exit
 fi
+if [ $1 = "install" ]
+then
+    echo 'installing cpufreqctl...'
+    cp $0 /usr/bin/
+    echo 'installing policy...'
+	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
+	exit
+fi
 

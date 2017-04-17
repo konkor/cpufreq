@@ -20,11 +20,13 @@ const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
 const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
+const ExtensionSystem = imports.ui.extensionSystem;
 const Me = ExtensionUtils.getCurrentExtension ();
 const EXTENSIONDIR = Me.dir.get_path ();
 const Convenience = Me.imports.convenience;
 
 let event = null;
+let install_event = null;
 let save = false;
 let streams = [];
 let freqInfo = null;
@@ -56,8 +58,8 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
         }));
-        this.pkexec_path = GLib.find_program_in_path ('pkexec');
-        this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
+        this.pkexec_path = null;
+        this.cpufreqctl_path = null;
 
         this.governorchanged = false;
         this.util_present = false;
@@ -79,14 +81,7 @@ const FrequencyIndicator = new Lang.Class({
             this.util_present = true;
         }
 
-        if(GLib.file_test ("/usr/share/polkit-1/actions/konkor.cpufreq.policy", GLib.FileTest.EXISTS)) {
-            this.installed = true;
-        }
-
-        if (this.pkexec_path == null) {
-            this.installed = false;
-        }
-
+        this._check_install ();
         this._check_extensions ();
 
         save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
@@ -96,6 +91,23 @@ const FrequencyIndicator = new Lang.Class({
         if (save) this._load_settings ();
 
         this._add_event ();
+    },
+
+    _check_install: function () {
+        this.pkexec_path = GLib.find_program_in_path ('pkexec');
+        this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
+        this.installed = false;
+        if (!this.cpufreqctl_path) {
+            this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
+        } else {
+            this.installed = true;
+        }
+        if (!GLib.file_test ("/usr/share/polkit-1/actions/konkor.cpufreq.policy", GLib.FileTest.EXISTS)) {
+            this.installed = false;
+        }
+        if (!this.pkexec_path) {
+            this.installed = false;
+        }
     },
 
     _check_extensions: function () {
@@ -428,24 +440,24 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _install: function () {
-        if (this.pkexec_path == null) {
-            return;
+        cmd = this.pkexec_path + " " + EXTENSIONDIR + '/cpufreqctl install';
+        Util.trySpawnCommandLine (cmd);
+        if (install_event) {
+            Mainloop.source_remove (install_event);
         }
-        cmd = "sed -i \"s/USERNAME/" + GLib.get_user_name() + "/\" " + EXTENSIONDIR + "/konkor.cpufreq.policy";
-        //global.log (cmd);
-        GLib.spawn_command_line_sync (cmd);
-        cmd = this.pkexec_path + " cp " + EXTENSIONDIR + '/konkor.cpufreq.policy /usr/share/polkit-1/actions/';
-		Util.trySpawnCommandLine (cmd);
-        GLib.usleep (2000000);
-        if(GLib.file_test ("/usr/share/polkit-1/actions/konkor.cpufreq.policy", GLib.FileTest.EXISTS)) {
-            this.installed = true;
-        } else {
-            return;
-        }
-        Mainloop.source_remove (event);
-        this._check_extensions ();
-        this._build_popup ();
-        this._add_event ();
+        install_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+            this._check_install ();
+            if (this.installed) {
+                try {
+                    Mainloop.source_remove (event);
+                    ExtensionSystem.reloadExtension(Me);
+                    print ("Reloading completed");
+                } catch (e) {
+                    print ("Error reloading extension", e.message);
+                }
+            }
+            return !this.installed;
+        }));
     },
 
     _get_frequences: function () {

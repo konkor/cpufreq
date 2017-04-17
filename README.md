@@ -44,38 +44,31 @@ chmod 0755 cpufreqctl
 ```
 If you want change governors without asking root password each time You need edit user home folder in konkor.cpufreq.policy and install it. Change 'USERNAME' to user's real name.
 ```
-gedit konkor.cpufreq.policy
 sudo cp konkor.cpufreq.policy /usr/share/polkit-1/actions/
-sudo chown root:root ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
 
 ### From source zip archive
 Download zip archive from github page. Run _gnome-tweak-tool_ go to extensions tab,
 click _Install Shell Extension_ from drive and select _master.zip_.
 Restart Gnome shell by pressing Alt-F2 and entering 'r'.
-Then fix the executing bit and police as described above.
 ```
 wget https://github.com/konkor/cpufreq/archive/master.zip
 gnome-tweak-tool
+cpufreq extension => Install...
 ```
 
 ### From git source
 ```
 git clone https://github.com/konkor/cpufreq
 cd cpufreq
-```
-Edit user home folder in konkor.cpufreq.policy
-```
 unzip cpufreq-master.zip
-gedit cpufreq-master/konkor.cpufreq.policy
 
 mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
 cd cpufreq-master/
 cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
 chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 
-sudo cp konkor.cpufreq.policy /usr/share/polkit-1/actions/
-sudo chown root:root ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
+sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
 ```
 Last rows are to able change governors without asking super user password when you changing governors from the applet.
 
