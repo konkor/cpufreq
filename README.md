@@ -52,9 +52,14 @@ Download zip archive from github page. Run _gnome-tweak-tool_ go to extensions t
 click _Install Shell Extension_ from drive and select _master.zip_.
 Restart Gnome shell by pressing Alt-F2 and entering 'r'.
 ```
-wget https://github.com/konkor/cpufreq/archive/master.zip
-gnome-tweak-tool
-cpufreq extension => Install...
+$wget https://github.com/konkor/cpufreq/archive/master.zip
+$gnome-tweak-tool # Select 'Install Shell Extension' button on the Extensions Tab.
+$chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
+```
+Now close gnome-tweak-tool and restart gnome-shell Log out or just enter 'r' command in 'Alt-F2' promt.
+```
+$gnome-tweak-tool # Turn on the extension.
+cpufreq extension => ⚠ Install...
 ```
 
 ### From git source
