@@ -15,7 +15,10 @@ Please install cpufrequtils or cpupower:
 ```
 sudo apt-get install cpufrequtils
 ```
-
+or for modern kernels:
+```
+sudo apt-get install linux-cpupower
+```
 * Arch Linux
 ```
 sudo pacman -S cpupower
@@ -35,28 +38,28 @@ yum install kernel-tools
 * Gnome Shell >= 3.14+
 * cpufrequtils or cpupower
 
-### You need fix executing bit after installation to able to change governors
+### You could fix executing bit after installation to able to change governors
 [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 
 ```
 cd ~/.local/share/gnome-shell/extensions/cpufreq@konkor
-chmod 0755 cpufreqctl
+chmod +x cpufreqctl
 ```
-If you want change governors without asking root password each time You need edit user home folder in konkor.cpufreq.policy and install it. Change 'USERNAME' to user's real name.
+If you want change governors or/and frequencies You have to install it.
 ```
-sudo cp konkor.cpufreq.policy /usr/share/polkit-1/actions/
+sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
 ```
 
 ### From source zip archive
 Download zip archive from github page. Run _gnome-tweak-tool_ go to extensions tab,
-click _Install Shell Extension_ from drive and select _master.zip_.
-Restart Gnome shell by pressing Alt-F2 and entering 'r'.
+click _Install Shell Extension_ from drive and select _cpufreq-master.zip_.
+Detailed steps below:
 ```
 $wget https://github.com/konkor/cpufreq/archive/master.zip
 $gnome-tweak-tool # Select 'Install Shell Extension' button on the Extensions Tab.
 $chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
-Now close gnome-tweak-tool and restart gnome-shell Log out or just enter 'r' command in 'Alt-F2' promt.
+Now close _gnome-tweak-tool_ and restart _gnome-shell_ Log Out or just enter 'r' command in 'Alt-F2' prompt.
 ```
 $gnome-tweak-tool # Turn on the extension.
 cpufreq extension => ⚠ Install...
@@ -66,16 +69,32 @@ cpufreq extension => ⚠ Install...
 ```
 git clone https://github.com/konkor/cpufreq
 cd cpufreq
-unzip cpufreq-master.zip
 
 mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
-cd cpufreq-master/
 cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
 chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
-
-sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
 ```
-Last rows are to able change governors without asking super user password when you changing governors from the applet.
+
+The following command requires super user/Administrator/Root access. Using the same Terminal window, run the following command will allow you to change the governors from the _Cpufreq_ applet.
+1. `sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install`
+1. You will be prompt to enter your password
+1. _Cpufreq_ applet is now installed and its menu is now display in GNOME top toolbar
+1. Done. You have successfully installed _Cpufreq_.
+
+Optionally, if you need to install _Cpufreq_ for an additional GNOME user(s), but that user(s) do not have super user/Administrator/Root access, here are the steps that will allow that user to change the governors from the _Cpufreq_ applet
+1. Login that additional GNOME user(s)
+1. Run all the same command lines as [that section above](https://github.com/konkor/cpufreq/blob/master/README.md#from-git-source)
+1. Open GNOME _Tweak Tools_ (gnome-tweak-tool). Click on _Extensions_ vertical tab.
+1. Next to _Cpufreq_ row click on the toggle button to turn it ON
+1. Restart GNOME by pressing "Alt+F2' keys. When prompt type in "r" without the quotes. Press "Enter" key. Wait a few seconds for GNOME to refresh.
+1. _Cpufreq_ applet is now installed and its menu is now display in GNOME top toolbar
+1. Done. You have successfully installed _Cpufreq_.
+
+### Updating the existing extension from git source
+1. $wget https://github.com/konkor/cpufreq/archive/master.zip
+1. Extract _cpufreq-master.zip_.
+1. Copy/Replace all files in the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
+1. Restart GNOME by pressing "Alt+F2' keys. When prompt type in "r" without the quotes. Press "Enter" key.
 
 ### Source and packages
 * [GitHub](https://github.com/konkor/cpufreq)
