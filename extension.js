@@ -72,23 +72,23 @@ const FrequencyIndicator = new Lang.Class({
         this.minimum_freq = -1;
         this.maximum_freq = -1;
 
-        this.cpuFreqInfoPath = GLib.find_program_in_path ('cpufreq-info');
-        if (this.cpuFreqInfoPath){
-            this.util_present = true;
-        }
-
-        this.cpuPowerPath = GLib.find_program_in_path ('cpupower');
-        if (this.cpuPowerPath) {
-            this.util_present = true;
+        freqInfo = null;
+        cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+        if (freqInfo) {
+            if (freqInfo == 'intel_pstate') {
+                this.util_present = true;
+                this.pstate_present = true;
+            } else if (freqInfo == 'acpi-cpufreq') {
+                this.util_present = true;
+            }
         }
 
         this._check_install ();
         this._check_extensions ();
 
         save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
-
         this._build_ui ();
-
         if (save) this._load_settings ();
 
         this._add_event ();
@@ -145,14 +145,6 @@ const FrequencyIndicator = new Lang.Class({
 
     _check_extensions: function () {
         if (this.util_present && this.installed) {
-            freqInfo = null;
-            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " driver");
-            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
-            if (freqInfo) {
-                if (freqInfo == 'intel_pstate') {
-                    this.pstate_present = true;
-                }
-            }
             let default_boost = this._get_boost ();
             if (default_boost == false) {
                 this._set_boost (true);
