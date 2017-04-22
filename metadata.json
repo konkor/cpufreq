@@ -1,5 +1,5 @@
 {
-  "description": "CPU frequency monitor and governor manager.\n\nThis is lightweight gnome-extension for CPU scaling monitor and power governors's management. The extension is using standart cpufrequtils (or cpupower) package to collect information and manage governors. It's need root permission to able changing governors or install policy for pkexec.\n\nFor more information and how-to see README.md",
+  "description": "CPU frequency monitor and governor manager.\n\nThis is a lightweight gnome-extension for CPU scaling monitor and power governors's management. The extension is using standart cpufrequtils (or cpupower) package to collect information and manage governors. It needs root permission to able changing governors or install policy for pkexec.\n\nFor more information and how-to see README.md",
   "name": "cpufreq",
   "settings-schema": "org.gnome.shell.extensions.cpufreq",
   "shell-version": [
