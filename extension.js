@@ -75,12 +75,10 @@ const FrequencyIndicator = new Lang.Class({
         freqInfo = null;
         cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
         if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
-        if (freqInfo) {
+        if (freqInfo && GLib.file_test ("/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver", GLib.FileTest.EXISTS)) {
+            this.util_present = true;
             if (freqInfo == 'intel_pstate') {
-                this.util_present = true;
                 this.pstate_present = true;
-            } else if (freqInfo == 'acpi-cpufreq') {
-                this.util_present = true;
             }
         }
 
