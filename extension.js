@@ -300,14 +300,22 @@ const FrequencyIndicator = new Lang.Class({
                                     slider_lock = false;
                                 }
                                 if (slider_min && (this.minimum_freq != -1)) {
+                                    slider_min.actor.reactive = true;
+                                    slider_min.actor.opacity = 255;
+                                    slider_max.actor.reactive = true;
+                                    slider_max.actor.opacity = 255;
                                     if (governorItem.label.text == 'powersave') {
                                         slider_min.setValue (0);
                                         label_min.set_text (this._get_label (this.minimum_freq));
                                         this._set_min (this.minimum_freq);
+                                        slider_max.actor.reactive = false;
+                                        slider_max.actor.opacity = 50;
                                     } else if (governorItem.label.text == 'performance') {
                                         slider_max.setValue (1);
                                         label_max.set_text (this._get_label (this.maximum_freq));
                                         this._set_max (this.maximum_freq);
+                                        slider_min.actor.reactive = false;
+                                        slider_min.actor.opacity = 50;
                                     }
                                 }
                             } else {
@@ -406,6 +414,15 @@ const FrequencyIndicator = new Lang.Class({
                         }
                     }
                 }));
+            }
+            if (slider_min) {
+                if (this.activeg.label.text == 'powersave') {
+                    slider_max.actor.reactive = false;
+                    slider_max.actor.opacity = 50;
+                } else if (this.activeg.label.text == 'performance') {
+                    slider_min.actor.reactive = false;
+                    slider_min.actor.opacity = 50;
+                }
             }
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
