@@ -60,7 +60,7 @@ const FrequencyIndicator = new Lang.Class({
         }));
         this.pkexec_path = null;
         this.cpufreqctl_path = null;
-
+        this.cpucount = this._get_cpu_number ();
         this.governorchanged = false;
         this.util_present = false;
         this.pstate_present = false;
@@ -212,16 +212,21 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _init_streams: function () {
-        let len = GLib.get_num_processors ();
+        let s;
         streams = [];
-        for (let key = 0; key < len; key++) {
-            let f = Gio.File.new_for_path('/sys/devices/system/cpu/cpu' + key +
-                '/cpufreq/scaling_cur_freq');
-            streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
+        for (let key = 0; key < this.cpucount; key++) {
+            s = '/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq';
+            if (GLib.file_test (s, GLib.FileTest.EXISTS)) {
+                let f = Gio.File.new_for_path (s);
+                streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
+            } else {
+                streams.push (null);
+            }
         }
     },
 
     _read_line: function (dis) {
+        if (dis == null) return "0";
         let line;
         try {
             dis.seek (0, GLib.SeekType.SET, null);
@@ -239,6 +244,7 @@ const FrequencyIndicator = new Lang.Class({
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem('Governors', false);
+            this.coremenu = new PopupMenu.PopupSubMenuMenuItem('CPU Power', false);
             this.menu.addMenuItem (this.activeg);
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
             let slider_min = null;
@@ -424,6 +430,30 @@ const FrequencyIndicator = new Lang.Class({
                     slider_min.actor.opacity = 50;
                 }
             }
+            if (this.cpucount > 1) {
+                let coreitem;
+                this.coreitems = [];
+                this.menu.addMenuItem (this.coremenu);
+                this.scoreitem = new PopupMenu.PopupSwitchMenuItem ('Single Core Mode: ', this._get_single ());
+                this.coremenu.menu.addMenuItem (this.scoreitem);
+                this.scoreitem.connect ('toggled', Lang.bind (this, function (item) {
+                    if (this.installed) {
+                        this._set_single (item.state);
+                    }
+                }));
+                for (let key = 1; key < this.cpucount; key++) {
+                    coreitem = new CoreMenuItem ('Core ' + key + ': ', this._get_core (key));
+                    coreitem.key = key;
+                    this.coremenu.menu.addMenuItem (coreitem);
+                    coreitem.connect ('toggled', Lang.bind (this, function (item) {
+                        if (this.installed) {
+                            this._set_core (item.key, item.state);
+                            //this.scoreitem.setToggleState (this._get_single ());
+                        }
+                    }));
+                    this.coreitems.push (coreitem);
+                }
+            }
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
                 if (!this.updated) updates_txt = " updates";
@@ -450,6 +480,17 @@ const FrequencyIndicator = new Lang.Class({
             let errorItem = new PopupMenu.PopupMenuItem ("\u26a0 Please install cpufrequtils or cpupower");
             this.menu.addMenuItem (errorItem);
         }
+    },
+
+    _get_cpu_number: function () {
+        let c = 0;
+        let cpulist = null;
+        let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
+        if (ret[0]) cpulist = ret[1].toString().split("\n", 1)[0].split("-");
+        for each (let f in cpulist) {
+            if (parseInt (f) > 0) c = parseInt (f);
+        }
+        return c + 1;
     },
 
     _get_governors: function () {
@@ -510,6 +551,46 @@ const FrequencyIndicator = new Lang.Class({
         let m = parseFloat (this.frequences[this.frequences.length -1]) - parseFloat (this.frequences[0]);
         let p = (parseFloat (num) - parseFloat (this.frequences[0]))/m;
         return p;
+    },
+
+    _get_single: function () {
+        if (GLib.get_num_processors () == 1) return true;
+        return false;
+    },
+
+    _set_single: function (state) {
+        this.coreitems.forEach (coreitem => {
+            if (coreitem.state == state) coreitem.toggle ();
+        });
+    },
+
+    _get_core: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/cpu" + core + "/online");
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                if (freqInfo == '1') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
+
+    _set_core: function (core, state) {
+        if (this.util_present) {
+            this.util_present = false;
+            if (state) {
+                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " on " + core);
+            } else {
+                GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " off " + core);
+            }
+            this._init_streams ();
+            this.util_present = true;
+            return state;
+        }
+        return false;
     },
 
     _get_turbo: function () {
@@ -688,6 +769,19 @@ const FrequencyIndicator = new Lang.Class({
             return state;
         }
         return false;
+    }
+});
+
+const CoreMenuItem = new Lang.Class({
+    Name: 'CoreMenuItem',
+    Extends: PopupMenu.PopupSwitchMenuItem,
+
+    _init: function(text, active, params) {
+        this.parent(text, active, params);
+    },
+
+    activate: function(event) {
+        this.toggle();
     }
 });
 

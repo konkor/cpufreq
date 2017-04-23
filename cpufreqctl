@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION='10'
+VERSION='11'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -189,5 +189,29 @@ fi
 if [ $1 = "version" ]
 then
     echo $VERSION
+	exit
+fi
+if [ $1 = "on" ]
+then
+	if [ $# = 1 ]
+	then
+		echo "input core number"
+		exit
+	fi
+	FLNM="$FLROOT/cpu"$2"/online"
+	echo "Power on CPU Core"$2
+	echo "1" > $FLNM
+	exit
+fi
+if [ $1 = "off" ]
+then
+	if [ $# = 1 ]
+	then
+		echo "input core number"
+		exit
+	fi
+	FLNM="$FLROOT/cpu"$2"/online"
+	echo "Power off CPU Core"$2
+	echo "0" > $FLNM
 	exit
 fi
