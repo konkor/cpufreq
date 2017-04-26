@@ -71,6 +71,7 @@ const FrequencyIndicator = new Lang.Class({
         this.frequences = [];
         this.minimum_freq = -1;
         this.maximum_freq = -1;
+        this.scm = (this.cpucount == 1);
 
         freqInfo = null;
         cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
@@ -304,30 +305,23 @@ const FrequencyIndicator = new Lang.Class({
                                     slider_min.setValue (this._get_min_pstate () / 100);
                                     slider_max.setValue (this._get_max_pstate () / 100);
                                     slider_lock = false;
-                                }
-                                if (slider_min && (this.minimum_freq != -1)) {
-                                    if (!this.pstate_present) {
-                                        slider_min.actor.reactive = true;
-                                        slider_min.actor.opacity = 255;
-                                        slider_max.actor.reactive = true;
-                                        slider_max.actor.opacity = 255;
-                                    }
+                                } else if (slider_min) {
+                                    slider_min.actor.reactive = true;
+                                    slider_min.actor.opacity = 255;
+                                    slider_max.actor.reactive = true;
+                                    slider_max.actor.opacity = 255;
                                     if (governorItem.label.text == 'powersave') {
                                         slider_min.setValue (0);
                                         label_min.set_text (this._get_label (this.minimum_freq));
                                         this._set_min (this.minimum_freq);
-                                        if (!this.pstate_present) {
-                                            slider_max.actor.reactive = false;
-                                            slider_max.actor.opacity = 50;
-                                        }
+                                        slider_max.actor.reactive = false;
+                                        slider_max.actor.opacity = 50;
                                     } else if (governorItem.label.text == 'performance') {
                                         slider_max.setValue (1);
                                         label_max.set_text (this._get_label (this.maximum_freq));
                                         this._set_max (this.maximum_freq);
-                                        if (!this.pstate_present) {
-                                            slider_min.actor.reactive = false;
-                                            slider_min.actor.opacity = 50;
-                                        }
+                                        slider_min.actor.reactive = false;
+                                        slider_min.actor.opacity = 50;
                                     }
                                 }
                             } else {
@@ -444,6 +438,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.coremenu.menu.addMenuItem (this.scoreitem);
                 this.scoreitem.connect ('toggled', Lang.bind (this, function (item) {
                     if (this.installed) {
+                        this.scm = item.state;
                         this._set_single (item.state);
                     }
                 }));
@@ -454,7 +449,7 @@ const FrequencyIndicator = new Lang.Class({
                     coreitem.connect ('toggled', Lang.bind (this, function (item) {
                         if (this.installed) {
                             this._set_core (item.key, item.state);
-                            //this.scoreitem.setToggleState (this._get_single ());
+                            if (!this.scm) this.scoreitem.setToggleState (this._get_single ());
                         }
                     }));
                     this.coreitems.push (coreitem);
