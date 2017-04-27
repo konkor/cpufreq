@@ -245,8 +245,8 @@ const FrequencyIndicator = new Lang.Class({
         if (this.util_present) {
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
-            this.activeg = new PopupMenu.PopupSubMenuMenuItem("Governors", false);
-            this.coremenu = new PopupMenu.PopupSubMenuMenuItem("Cores " + this.cpucount + " online", false);
+            this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
+            this.coremenu = new PopupMenu.PopupSubMenuMenuItem (this.cpucount + " Cores Online", false);
             this.menu.addMenuItem (this.activeg);
             this.corewarn = null;
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
@@ -439,7 +439,7 @@ const FrequencyIndicator = new Lang.Class({
                 slider_core = new Slider.Slider (1);
                 menu_core.actor.add (slider_core.actor, {expand: true});
                 this.coremenu.menu.addMenuItem (menu_core);
-                this.corewarn = new PopupMenu.PopupMenuItem ("⚠Single Core Not Recommended");
+                this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Not Recommended");
                 this.corewarn.actor.effect = new Clutter.ColorizeEffect (new Clutter.Color({red: 47, green: 4, blue: 4}), 0.75);
                 this.corewarn.actor.visible = false;
                 this.coremenu.menu.addMenuItem (this.corewarn);
@@ -450,10 +450,14 @@ const FrequencyIndicator = new Lang.Class({
                 slider_core.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         var cc = Math.floor ((this.cpucount - 1) * item.value + 1);
-                        this.coremenu.label.text = "Cores " + cc + " online";
                         this._set_cores (cc);
-                        if (cc == 1) this.corewarn.actor.visible = true;
-                        else this.corewarn.actor.visible = false;
+                        if (cc == 1) {
+                            this.corewarn.actor.visible = true;
+                            this.coremenu.label.text = "Single Core Online";
+                        } else {
+                            this.corewarn.actor.visible = false;
+                            this.coremenu.label.text = cc + " Cores Online";
+                        }
                     }
                 }));
             }
@@ -595,7 +599,7 @@ const FrequencyIndicator = new Lang.Class({
         if (core_event) {
             Mainloop.source_remove (core_event);
         }
-        core_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
+        core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
             for (let key = 1; key < this.cpucount; key++) {
                 if (key < ccore) this._set_core (key, true);
                 else this._set_core (key, false);
