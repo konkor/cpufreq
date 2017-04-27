@@ -27,11 +27,13 @@ const Convenience = Me.imports.convenience;
 
 let event = null;
 let install_event = null;
+let core_event = null;
 let save = false;
 let streams = [];
 let freqInfo = null;
 let cpufreq_output = null;
 let cmd = null;
+let ccore = 0;
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -71,7 +73,6 @@ const FrequencyIndicator = new Lang.Class({
         this.frequences = [];
         this.minimum_freq = -1;
         this.maximum_freq = -1;
-        this.scm = (this.cpucount == 1);
 
         freqInfo = null;
         cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
@@ -244,12 +245,14 @@ const FrequencyIndicator = new Lang.Class({
         if (this.util_present) {
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
-            this.activeg = new PopupMenu.PopupSubMenuMenuItem('Governors', false);
-            this.coremenu = new PopupMenu.PopupSubMenuMenuItem('CPU Power', false);
+            this.activeg = new PopupMenu.PopupSubMenuMenuItem("Governors", false);
+            this.coremenu = new PopupMenu.PopupSubMenuMenuItem("Cores " + this.cpucount + " online", false);
             this.menu.addMenuItem (this.activeg);
+            this.corewarn = null;
             let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
             let slider_min = null;
             let slider_max = null;
+            let slider_core = null;
             let label_min = null;
             let label_max = null;
             let slider_lock = false;
@@ -431,29 +434,28 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
             if (this.cpucount > 1) {
-                let coreitem;
-                this.coreitems = [];
                 this.menu.addMenuItem (this.coremenu);
-                this.scoreitem = new PopupMenu.PopupSwitchMenuItem ('Single Core Mode: ', this._get_single ());
-                this.coremenu.menu.addMenuItem (this.scoreitem);
-                this.scoreitem.connect ('toggled', Lang.bind (this, function (item) {
+                let menu_core = new PopupMenu.PopupBaseMenuItem ({activate: false});
+                slider_core = new Slider.Slider (1);
+                menu_core.actor.add (slider_core.actor, {expand: true});
+                this.coremenu.menu.addMenuItem (menu_core);
+                this.corewarn = new PopupMenu.PopupMenuItem ("⚠Single Core Not Recommended");
+                this.corewarn.actor.effect = new Clutter.ColorizeEffect (new Clutter.Color({red: 47, green: 4, blue: 4}), 0.75);
+                this.corewarn.actor.visible = false;
+                this.coremenu.menu.addMenuItem (this.corewarn);
+                this.corewarn.connect ('activate', Lang.bind (this, function () {
+                    cmd = "gedit --new-window " + EXTENSIONDIR + "/README.md +1";
+                    Util.trySpawnCommandLine (cmd);
+                }));
+                slider_core.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
-                        this.scm = item.state;
-                        this._set_single (item.state);
+                        var cc = Math.floor ((this.cpucount - 1) * item.value + 1);
+                        this.coremenu.label.text = "Cores " + cc + " online";
+                        this._set_cores (cc);
+                        if (cc == 1) this.corewarn.actor.visible = true;
+                        else this.corewarn.actor.visible = false;
                     }
                 }));
-                for (let key = 1; key < this.cpucount; key++) {
-                    coreitem = new CoreMenuItem ('Core ' + key + ': ', this._get_core (key));
-                    coreitem.key = key;
-                    this.coremenu.menu.addMenuItem (coreitem);
-                    coreitem.connect ('toggled', Lang.bind (this, function (item) {
-                        if (this.installed) {
-                            this._set_core (item.key, item.state);
-                            if (!this.scm) this.scoreitem.setToggleState (this._get_single ());
-                        }
-                    }));
-                    this.coreitems.push (coreitem);
-                }
             }
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
@@ -559,12 +561,6 @@ const FrequencyIndicator = new Lang.Class({
         return false;
     },
 
-    _set_single: function (state) {
-        this.coreitems.forEach (coreitem => {
-            if (coreitem.state == state) coreitem.toggle ();
-        });
-    },
-
     _get_core: function (core) {
         freqInfo = null;
         if (this.util_present) {
@@ -592,6 +588,20 @@ const FrequencyIndicator = new Lang.Class({
             return state;
         }
         return false;
+    },
+
+    _set_cores: function (count) {
+        ccore = count;
+        if (core_event) {
+            Mainloop.source_remove (core_event);
+        }
+        core_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
+            for (let key = 1; key < this.cpucount; key++) {
+                if (key < ccore) this._set_core (key, true);
+                else this._set_core (key, false);
+            }
+            return false;
+        }));
     },
 
     _get_turbo: function () {
