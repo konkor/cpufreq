@@ -247,9 +247,9 @@ const FrequencyIndicator = new Lang.Class({
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
             this.coremenu = new PopupMenu.PopupSubMenuMenuItem (this.cpucount + " Cores Online", false);
+            this.scalemenu = null;
             this.menu.addMenuItem (this.activeg);
             this.corewarn = null;
-            let separator1 = new PopupMenu.PopupSeparatorMenuItem ();
             let slider_min = null;
             let slider_max = null;
             let slider_core = null;
@@ -257,6 +257,9 @@ const FrequencyIndicator = new Lang.Class({
             let label_max = null;
             let slider_lock = false;
             let userspace = null;
+            let slaletxt = "Scaling ";
+            let turbo_switch = null;
+            let boost_switch = null;
 
             if (this.pstate_present) {
                 slider_min = new Slider.Slider (this._get_min_pstate () / 100);
@@ -264,6 +267,11 @@ const FrequencyIndicator = new Lang.Class({
             } else if (this.frequences.length > 1) {
                 slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
                 slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
+            }
+            if (this.pstate_present || (this.frequences.length > 1)) {
+                if (this.pstate_present) slaletxt += this._get_min_pstate() + "% - " + this._get_max_pstate() + "%";
+                else slaletxt = this._get_min_label(1) + " - " + this._get_max_label(1);
+                this.scalemenu = new PopupMenu.PopupSubMenuMenuItem (slaletxt, false);
             }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
@@ -335,53 +343,49 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
             if (userspace != null) this.menu.addMenuItem (userspace);
-            if (this.boost_present || this.pstate_present) {
-                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-                this.menu.addMenuItem (separator1);
-            }
             if (this.pstate_present) {
-                let turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
-                this.menu.addMenuItem (turbo_switch);
+                turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
                 turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (this.installed) {
                         this._set_turbo (item.state);
                     }
                 }));
-                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-                this.menu.addMenuItem (separator1);
+                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (this.scalemenu);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
                 label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
-                this.menu.addMenuItem (title_min);
+                this.scalemenu.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_min.actor.add (slider_min.actor, {expand: true});
-                this.menu.addMenuItem (menu_min);
+                this.scalemenu.menu.addMenuItem (menu_min);
                 slider_min.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             label_min.set_text (Math.floor (item.value * 100).toString() + "%");
                             this._set_min_pstate (Math.floor (item.value * 100));
+                            this.scalemenu.label.text = "Scaling " + this._get_min_pstate() + "% - " + this._get_max_pstate() + "%";
                         }
                     }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
                 label_max = new St.Label ({text: this._get_max_pstate().toString() + "%"});
                 title_max.actor.add_child (label_max, {align:St.Align.END});
-                this.menu.addMenuItem (title_max);
+                this.scalemenu.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_max.actor.add (slider_max.actor, {expand: true});
-                this.menu.addMenuItem (menu_max);
+                this.scalemenu.menu.addMenuItem (menu_max);
                 slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             label_max.set_text (Math.floor (item.value * 100).toString() + "%");
                             this._set_max_pstate (Math.floor (item.value * 100));
+                            this.scalemenu.label.text = "Scaling " + this._get_min_pstate() + "% - " + this._get_max_pstate() + "%";
                         }
                     }
                 }));
             } else if (this.boost_present) {
-                let boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
-                this.menu.addMenuItem (boost_switch);
+                boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
                 boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     if (this.installed) {
                         this._set_boost (item.state);
@@ -389,37 +393,39 @@ const FrequencyIndicator = new Lang.Class({
                 }));
             }
             if (!this.pstate_present && (this.frequences.length > 1)) {
-                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-                this.menu.addMenuItem (separator1);
+                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (this.scalemenu);
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
                 label_min = new St.Label ({text: this._get_min_label ()});
                 title_min.actor.add_child (label_min, {align:St.Align.END});
-                this.menu.addMenuItem (title_min);
+                this.scalemenu.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_min.actor.add (slider_min.actor, {expand: true});
-                this.menu.addMenuItem (menu_min);
+                this.scalemenu.menu.addMenuItem (menu_min);
                 slider_min.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
                             label_min.set_text (this._get_label (f));
                             this._set_min (f);
+                            this.scalemenu.label.text = this._get_min_label(1) + " - " + this._get_max_label(1);
                         }
                     }
                 }));
                 let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
                 label_max = new St.Label ({text: this._get_max_label ()});
                 title_max.actor.add_child (label_max, {align:St.Align.END});
-                this.menu.addMenuItem (title_max);
+                this.scalemenu.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_max.actor.add (slider_max.actor, {expand: true});
-                this.menu.addMenuItem (menu_max);
+                this.scalemenu.menu.addMenuItem (menu_max);
                 slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
                             label_max.set_text (this._get_label (f));
                             this._set_max (f);
+                            this.scalemenu.label.text = this._get_min_label(1) + " - " + this._get_max_label(1);
                         }
                     }
                 }));
@@ -461,19 +467,22 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             }
+            if (this.boost_present || this.pstate_present) {
+                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+            }
+            if (boost_switch) this.menu.addMenuItem (boost_switch);
+            if (turbo_switch) this.menu.addMenuItem (turbo_switch);
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
                 if (!this.updated) updates_txt = " updates";
-                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-                this.menu.addMenuItem (separator1);
+                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
                 let mi_install = new PopupMenu.PopupMenuItem ("\u26a0 Install" + updates_txt + "...");
                 this.menu.addMenuItem (mi_install);
                 mi_install.connect ('activate', Lang.bind (this, function () {
                     this._install ();
                 }));
             } else {
-                separator1 = new PopupMenu.PopupSeparatorMenuItem ();
-                this.menu.addMenuItem (separator1);
+                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
                 let sm = new PopupMenu.PopupSubMenuMenuItem('Preferences', false);
                 this.menu.addMenuItem (sm);
                 let save_switch = new PopupMenu.PopupSwitchMenuItem('Remember settings', save);
@@ -688,20 +697,23 @@ const FrequencyIndicator = new Lang.Class({
         return 100;
     },
 
-    _get_label: function (num) {
+    _get_label: function (num, n) {
+        n = (typeof n !== 'undefined') ?  n : 3;
         if (num >= 1000000) {
-            return (num/1000000).toFixed(3).toString() + " \u3393";
+            return (num/1000000).toFixed(n).toString() + " \u3393";
         } else {
             return (num/1000).toFixed(0).toString() + " \u3392";
         }
     },
 
-    _get_min_label: function () {
-        return this._get_label (this._get_min ());
+    _get_min_label: function (n) {
+        n = (typeof n !== 'undefined') ?  n : 3;
+        return this._get_label (this._get_min (), n);
     },
 
-    _get_max_label: function () {
-        return this._get_label (this._get_max ());
+    _get_max_label: function (n) {
+        n = (typeof n !== 'undefined') ?  n : 3;
+        return this._get_label (this._get_max (), n);
     },
 
     _get_min: function () {
@@ -784,19 +796,6 @@ const FrequencyIndicator = new Lang.Class({
             return state;
         }
         return false;
-    }
-});
-
-const CoreMenuItem = new Lang.Class({
-    Name: 'CoreMenuItem',
-    Extends: PopupMenu.PopupSwitchMenuItem,
-
-    _init: function(text, active, params) {
-        this.parent(text, active, params);
-    },
-
-    activate: function(event) {
-        this.toggle();
     }
 });
 
