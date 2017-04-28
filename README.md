@@ -1,15 +1,31 @@
 # cpufreq
-Gnome Shell 3.14+ CPU Frequency Monitor and Governor Manager.
+Gnome Shell CPU Frequency Monitor and Governor Manager.
 
 https://extensions.gnome.org/extension/1082/cpufreq/
 
 ![](/data/screenshots.png?raw=true)
 
-This is a lightweight gnome-extension for CPU scaling monitor and power governor's management. The extension is using standard cpufrequtils (cpupower) package to collect information and manage governors. It needs root permission to able changing governors or install policy for pkexec.
+This is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.
+
+## Features
+* Compatible with many hardware architectures (x86, x64, arm ...);
+* CPU Frequency monitoring;
+* CPU Governor management;
+* CPU Frequency speed limits;
+* CPU Boost supporting;
+* CPU Power on/off supporting;
+* Saving/Restoring settings;
+* More.
+
+## A Few Reasons Why You Should Not Want To Use Single Core For _Powersaving_:
+* Modern OS/kernel better works on multi core architectures.
+* You need at least 1 core for foreground application and 1 for system services.
+* Linux Kernel is changing CPU cores to avoid overheating and thermal throttle.
+* ...
 
 [Phoronix Benchmarks](http://www.phoronix.com/scan.php?page=article&item=linux-47-schedutil&num=1)
 
-Please install cpufrequtils or cpupower:
+Optional you can install cpufrequtils or cpupower package:
 
 * Debian/Ubuntu
 ```
@@ -28,15 +44,10 @@ sudo pacman -S cpupower
 yum install kernel-tools
 ```
 
-## Features
-* Compatible with old cpufreq tools and modern cpupower;
-* Boost supporting;
-* Utilize userspace and pstate abilities.
-
 ## Install
 ### Dependencies
-* Gnome Shell >= 3.14+
-* cpufrequtils or cpupower
+* Gnome Shell 3.14+;
+* supported cpufreq modules.
 
 ### You could fix executing bit after installation to able to change governors
 [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)

@@ -437,7 +437,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.corewarn.actor.visible = false;
                 this.coremenu.menu.addMenuItem (this.corewarn);
                 this.corewarn.connect ('activate', Lang.bind (this, function () {
-                    cmd = "gedit --new-window " + EXTENSIONDIR + "/README.md +1";
+                    cmd = "gedit --new-window " + EXTENSIONDIR + "/README.md +20";
                     Util.trySpawnCommandLine (cmd);
                 }));
                 slider_core.connect('value-changed', Lang.bind (this, function (item) {
