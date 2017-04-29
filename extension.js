@@ -602,6 +602,7 @@ const FrequencyIndicator = new Lang.Class({
                 if (key < ccore) this._set_core (key, true);
                 else this._set_core (key, false);
             }
+            core_event = null;
             return false;
         }));
     },
