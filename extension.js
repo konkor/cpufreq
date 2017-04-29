@@ -28,6 +28,7 @@ const Convenience = Me.imports.convenience;
 let event = null;
 let install_event = null;
 let core_event = null;
+let freq_event = null;
 let save = false;
 let streams = [];
 let freqInfo = null;
@@ -427,6 +428,7 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
             if (this.cpucount > 1) {
+                //this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
                 this.menu.addMenuItem (this.coremenu);
                 let menu_core = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 slider_core = new Slider.Slider (1);
@@ -650,10 +652,15 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_min_pstate: function (minimum) {
+        if (freq_event) Mainloop.source_remove (freq_event);
         if (this.util_present) {
-            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
-            Util.trySpawnCommandLine (cmd);
-            if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
+            freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
+                Util.trySpawnCommandLine (cmd);
+                if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
+                freq_event = null;
+                return false;
+            }));
             return minimum;
         }
         return 0;
@@ -675,10 +682,15 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_max_pstate: function (maximum) {
+        if (freq_event) Mainloop.source_remove (freq_event);
         if (this.util_present) {
-            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
-            Util.trySpawnCommandLine (cmd);
-            if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
+            freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
+                Util.trySpawnCommandLine (cmd);
+                if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
+                freq_event = null;
+                return false;
+            }));
             return maximum;
         }
         return 100;
@@ -720,10 +732,15 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_min: function (minimum) {
         if (minimum <= 0) return 0;
+        if (freq_event) Mainloop.source_remove (freq_event);
         if (this.util_present) {
-            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
-            Util.trySpawnCommandLine (cmd);
-            if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
+            freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
+                Util.trySpawnCommandLine (cmd);
+                if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
+                freq_event = null;
+                return false;
+            }));
             return minimum;
         }
         return 0;
@@ -746,10 +763,15 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_max: function (maximum) {
         if (maximum <= 0) return 0;
+        if (freq_event) Mainloop.source_remove (freq_event);
         if (this.util_present) {
-            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
-            Util.trySpawnCommandLine (cmd);
-            if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
+            freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
+                Util.trySpawnCommandLine (cmd);
+                if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
+                freq_event = null;
+                return false;
+            }));
             return maximum;
         }
         return 0;
