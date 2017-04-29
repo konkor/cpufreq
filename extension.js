@@ -246,7 +246,7 @@ const FrequencyIndicator = new Lang.Class({
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
-            this.coremenu = new PopupMenu.PopupSubMenuMenuItem (this.cpucount + " Cores Online", false);
+            this.coremenu = new PopupMenu.PopupMenuItem (this.cpucount + " Cores Online", {reactive: false});
             this.menu.addMenuItem (this.activeg);
             this.corewarn = null;
             let slider_min = null;
@@ -431,11 +431,11 @@ const FrequencyIndicator = new Lang.Class({
                 let menu_core = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 slider_core = new Slider.Slider (1);
                 menu_core.actor.add (slider_core.actor, {expand: true});
-                this.coremenu.menu.addMenuItem (menu_core);
+                this.menu.addMenuItem (menu_core);
                 this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Not Recommended");
                 this.corewarn.actor.effect = new Clutter.ColorizeEffect (new Clutter.Color({red: 47, green: 4, blue: 4}), 0.75);
                 this.corewarn.actor.visible = false;
-                this.coremenu.menu.addMenuItem (this.corewarn);
+                this.menu.addMenuItem (this.corewarn);
                 this.corewarn.connect ('activate', Lang.bind (this, function () {
                     cmd = "gedit --new-window " + EXTENSIONDIR + "/README.md +20";
                     Util.trySpawnCommandLine (cmd);
