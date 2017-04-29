@@ -18,9 +18,10 @@ This is a lightweight CPU scaling monitor and powerful CPU management tool. The 
 * More.
 
 ## A Few Reasons Why You Should Not Want To Use Single Core For _Powersaving_:
-* Modern OS/kernel better works on multi core architectures.
-* You need at least 1 core for foreground application and 1 for system services.
-* Linux Kernel is changing CPU cores to avoid overheating and thermal throttle.
+* Modern OS/kernel works better on multi core architectures.
+* You need at least 1 core for a foreground application and 1 for the background system services.
+* Linux Kernel is changing CPU cores to avoid overheating, thermal throttle and to balance system loading.
+* Many CPUs have enabled Hyper Threading (HT) technology. So there is no big sense to run 0.5 physical CPU core.
 * ...
 
 [Phoronix Benchmarks](http://www.phoronix.com/scan.php?page=article&item=linux-47-schedutil&num=1)
