@@ -25,10 +25,10 @@ const Me = ExtensionUtils.getCurrentExtension ();
 const EXTENSIONDIR = Me.dir.get_path ();
 const Convenience = Me.imports.convenience;
 
-let event = null;
-let install_event = null;
-let core_event = null;
-let freq_event = null;
+let event = 0;
+let install_event = 0;
+let core_event = 0;
+let freq_event = 0;
 let save = false;
 let streams = [];
 let freqInfo = null;
@@ -126,7 +126,7 @@ const FrequencyIndicator = new Lang.Class({
     _install: function () {
         cmd = this.pkexec_path + " " + EXTENSIONDIR + '/cpufreqctl install';
         Util.trySpawnCommandLine (cmd);
-        if (install_event) {
+        if (install_event != 0) {
             Mainloop.source_remove (install_event);
         }
         install_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
@@ -134,7 +134,8 @@ const FrequencyIndicator = new Lang.Class({
             if (this.installed && this.updated) {
                 try {
                     Mainloop.source_remove (event);
-                    ExtensionSystem.reloadExtension(Me);
+                    event = 0;
+                    ExtensionSystem.reloadExtension (Me);
                     print ("Reloading completed");
                 } catch (e) {
                     print ("Error reloading extension", e.message);
@@ -161,6 +162,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
      _add_event: function () {
+        if (event != 0) Mainloop.source_remove (event);
         if (this.util_present) {
             event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
                 this._update_freq ();
@@ -247,7 +249,7 @@ const FrequencyIndicator = new Lang.Class({
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
-            this.coremenu = new PopupMenu.PopupMenuItem (this.cpucount + " Cores Online", {reactive: false});
+            this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false});
             this.menu.addMenuItem (this.activeg);
             this.corewarn = null;
             let slider_min = null;
@@ -431,7 +433,7 @@ const FrequencyIndicator = new Lang.Class({
                 //this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
                 this.menu.addMenuItem (this.coremenu);
                 let menu_core = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                slider_core = new Slider.Slider (1);
+                slider_core = new Slider.Slider (GLib.get_num_processors () / this.cpucount);
                 menu_core.actor.add (slider_core.actor, {expand: true});
                 this.menu.addMenuItem (menu_core);
                 this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Is Not Recommended");
@@ -594,7 +596,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_cores: function (count) {
         ccore = count;
-        if (core_event) {
+        if (core_event != 0) {
             Mainloop.source_remove (core_event);
         }
         core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
@@ -602,7 +604,7 @@ const FrequencyIndicator = new Lang.Class({
                 if (key < ccore) this._set_core (key, true);
                 else this._set_core (key, false);
             }
-            core_event = null;
+            core_event = 0;
             return false;
         }));
     },
@@ -653,13 +655,13 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_min_pstate: function (minimum) {
-        if (freq_event) Mainloop.source_remove (freq_event);
+        if (freq_event != 0) Mainloop.source_remove (freq_event);
         if (this.util_present) {
             freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
                 Util.trySpawnCommandLine (cmd);
                 if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
-                freq_event = null;
+                freq_event = 0;
                 return false;
             }));
             return minimum;
@@ -683,13 +685,13 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_max_pstate: function (maximum) {
-        if (freq_event) Mainloop.source_remove (freq_event);
+        if (freq_event != 0) Mainloop.source_remove (freq_event);
         if (this.util_present) {
             freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
                 Util.trySpawnCommandLine (cmd);
                 if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
-                freq_event = null;
+                freq_event = 0;
                 return false;
             }));
             return maximum;
@@ -733,13 +735,13 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_min: function (minimum) {
         if (minimum <= 0) return 0;
-        if (freq_event) Mainloop.source_remove (freq_event);
+        if (freq_event != 0) Mainloop.source_remove (freq_event);
         if (this.util_present) {
             freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
                 Util.trySpawnCommandLine (cmd);
                 if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
-                freq_event = null;
+                freq_event = 0;
                 return false;
             }));
             return minimum;
@@ -764,13 +766,13 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_max: function (maximum) {
         if (maximum <= 0) return 0;
-        if (freq_event) Mainloop.source_remove (freq_event);
+        if (freq_event != 0) Mainloop.source_remove (freq_event);
         if (this.util_present) {
             freq_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
                 Util.trySpawnCommandLine (cmd);
                 if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
-                freq_event = null;
+                freq_event = 0;
                 return false;
             }));
             return maximum;
@@ -815,12 +817,16 @@ function init () {
 }
 
 function enable () {
-  freqMenu = new FrequencyIndicator;
-  Main.panel.addToStatusArea('cpufreq-indicator', freqMenu);
+    freqMenu = new FrequencyIndicator;
+    Main.panel.addToStatusArea ('cpufreq-indicator', freqMenu);
 }
 
 function disable () {
-  freqMenu.destroy();
-  Mainloop.source_remove(event);
-  freqMenu = null;
+    if (event != 0) Mainloop.source_remove (event);
+    if (install_event != 0) Mainloop.source_remove (install_event);
+    if (core_event != 0) Mainloop.source_remove (core_event);
+    if (freq_event != 0) Mainloop.source_remove (freq_event);
+    event = install_event = core_event = freq_event = 0;
+    freqMenu.destroy ();
+    freqMenu = null;
 }
