@@ -434,7 +434,7 @@ const FrequencyIndicator = new Lang.Class({
                 slider_core = new Slider.Slider (1);
                 menu_core.actor.add (slider_core.actor, {expand: true});
                 this.menu.addMenuItem (menu_core);
-                this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Not Recommended");
+                this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Is Not Recommended");
                 this.corewarn.actor.effect = new Clutter.ColorizeEffect (new Clutter.Color({red: 47, green: 4, blue: 4}), 0.75);
                 this.corewarn.actor.visible = false;
                 this.menu.addMenuItem (this.corewarn);
