@@ -51,13 +51,16 @@ const FrequencyIndicator = new Lang.Class({
         this.actor.add_actor(_box);
         this.actor.connect('button-press-event', Lang.bind(this, function () {
             if (this.util_present) {
+                let gcount = 0;
                 this.governors = this._get_governors ();
                 if (this.governors.length > 0) {
                     for each (let governor in this.governors) {
                         if (governor[1] == true) {
                             this.activeg.label.text = "\u26A1 " + governor[0];
+                            gcount++;
                         }
                     }
+                    if (gcount > 1) this.activeg.label.text = "\u26A1 mixed";
                 }
             }
         }));
@@ -511,7 +514,7 @@ const FrequencyIndicator = new Lang.Class({
 
             for each (let governor in this.governorslist){
                 let governortemp;
-                if(governoractual == governor)
+                if (governoractual.indexOf (governor) > -1)
                     governortemp = [governor, true];
                 else
                     governortemp = [governor, false];

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION='11'
+VERSION='12'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -19,12 +19,23 @@ then
 fi
 if [ $1 = "gov" ]
 then
+    i=0
+    ag=''
 	if [ $# = 1 ]
 	then
-		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+	    while [ $i -ne $cpucount ]
+	    do
+	        if [ $i = 0 ]
+	        then
+	            ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+		    else
+		        ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
+		    fi
+		    i=`expr $i + 1`
+	    done
+		echo $ag
 		exit
 	fi
-	i=0
 	while [ $i -ne $cpucount ]
 	do
 		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
@@ -84,9 +95,9 @@ if [ $1 = "set" ]
 then
 	if [ $# = 1 ]
 	then
-		echo "available frequences"
+		echo "available frequencies"
 		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
-		echo "current cpu frequence"
+		echo "current cpu frequency"
 		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
 		exit
 	fi
