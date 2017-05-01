@@ -217,12 +217,10 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _init_streams: function () {
-        let s;
         streams = [];
         for (let key = 0; key < this.cpucount; key++) {
-            s = '/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq';
-            if (GLib.file_test (s, GLib.FileTest.EXISTS)) {
-                let f = Gio.File.new_for_path (s);
+            if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
+                let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
                 streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
             } else {
                 streams.push (null);
@@ -826,7 +824,7 @@ function disable () {
     if (install_event != 0) Mainloop.source_remove (install_event);
     if (core_event != 0) Mainloop.source_remove (core_event);
     if (freq_event != 0) Mainloop.source_remove (freq_event);
-    event = install_event = core_event = freq_event = 0;
+    event = 0; install_event = 0; core_event = 0; freq_event = 0;
     freqMenu.destroy ();
     freqMenu = null;
 }
