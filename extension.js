@@ -18,6 +18,8 @@ const MIN_FREQ_KEY = 'min-freq';
 const MAX_FREQ_KEY = 'max-freq';
 const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
 const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
+const PROFILES_KEY = 'profiles';
+const PROFILE_KEY = 'profile';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -36,6 +38,8 @@ let freqInfo = null;
 let cpufreq_output = null;
 let cmd = null;
 let ccore = 0;
+let profiles = [];
+let default_profile = null;
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -92,7 +96,11 @@ const FrequencyIndicator = new Lang.Class({
         this._check_install ();
         this._check_extensions ();
 
-        save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
+        save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
+        this.PID =  this._settings.get_int (PROFILE_KEY);
+        let profs =  this._settings.get_string (PROFILES_KEY);
+        if (profs.length > 0) profiles = JSON.parse (profs);
+        if (!default_profile) default_profile = this._get_profile ('Default');
         this._build_ui ();
         if (save) this._load_settings ();
 
@@ -252,7 +260,7 @@ const FrequencyIndicator = new Lang.Class({
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
             this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false});
-            this.menu.addMenuItem (this.activeg);
+            this.profmenu = new PopupMenu.PopupSubMenuMenuItem (default_profile.name, false);
             this.corewarn = null;
             let slider_min = null;
             let slider_max = null;
@@ -264,6 +272,7 @@ const FrequencyIndicator = new Lang.Class({
             let turbo_switch = null;
             let boost_switch = null;
 
+            this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
                 slider_min = new Slider.Slider (this._get_min_pstate () / 100);
                 slider_max = new Slider.Slider (this._get_max_pstate () / 100);
@@ -461,10 +470,25 @@ const FrequencyIndicator = new Lang.Class({
                 }));
             }
             if (this.boost_present || this.pstate_present) {
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                //this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
             }
             if (boost_switch) this.menu.addMenuItem (boost_switch);
             if (turbo_switch) this.menu.addMenuItem (turbo_switch);
+            this.menu.addMenuItem (this.profmenu);
+            let newItem = new NewMenuItem ("New ...");
+            this.profmenu.menu.addMenuItem (newItem);
+            newItem.connect ('save', Lang.bind (this, function () {
+                profiles.push (this._get_profile (newItem.entry.text));
+                this._add_profile (profiles[profiles.length -1]);
+            }));
+            let resetItem = new PopupMenu.PopupMenuItem (default_profile.name);
+                this.profmenu.menu.addMenuItem (resetItem);
+                resetItem.connect ('activate', Lang.bind (this, function () {
+                    if (this.installed) {
+                        //this._load_profile (default_profile);
+                        this.profmenu.label.text = default_profile.name;
+                    }
+                }));
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
                 if (!this.updated) updates_txt = " updates";
@@ -489,6 +513,34 @@ const FrequencyIndicator = new Lang.Class({
             let errorItem = new PopupMenu.PopupMenuItem ("\u26a0 Please install cpufrequtils or cpupower");
             this.menu.addMenuItem (errorItem);
         }
+    },
+
+    _add_profile: function (prf) {
+        let prfItem = new PopupMenu.PopupMenuItem (prf.name);
+        this.profmenu.menu.addMenuItem (prfItem);
+        prfItem.connect ('activate', Lang.bind (this, function (o) {
+            if (this.installed) {
+                //this._load_profile (prf);
+                this.profmenu.label.text = o.label.text;
+            }
+        }));
+    },
+
+    _get_profile: function (pname) {
+        let save_state = save;
+        let cores = [];
+        let boost = true;
+        save = false;
+        if (this.pstate_present) boost = this._get_turbo ();
+        else boost = this._get_boost ();
+        for (let key = 0; key < this.cpucount; key++) {
+            let core = {g:this._get_governor (key), minf:this._get_coremin (key), maxf:this._get_coremax (key)};
+            cores.push (core);
+        }
+        let p = {name:pname, turbo:boost, cpu:GLib.get_num_processors (), core:cores};
+        save = save_state;
+        print (JSON.stringify (p));
+        return p;
     },
 
     _get_cpu_number: function () {
@@ -609,6 +661,45 @@ const FrequencyIndicator = new Lang.Class({
             core_event = 0;
             return false;
         }));
+    },
+
+    _get_governor: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coreg " + core);
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                let g = freqInfo;
+                return g;
+            }
+        }
+        return "unknown";
+    },
+
+    _get_coremin: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coremin " + core);
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                let g = parseInt (freqInfo);
+                return g;
+            }
+        }
+        return 0;
+    },
+
+    _get_coremax: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coremax " + core);
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                let g = parseInt (freqInfo);
+                return g;
+            }
+        }
+        return 0;
     },
 
     _get_turbo: function () {
@@ -810,6 +901,45 @@ const FrequencyIndicator = new Lang.Class({
             return state;
         }
         return false;
+    }
+});
+
+const NewMenuItem = new Lang.Class ({
+    Name: 'NewMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function (text, active, params) {
+        this.parent (text, active, params);
+        this.entry = new St.Entry ({ text: 'Profile', style: 'border: 1px solid black; border-radius: 6px; padding: 5px; spacing: 0px; background-color: #215d9c;', x_expand: true });
+        this.actor.add_child (this.entry);
+        this.entry.set_primary_icon (new St.Icon({
+            icon_name: 'document-save-symbolic',
+            icon_size: 14
+        }));
+        this.entry.set_secondary_icon (new St.Icon({
+            icon_name: 'edit-delete-symbolic',
+            icon_size: 14
+        }));
+        this.entry.connect ('primary-icon-clicked', Lang.bind(this, function (actor, event) {
+            this.save (event);
+        }));
+        /*this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function() {
+            print ('secondary-icon-clicked');
+        }));*/
+        this.entry.visible = false;
+    },
+
+    activate: function (event) {
+        this.toggle ();
+    },
+
+    toggle: function () {
+        this.label.visible = !this.label.visible;
+        this.entry.visible = !this.entry.visible;
+    },
+
+    save: function (event) {
+        this.emit ('save', event);
     }
 });
 
