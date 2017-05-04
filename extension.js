@@ -516,7 +516,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _add_profile: function (prf) {
-        let prfItem = new PopupMenu.PopupMenuItem (prf.name);
+        let prfItem = new ProfileMenuItem (prf.name);
         this.profmenu.menu.addMenuItem (prfItem);
         prfItem.connect ('activate', Lang.bind (this, function (o) {
             if (this.installed) {
@@ -910,22 +910,13 @@ const NewMenuItem = new Lang.Class ({
 
     _init: function (text, active, params) {
         this.parent (text, active, params);
-        this.entry = new St.Entry ({ text: 'Profile', style: 'border: 1px solid black; border-radius: 6px; padding: 5px; spacing: 0px; background-color: #215d9c;', x_expand: true });
+        this.entry = new St.Entry ({ text: 'Profile Name', style_class: 'cpufreq-entry', x_expand: true });
         this.actor.add_child (this.entry);
-        this.entry.set_primary_icon (new St.Icon({
-            icon_name: 'document-save-symbolic',
-            icon_size: 14
-        }));
-        this.entry.set_secondary_icon (new St.Icon({
-            icon_name: 'edit-delete-symbolic',
-            icon_size: 14
-        }));
+        this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
+        this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
         this.entry.connect ('primary-icon-clicked', Lang.bind(this, function (actor, event) {
-            this.save (event);
+            this.emit ('save', event);
         }));
-        /*this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function() {
-            print ('secondary-icon-clicked');
-        }));*/
         this.entry.visible = false;
     },
 
@@ -936,10 +927,55 @@ const NewMenuItem = new Lang.Class ({
     toggle: function () {
         this.label.visible = !this.label.visible;
         this.entry.visible = !this.entry.visible;
+    }
+});
+
+const ProfileMenuItem = new Lang.Class ({
+    Name: 'ProfileMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function (text, active, params) {
+        this.parent (text, active, params);
+        this.label.x_expand = true;
+        this.edit_mode = false;
+        this.entry = new St.Entry ({ text: text, style_class: 'cpufreq-entry', x_expand: true });
+        this.actor.add_child (this.entry);
+        this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
+        this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
+        this.entry.connect ('primary-icon-clicked', Lang.bind (this, function (actor, event) {
+            this.label.text = this.entry.text;
+            this.toggle ();
+            this.emit ('update', event);
+        }));
+        this.entry.connect ('secondary-icon-clicked', Lang.bind (this, function (actor, event) {
+            this.toggle ();
+        }));
+        this.entry.visible = false;
+        this.edit_button = new St.Button ({ child: new St.Icon ({ icon_name: 'open-menu-symbolic', icon_size: 14 }), style_class: 'edit-button'});
+        this.actor.add_child (this.edit_button);
+        this.edit_button.connect ('clicked', Lang.bind (this, function (actor, event) {
+            this.toggle ();
+            this.edit_mode = true;
+            this.emit ('edit', event);
+        }));
+        this.delete_button = new St.Button ({ child: new St.Icon ({ icon_name: 'edit-delete-symbolic', icon_size: 14 }), style_class: 'delete-button'});
+        this.actor.add_child (this.delete_button);
+        this.delete_button.connect ('clicked', Lang.bind (this, function (actor, event) {
+            this.emit ('delete', event);
+        }));
     },
 
-    save: function (event) {
-        this.emit ('save', event);
+    activate: function (event) {
+        if (!this.edit_mode) this.parent (event);
+        if (this.entry.visible) this.toggle ();
+        this.edit_mode = false;
+    },
+
+    toggle: function () {
+        this.label.visible = !this.label.visible;
+        this.entry.visible = !this.entry.visible;
+        this.edit_button.visible = !this.edit_button.visible;
+        this.delete_button.visible = !this.delete_button.visible;
     }
 });
 

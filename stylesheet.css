@@ -1,3 +1,30 @@
 .popup-menu {
     min-width: 288px;
 }
+
+.cpufreq-entry {
+    border: 1px solid black;
+    border-radius: 6px;
+    padding: 5px;
+    spacing: 0px;
+    color: #eeeeec;
+    background-color: #215d9c;
+}
+
+.edit-button, .delete-button {
+    border-radius: 32px;
+    padding: 4px;
+/*    border: 1px solid #cccccc; */
+}
+
+.edit-button:hover, .edit-button:focus {
+    background-color: #215d9c;
+    border: none;
+    padding: 4px;
+}
+
+.delete-button:hover, .delete-button:focus {
+    background-color: rgba(245,93,47,0.8);
+    border: none;
+    padding: 4px;
+}
