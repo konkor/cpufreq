@@ -932,8 +932,9 @@ const NewMenuItem = new Lang.Class ({
         this.entry = new St.Entry ({ text: 'Profile Name', style_class: 'cpufreq-entry', x_expand: true });
         this.actor.add_child (this.entry);
         this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
+        //FIX to the bug https://bugzilla.gnome.org/show_bug.cgi?id=782190 only 1 button useful for 3.18-3.22
         //this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
-        this.entry.connect ('primary-icon-clicked', Lang.bind(this, function () {
+        this.entry.connect ('button-release-event', Lang.bind(this, function () {
             this.emit ('save');
         }));
         this.entry.visible = false;
@@ -960,14 +961,10 @@ const ProfileMenuItem = new Lang.Class ({
         this.entry = new St.Entry ({ text: text, style_class: 'cpufreq-entry', x_expand: true });
         this.actor.add_child (this.entry);
         this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
-        this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
-        this.entry.connect ('primary-icon-clicked', Lang.bind (this, function () {
+        this.entry.connect ('button-release-event', Lang.bind (this, function () {
             this.label.text = this.entry.text;
             this.toggle ();
             this.emit ('update', event);
-        }));
-        this.entry.connect ('secondary-icon-clicked', Lang.bind (this, function (actor, event) {
-            this.toggle ();
         }));
         this.entry.visible = false;
         this.edit_button = new St.Button ({ child: new St.Icon ({ icon_name: 'open-menu-symbolic', icon_size: 14 }), style_class: 'edit-button'});
