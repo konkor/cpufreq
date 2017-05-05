@@ -929,19 +929,22 @@ const NewMenuItem = new Lang.Class ({
 
     _init: function (text, active, params) {
         this.parent (text, active, params);
-        this.entry = new St.Entry ({ text: 'Profile Name', style_class: 'cpufreq-entry', x_expand: true });
+        this.entry = new St.Entry ({ text:'', hint_text: 'Profile Name', style_class: 'cpufreq-entry', track_hover: true, can_focus: true, x_expand: true });
         this.actor.add_child (this.entry);
-        this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
+        this.entry.set_primary_icon (new St.Icon({ style_class: 'cpufreq-entry-icon', icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
         //FIX to the bug https://bugzilla.gnome.org/show_bug.cgi?id=782190 only 1 button useful for 3.18-3.22
         //this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
-        this.entry.connect ('button-release-event', Lang.bind(this, function () {
+        this.entry.connect ('primary-icon-clicked', Lang.bind(this, function () {
+            this.emit ('save');
+        }));
+        this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function (o,e) {
             this.emit ('save');
         }));
         this.entry.visible = false;
     },
 
     activate: function (event) {
-        this.toggle ();
+        if (this.entry.text != '') this.toggle ();
     },
 
     toggle: function () {
@@ -958,10 +961,15 @@ const ProfileMenuItem = new Lang.Class ({
         this.parent (text, active, params);
         this.label.x_expand = true;
         this.edit_mode = false;
-        this.entry = new St.Entry ({ text: text, style_class: 'cpufreq-entry', x_expand: true });
+        this.entry = new St.Entry ({ text: text, style_class: 'cpufreq-entry', track_hover: true, can_focus: true, x_expand: true });
         this.actor.add_child (this.entry);
-        this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
-        this.entry.connect ('button-release-event', Lang.bind (this, function () {
+        this.entry.set_primary_icon (new St.Icon({ style_class: 'cpufreq-entry-icon', icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
+        this.entry.connect ('primary-icon-clicked', Lang.bind (this, function () {
+            this.label.text = this.entry.text;
+            this.toggle ();
+            this.emit ('update', event);
+        }));
+        this.entry.connect ('secondary-icon-clicked', Lang.bind (this, function () {
             this.label.text = this.entry.text;
             this.toggle ();
             this.emit ('update', event);
@@ -982,6 +990,7 @@ const ProfileMenuItem = new Lang.Class ({
     },
 
     activate: function (event) {
+        if (this.entry.text == '') this.entry.text = this.label.text;
         if (!this.edit_mode) this.parent (event);
         if (this.entry.visible) this.toggle ();
         this.edit_mode = false;

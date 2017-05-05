@@ -3,13 +3,29 @@
 }
 
 .cpufreq-entry {
-    border: 1px solid black;
+    border-width: 2px;
+    border-color: #747467;
     border-radius: 6px;
-    padding: 5px;
-    spacing: 0px;
+    padding: 4px;
+    transition-duration: 300ms;
+    box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
     color: #eeeeec;
-    background-color: #215d9c;
-}
+    background-color: #215d9c; }
+  .cpufreq-entry:focus {
+    padding: 4px;
+    border-width: 2px;
+    border-color: #eeeeec; }
+  .cpufreq-entry:hover {
+    padding: 4px;
+    border-width: 2px;
+    border-color: #215d9c; }
+  .cpufreq-entry-icon {
+    icon-size: 1em;
+    color: #8d8f8a; }
+  .cpufreq-entry:hover .cpufreq-entry-icon {
+    color: #c0c0c0; }
+  .cpufreq-entry:focus .cpufreq-entry-icon {
+    color: #e0e0ec; }
 
 .edit-button, .delete-button {
     border-radius: 32px;
@@ -28,3 +44,4 @@
     border: none;
     padding: 4px;
 }
+
