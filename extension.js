@@ -145,8 +145,7 @@ const FrequencyIndicator = new Lang.Class({
             this._check_install ();
             if (this.installed && this.updated) {
                 try {
-                    Mainloop.source_remove (event);
-                    event = 0;
+                    this.remove_events ();
                     ExtensionSystem.reloadExtension (Me);
                     print ("Reloading completed");
                 } catch (e) {
@@ -507,6 +506,17 @@ const FrequencyIndicator = new Lang.Class({
                 save_switch.connect ('toggled', Lang.bind (this, function (item) {
                     save = item.state;
                     this._settings.set_boolean(SAVE_SETTINGS_KEY, item.state);
+                }));
+                let mi_reload = new PopupMenu.PopupMenuItem ("Reload");
+                sm.menu.addMenuItem (mi_reload);
+                mi_reload.connect ('activate', Lang.bind (this, function () {
+                    try {
+                        this.remove_events ();
+                        ExtensionSystem.reloadExtension (Me);
+                        print ("Reloading completed");
+                    } catch (e) {
+                        print ("Error reloading extension", e.message);
+                    }
                 }));
             }
         } else {
@@ -901,6 +911,15 @@ const FrequencyIndicator = new Lang.Class({
             return state;
         }
         return false;
+    },
+
+    remove_events: function () {
+        if (event != 0) Mainloop.source_remove (event);
+        if (install_event != 0) Mainloop.source_remove (install_event);
+        if (core_event != 0) Mainloop.source_remove (core_event);
+        if (min_event != 0) Mainloop.source_remove (min_event);
+        if (max_event != 0) Mainloop.source_remove (max_event);
+        event = 0; install_event = 0; core_event = 0; min_event = 0; max_event = 0;
     }
 });
 
@@ -913,9 +932,9 @@ const NewMenuItem = new Lang.Class ({
         this.entry = new St.Entry ({ text: 'Profile Name', style_class: 'cpufreq-entry', x_expand: true });
         this.actor.add_child (this.entry);
         this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
-        this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
-        this.entry.connect ('primary-icon-clicked', Lang.bind(this, function (actor, event) {
-            this.emit ('save', event);
+        //this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
+        this.entry.connect ('primary-icon-clicked', Lang.bind(this, function () {
+            this.emit ('save');
         }));
         this.entry.visible = false;
     },
@@ -942,7 +961,7 @@ const ProfileMenuItem = new Lang.Class ({
         this.actor.add_child (this.entry);
         this.entry.set_primary_icon (new St.Icon({ icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
         this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
-        this.entry.connect ('primary-icon-clicked', Lang.bind (this, function (actor, event) {
+        this.entry.connect ('primary-icon-clicked', Lang.bind (this, function () {
             this.label.text = this.entry.text;
             this.toggle ();
             this.emit ('update', event);
@@ -990,12 +1009,7 @@ function enable () {
 }
 
 function disable () {
-    if (event != 0) Mainloop.source_remove (event);
-    if (install_event != 0) Mainloop.source_remove (install_event);
-    if (core_event != 0) Mainloop.source_remove (core_event);
-    if (min_event != 0) Mainloop.source_remove (min_event);
-    if (max_event != 0) Mainloop.source_remove (max_event);
-    event = 0; install_event = 0; core_event = 0; min_event = 0; max_event = 0;
+    freqMenu.remove_events ();
     freqMenu.destroy ();
     freqMenu = null;
 }
