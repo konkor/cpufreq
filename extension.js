@@ -261,8 +261,8 @@ const FrequencyIndicator = new Lang.Class({
             this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false});
             this.profmenu = new PopupMenu.PopupSubMenuMenuItem (default_profile.name, false);
             this.corewarn = null;
-            let slider_min = null;
-            let slider_max = null;
+            this.slider_min = null;
+            this.slider_max = null;
             let slider_core = null;
             let label_min = null;
             let label_max = null;
@@ -273,11 +273,11 @@ const FrequencyIndicator = new Lang.Class({
 
             this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
-                slider_min = new Slider.Slider (this._get_min_pstate () / 100);
-                slider_max = new Slider.Slider (this._get_max_pstate () / 100);
+                this.slider_min = new Slider.Slider (this._get_min_pstate () / 100);
+                this.slider_max = new Slider.Slider (this._get_max_pstate () / 100);
             } else if (this.frequences.length > 1) {
-                slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
-                slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
+                this.slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
+                this.slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
             }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
@@ -319,26 +319,26 @@ const FrequencyIndicator = new Lang.Class({
 		                        if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
 		                        if (this.pstate_present) {
 		                            slider_lock = true;
-                                    slider_min.setValue (this._get_min_pstate () / 100);
-                                    slider_max.setValue (this._get_max_pstate () / 100);
+                                    this.slider_min.setValue (this._get_min_pstate () / 100);
+                                    this.slider_max.setValue (this._get_max_pstate () / 100);
                                     slider_lock = false;
-                                } else if (slider_min) {
-                                    slider_min.actor.reactive = true;
-                                    slider_min.actor.opacity = 255;
-                                    slider_max.actor.reactive = true;
-                                    slider_max.actor.opacity = 255;
+                                } else if (this.slider_min) {
+                                    this.slider_min.actor.reactive = true;
+                                    this.slider_min.actor.opacity = 255;
+                                    this.slider_max.actor.reactive = true;
+                                    this.slider_max.actor.opacity = 255;
                                     if (governorItem.label.text == 'powersave') {
-                                        slider_min.setValue (0);
+                                        this.slider_min.setValue (0);
                                         label_min.set_text (this._get_label (this.minimum_freq));
                                         this._set_min (this.minimum_freq);
-                                        slider_max.actor.reactive = false;
-                                        slider_max.actor.opacity = 50;
+                                        this.slider_max.actor.reactive = false;
+                                        this.slider_max.actor.opacity = 50;
                                     } else if (governorItem.label.text == 'performance') {
-                                        slider_max.setValue (1);
+                                        this.slider_max.setValue (1);
                                         label_max.set_text (this._get_label (this.maximum_freq));
                                         this._set_max (this.maximum_freq);
-                                        slider_min.actor.reactive = false;
-                                        slider_min.actor.opacity = 50;
+                                        this.slider_min.actor.reactive = false;
+                                        this.slider_min.actor.opacity = 50;
                                     }
                                 }
                             } else {
@@ -362,9 +362,9 @@ const FrequencyIndicator = new Lang.Class({
                 title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_min.actor.add (slider_min.actor, {expand: true});
+                menu_min.actor.add (this.slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
-                slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_min.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             label_min.set_text (Math.floor (item.value * 100).toString() + "%");
@@ -377,9 +377,9 @@ const FrequencyIndicator = new Lang.Class({
                 title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_max.actor.add (slider_max.actor, {expand: true});
+                menu_max.actor.add (this.slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
-                slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             label_max.set_text (Math.floor (item.value * 100).toString() + "%");
@@ -402,9 +402,9 @@ const FrequencyIndicator = new Lang.Class({
                 title_min.actor.add_child (label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_min.actor.add (slider_min.actor, {expand: true});
+                menu_min.actor.add (this.slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
-                slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_min.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
@@ -418,9 +418,9 @@ const FrequencyIndicator = new Lang.Class({
                 title_max.actor.add_child (label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_max.actor.add (slider_max.actor, {expand: true});
+                menu_max.actor.add (this.slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
-                slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     if (this.installed) {
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
@@ -430,13 +430,13 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             }
-            if (slider_min && !this.pstate_present) {
+            if (this.slider_min && !this.pstate_present) {
                 if (this.activeg.label.text == 'powersave') {
-                    slider_max.actor.reactive = false;
-                    slider_max.actor.opacity = 50;
+                    this.slider_max.actor.reactive = false;
+                    this.slider_max.actor.opacity = 50;
                 } else if (this.activeg.label.text == 'performance') {
-                    slider_min.actor.reactive = false;
-                    slider_min.actor.opacity = 50;
+                    this.slider_min.actor.reactive = false;
+                    this.slider_min.actor.opacity = 50;
                 }
             }
             if (this.cpucount > 1) {
@@ -473,21 +473,27 @@ const FrequencyIndicator = new Lang.Class({
             }
             if (boost_switch) this.menu.addMenuItem (boost_switch);
             if (turbo_switch) this.menu.addMenuItem (turbo_switch);
-            this.menu.addMenuItem (this.profmenu);
+            //Profiles menu
             let newItem = new NewMenuItem ("New ...");
             this.profmenu.menu.addMenuItem (newItem);
             newItem.connect ('save', Lang.bind (this, function () {
                 profiles.push (this._get_profile (newItem.entry.text));
-                this._add_profile (profiles[profiles.length -1]);
+                this._add_profile (profiles.length -1);
+                this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
             }));
+            this.menu.addMenuItem (this.profmenu);
             let resetItem = new PopupMenu.PopupMenuItem (default_profile.name);
-                this.profmenu.menu.addMenuItem (resetItem);
-                resetItem.connect ('activate', Lang.bind (this, function () {
-                    if (this.installed) {
-                        //this._load_profile (default_profile);
-                        this.profmenu.label.text = default_profile.name;
-                    }
-                }));
+            this.profmenu.menu.addMenuItem (resetItem);
+            resetItem.connect ('activate', Lang.bind (this, function () {
+                if (this.installed) {
+                    this._load_profile (default_profile);
+                    this.profmenu.label.text = default_profile.name;
+                    this.PID = -1;
+                }
+            }));
+            for (let p in profiles) {
+                this._add_profile (p);
+            }
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
                 if (!this.updated) updates_txt = " updates";
@@ -525,13 +531,34 @@ const FrequencyIndicator = new Lang.Class({
         }
     },
 
-    _add_profile: function (prf) {
-        let prfItem = new ProfileMenuItem (prf.name);
+    _add_profile: function (idx) {
+        let prfItem = new ProfileMenuItem (profiles[idx].name);
+        prfItem.ID = idx;
         this.profmenu.menu.addMenuItem (prfItem);
         prfItem.connect ('activate', Lang.bind (this, function (o) {
             if (this.installed) {
-                //this._load_profile (prf);
                 this.profmenu.label.text = o.label.text;
+                this._load_profile (profiles[o.ID]);
+                this.PID = o.ID;
+            }
+        }));
+        prfItem.connect ('update', Lang.bind (this, function (o) {
+            profiles[o.ID].name = o.label.text;
+            this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+        }));
+        prfItem.connect ('delete', Lang.bind (this, function (o) {
+            var id  = parseInt (o.ID);
+            if (id == this.PID) this.PID = -1;
+            profiles.splice (o.ID, 1);
+            this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+            this._settings.set_int (PROFILE_KEY, this.PID);
+            o.destroy ();
+            let items = this.profmenu.menu.box.get_children ().map (function(actor) {return actor._delegate;});
+            id += 2;
+            for (let key = id; key < items.length; key++){
+                let item = items[key];
+                print (key, item.ID);
+                item.ID -= 1;
             }
         }));
     },
@@ -540,17 +567,26 @@ const FrequencyIndicator = new Lang.Class({
         let save_state = save;
         let cores = [];
         let boost = true;
+        let minf = 0, maxf = 100;
         save = false;
         if (this.pstate_present) boost = this._get_turbo ();
         else boost = this._get_boost ();
+        if (this.slider_min) {
+            minf = Math.floor (this.slider_min.value * 100);
+            maxf = Math.floor (this.slider_max.value * 100);
+        }
         for (let key = 0; key < this.cpucount; key++) {
-            let core = {g:this._get_governor (key), minf:this._get_coremin (key), maxf:this._get_coremax (key)};
+            let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
             cores.push (core);
         }
-        let p = {name:pname, turbo:boost, cpu:GLib.get_num_processors (), core:cores};
+        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), core:cores};
         save = save_state;
-        print (JSON.stringify (p));
+        //print (JSON.stringify (p));
         return p;
+    },
+
+    _load_profile: function (prf) {
+        //TODO
     },
 
     _get_cpu_number: function () {
@@ -937,7 +973,7 @@ const NewMenuItem = new Lang.Class ({
         this.entry.connect ('primary-icon-clicked', Lang.bind(this, function () {
             this.emit ('save');
         }));
-        this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function (o,e) {
+        this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function () {
             this.emit ('save');
         }));
         this.entry.visible = false;
@@ -980,7 +1016,6 @@ const ProfileMenuItem = new Lang.Class ({
         this.edit_button.connect ('clicked', Lang.bind (this, function (actor, event) {
             this.toggle ();
             this.edit_mode = true;
-            this.emit ('edit', event);
         }));
         this.delete_button = new St.Button ({ child: new St.Icon ({ icon_name: 'edit-delete-symbolic', icon_size: 14 }), style_class: 'delete-button'});
         this.actor.add_child (this.delete_button);
