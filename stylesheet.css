@@ -10,6 +10,8 @@
     transition-duration: 300ms;
     box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
     color: #eeeeec;
+    selected-color: #215d9c;
+    selection-background-color: #dedfec;
     background-color: #215d9c; }
   .cpufreq-entry:focus {
     padding: 4px;
