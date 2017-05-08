@@ -613,7 +613,7 @@ const FrequencyIndicator = new Lang.Class({
             id += 2;
             for (let key = id; key < items.length; key++){
                 let item = items[key];
-                print (key, item.ID);
+                //print (key, item.ID);
                 item.ID -= 1;
             }
         }));
@@ -637,7 +637,7 @@ const FrequencyIndicator = new Lang.Class({
         }
         let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), core:cores};
         save = save_state;
-        //print (JSON.stringify (p));
+        print (JSON.stringify (p));
         return p;
     },
 
@@ -656,7 +656,7 @@ const FrequencyIndicator = new Lang.Class({
             this._set_max_pstate (prf.maxf);
             this._set_turbo (prf.turbo);
         } else {
-            this._set_turbo (prf.boost);
+            this._set_boost (prf.turbo);
         }
         this._set_cores (prf.cpu);
         if (this.profmenu) this.profmenu.label.text = prf.name;
@@ -785,7 +785,7 @@ const FrequencyIndicator = new Lang.Class({
     _get_governor: function (core) {
         freqInfo = null;
         if (this.util_present) {
-            cpufreq_output = GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coreg " + core);
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coreg " + core);
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 let g = freqInfo;
@@ -810,7 +810,7 @@ const FrequencyIndicator = new Lang.Class({
     _get_coremin: function (core) {
         freqInfo = null;
         if (this.util_present) {
-            cpufreq_output = GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coremin " + core);
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremin " + core);
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 let g = parseInt (freqInfo);
@@ -835,7 +835,7 @@ const FrequencyIndicator = new Lang.Class({
     _get_coremax: function (core) {
         freqInfo = null;
         if (this.util_present) {
-            cpufreq_output = GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coremax " + core);
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremax " + core);
             if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) {
                 let g = parseInt (freqInfo);
