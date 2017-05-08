@@ -50,29 +50,30 @@ yum install kernel-tools
 * Gnome Shell 3.14+;
 * supported cpufreq modules.
 
-### You could fix executing bit after installation to able to change governors
-[extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
+### Official repository [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
+You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
 
+### From source zip archive (manual method)
+1. Download zip archive from github page _[cpufreq-master.zip](https://github.com/konkor/cpufreq/archive/master.zip)_.
+2. Extract _cpufreq-master.zip_ archive and copy all to the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
+3. Optionally, check/fix the executing bit:
 ```
-chmod +x  ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
+chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
-If you want change governors or/and frequencies You have to install it.
-```
-sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
-```
+4. Enable the `cpufreq` extension...
 
-### From source zip archive
+### From source zip archive (_gnome-tweak-tool_ method)
 Download zip archive from github page. Run _gnome-tweak-tool_ go to extensions tab,
 click _Install Shell Extension_ from drive and select _cpufreq-master.zip_.
 Detailed steps below:
 ```
-$wget https://github.com/konkor/cpufreq/archive/master.zip
-$gnome-tweak-tool # Select 'Install Shell Extension' button on the Extensions Tab.
-$chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
+wget https://github.com/konkor/cpufreq/archive/master.zip
+gnome-tweak-tool # Select 'Install Shell Extension' button on the Extensions Tab.
+chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
 Now close _gnome-tweak-tool_ and restart _gnome-shell_ Log Out or just enter 'r' command in 'Alt-F2' prompt.
 ```
-$gnome-tweak-tool # Turn on the extension.
+gnome-tweak-tool # Turn on the extension.
 cpufreq extension => ⚠ Install...
 ```
 
@@ -102,10 +103,19 @@ Optionally, if you need to install _Cpufreq_ for an additional GNOME user(s), bu
 1. Done. You have successfully installed _Cpufreq_.
 
 ### Updating the existing extension from git source
-1. $wget https://github.com/konkor/cpufreq/archive/master.zip
+1. wget https://github.com/konkor/cpufreq/archive/master.zip
 1. Extract _cpufreq-master.zip_.
 1. Copy/Replace all files in the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
 1. Restart GNOME by pressing "Alt+F2' keys. When prompt type in "r" without the quotes. Press "Enter" key.
+
+### You should fix executing bit after installation through the `gnome-tweak-tool` or `git clone` to able to run the extension.
+```
+chmod +x  ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
+```
+If you want change governors or/and frequencies You have to install it.
+```
+sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
+```
 
 ### Source and packages
 * [GitHub](https://github.com/konkor/cpufreq)
