@@ -54,8 +54,7 @@ yum install kernel-tools
 [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 
 ```
-cd ~/.local/share/gnome-shell/extensions/cpufreq@konkor
-chmod +x cpufreqctl
+chmod +x  ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
 If you want change governors or/and frequencies You have to install it.
 ```
