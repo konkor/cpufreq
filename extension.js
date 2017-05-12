@@ -4,6 +4,7 @@ const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
+const Separator = imports.ui.separator;
 const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
@@ -292,7 +293,7 @@ const FrequencyIndicator = new Lang.Class({
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
-            this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false});
+            this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false, style_class: 'popup-info-item'});
             this.profmenu = new PopupMenu.PopupSubMenuMenuItem (default_profile.name, false);
             this.corewarn = null;
             this.slider_min = null;
@@ -394,7 +395,7 @@ const FrequencyIndicator = new Lang.Class({
                         this._set_turbo (item.state);
                     }
                 }));
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (new SeparatorItem ());
                 let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
                 this.label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
                 title_min.actor.add_child (this.label_min, {align:St.Align.END});
@@ -428,7 +429,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             } else if (this.boost_present) {
-                this.boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
+                this.boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost (), {style_class: 'popup-turbo-item'});
                 this.boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
@@ -437,8 +438,8 @@ const FrequencyIndicator = new Lang.Class({
                 }));
             }
             if (!this.pstate_present && (this.frequences.length > 1)) {
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
-                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
+                this.menu.addMenuItem (new SeparatorItem ());
+                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false, style_class: 'popup-info-item'});
                 this.label_min = new St.Label ({text: this._get_min_label ()});
                 title_min.actor.add_child (this.label_min, {align:St.Align.END});
                 this.menu.addMenuItem (title_min);
@@ -455,7 +456,7 @@ const FrequencyIndicator = new Lang.Class({
                         }
                     }
                 }));
-                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
+                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false, style_class: 'popup-info-item'});
                 this.label_max = new St.Label ({text: this._get_max_label ()});
                 title_max.actor.add_child (this.label_max, {align:St.Align.END});
                 this.menu.addMenuItem (title_max);
@@ -513,7 +514,7 @@ const FrequencyIndicator = new Lang.Class({
                 }));
             }
             if (this.boost_present || this.pstate_present) {
-                //this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                //this.menu.addMenuItem (new SeparatorItem ());
             }
             if (this.boost_switch) this.menu.addMenuItem (this.boost_switch);
             if (this.turbo_switch) this.menu.addMenuItem (this.turbo_switch);
@@ -525,6 +526,7 @@ const FrequencyIndicator = new Lang.Class({
                 this._add_profile (profiles.length -1);
                 this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
             }));
+            this.menu.addMenuItem (new SeparatorItem ());
             this.menu.addMenuItem (this.profmenu);
             let resetItem = new PopupMenu.PopupMenuItem (default_profile.name);
             this.profmenu.menu.addMenuItem (resetItem);
@@ -541,14 +543,14 @@ const FrequencyIndicator = new Lang.Class({
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
                 if (!this.updated) updates_txt = " updates";
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (new SeparatorItem ());
                 let mi_install = new PopupMenu.PopupMenuItem ("\u26a0 Install" + updates_txt + "...");
                 this.menu.addMenuItem (mi_install);
                 mi_install.connect ('activate', Lang.bind (this, function () {
                     this._install ();
                 }));
             } else {
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (new SeparatorItem ());
                 let sm = new PopupMenu.PopupSubMenuMenuItem('Preferences', false);
                 this.menu.addMenuItem (sm);
                 let save_switch = new PopupMenu.PopupSwitchMenuItem('Remember settings', save);
@@ -1145,6 +1147,18 @@ const ProfileMenuItem = new Lang.Class ({
         this.entry.visible = !this.entry.visible;
         this.edit_button.visible = !this.edit_button.visible;
         this.delete_button.visible = !this.delete_button.visible;
+    }
+});
+
+const SeparatorItem = new Lang.Class({
+    Name: 'SeparatorItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function () {
+        this.parent({ reactive: false, style_class: 'separator-item', can_focus: false});
+
+        this._separator = new Separator.HorizontalSeparator ({ style_class: 'popup-separator-menu-item' });
+        this.actor.add (this._separator.actor, { expand: true });
     }
 });
 

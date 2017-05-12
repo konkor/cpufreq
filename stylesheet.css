@@ -2,6 +2,15 @@
     min-width: 288px;
 }
 
+.popup-info-item {
+    padding-top: 10px;
+    padding-bottom: 0px;
+}
+
+.separator-item {
+    padding: 0;
+}
+
 .cpufreq-entry {
     border-width: 2px;
     border-color: #747467;
