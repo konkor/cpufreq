@@ -87,6 +87,17 @@ const FrequencyIndicator = new Lang.Class({
                         this.label_max.set_text (this._get_label (f));
                     }
                 }
+                if (this.slider_core) {
+                    this.slider_core.setValue (GLib.get_num_processors () / this.cpucount);
+                    var cc = Math.floor ((this.cpucount - 1) * this.slider_core.value + 1);
+                    if (cc == 1) {
+                        this.corewarn.actor.visible = true;
+                        this.coremenu.label.text = "Single Core Online";
+                    } else {
+                        this.corewarn.actor.visible = false;
+                        this.coremenu.label.text = cc + " Cores Online";
+                    }
+                }
                 save = saves;
             }
         }));
@@ -429,7 +440,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             } else if (this.boost_present) {
-                this.boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost (), {style_class: 'popup-turbo-item'});
+                this.boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
                 this.boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
