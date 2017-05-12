@@ -136,6 +136,7 @@ const FrequencyIndicator = new Lang.Class({
         if (save) this._load_settings ();
 
         this._add_event ();
+        this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
     },
 
     _is_events: function () {
@@ -1104,6 +1105,18 @@ const NewMenuItem = new Lang.Class ({
         this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function () {
             this.emit ('save');
         }));
+        this.entry.clutter_text.connect('key-press-event', Lang.bind (this, function (o, event) {
+            let symbol = event.get_key_symbol();
+            if (symbol == Clutter.Escape) {
+                this.toggle ();
+                return Clutter.EVENT_STOP;
+            } else if (symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+                this.emit ('save');
+                this.toggle ();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
+        }));
         this.entry.visible = false;
     },
 
@@ -1114,6 +1127,8 @@ const NewMenuItem = new Lang.Class ({
     toggle: function () {
         this.label.visible = !this.label.visible;
         this.entry.visible = !this.entry.visible;
+        if (this.entry.visible) Clutter.grab_keyboard (this.entry.clutter_text);
+        else Clutter.ungrab_keyboard ();
     }
 });
 
@@ -1129,14 +1144,21 @@ const ProfileMenuItem = new Lang.Class ({
         this.actor.add_child (this.entry);
         this.entry.set_primary_icon (new St.Icon({ style_class: 'cpufreq-entry-icon', icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
         this.entry.connect ('primary-icon-clicked', Lang.bind (this, function () {
-            this.label.text = this.entry.text;
-            this.toggle ();
-            this.emit ('update', event);
+            this.update ();
         }));
         this.entry.connect ('secondary-icon-clicked', Lang.bind (this, function () {
-            this.label.text = this.entry.text;
-            this.toggle ();
-            this.emit ('update', event);
+            this.update ();
+        }));
+        this.entry.clutter_text.connect('key-press-event', Lang.bind (this, function (o, event) {
+            let symbol = event.get_key_symbol();
+            if (symbol == Clutter.Escape) {
+                this.toggle ();
+                return Clutter.EVENT_STOP;
+            } else if (symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+                this.update ();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
         }));
         this.entry.visible = false;
         this.edit_button = new St.Button ({ child: new St.Icon ({ icon_name: 'open-menu-symbolic', icon_size: 14 }), style_class: 'edit-button'});
@@ -1144,12 +1166,21 @@ const ProfileMenuItem = new Lang.Class ({
         this.edit_button.connect ('clicked', Lang.bind (this, function () {
             this.toggle ();
             this.edit_mode = true;
+            Clutter.grab_keyboard (this.entry.clutter_text);
+            global.stage.set_key_focus (this.entry.clutter_text);
         }));
         this.delete_button = new St.Button ({ child: new St.Icon ({ icon_name: 'edit-delete-symbolic', icon_size: 14 }), style_class: 'delete-button'});
         this.actor.add_child (this.delete_button);
         this.delete_button.connect ('clicked', Lang.bind (this, function (actor, event) {
             this.emit ('delete', event);
         }));
+    },
+
+    update: function () {
+        this.label.text = this.entry.text;
+        this.toggle ();
+        this.entry.remove_style_pseudo_class('focus');
+        this.emit ('update', event);
     },
 
     activate: function (event) {
@@ -1164,6 +1195,7 @@ const ProfileMenuItem = new Lang.Class ({
         this.entry.visible = !this.entry.visible;
         this.edit_button.visible = !this.edit_button.visible;
         this.delete_button.visible = !this.delete_button.visible;
+        Clutter.ungrab_keyboard ();
     }
 });
 
