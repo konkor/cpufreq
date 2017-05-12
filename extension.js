@@ -655,7 +655,13 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _load_profile: function (prf) {
-        for (let key = 0; key < this.cpucount; key++) {
+        if (install_event > 0) return;
+        this.remove_events ();
+        for (let key = 1; key < this.cpucount; key++) {
+            if (key < prf.cpu) this._set_core (key, true);
+            else this._set_core (key, false);
+        }
+        for (let key = 0; key < prf.cpu; key++) {
             if (prf.core[key]) {
                 this._set_governor (key, prf.core[key].g);
                 if (!this.pstate_present) {
@@ -671,8 +677,8 @@ const FrequencyIndicator = new Lang.Class({
         } else {
             this._set_boost (prf.turbo);
         }
-        this._set_cores (prf.cpu);
         if (this.profmenu) this.profmenu.label.text = prf.name;
+        this._add_event ();
     },
 
     _get_cpu_number: function () {
