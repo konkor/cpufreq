@@ -1117,6 +1117,9 @@ const NewMenuItem = new Lang.Class ({
             }
             return Clutter.EVENT_PROPAGATE;
         }));
+        this.entry.clutter_text.connect('key-focus-in', Lang.bind (this, function () {
+            Clutter.grab_keyboard (this.entry.clutter_text);
+        }));
         this.entry.visible = false;
     },
 
