@@ -408,10 +408,8 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
                 this.menu.addMenuItem (new SeparatorItem ());
-                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
-                this.label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
-                title_min.actor.add_child (this.label_min, {align:St.Align.END});
-                this.menu.addMenuItem (title_min);
+                this.label_min = new InfoMenuItem ("Minimum", this._get_min_pstate () + "%");
+                this.menu.addMenuItem (this.label_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_min.actor.add (this.slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
@@ -424,10 +422,8 @@ const FrequencyIndicator = new Lang.Class({
                         }
                     }
                 }));
-                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
-                this.label_max = new St.Label ({text: this._get_max_pstate().toString() + "%"});
-                title_max.actor.add_child (this.label_max, {align:St.Align.END});
-                this.menu.addMenuItem (title_max);
+                this.label_max = new InfoMenuItem ("Maximum", this._get_max_pstate () + "%");
+                this.menu.addMenuItem (this.label_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_max.actor.add (this.slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
@@ -451,10 +447,8 @@ const FrequencyIndicator = new Lang.Class({
             }
             if (!this.pstate_present && (this.frequences.length > 1)) {
                 this.menu.addMenuItem (new SeparatorItem ());
-                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false, style_class: 'popup-info-item'});
-                this.label_min = new St.Label ({text: this._get_min_label ()});
-                title_min.actor.add_child (this.label_min, {align:St.Align.END});
-                this.menu.addMenuItem (title_min);
+                this.label_min = new InfoMenuItem ("Minimum", this._get_min_label ());
+                this.menu.addMenuItem (this.label_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_min.actor.add (this.slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
@@ -468,10 +462,8 @@ const FrequencyIndicator = new Lang.Class({
                         }
                     }
                 }));
-                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false, style_class: 'popup-info-item'});
-                this.label_max = new St.Label ({text: this._get_max_label ()});
-                title_max.actor.add_child (this.label_max, {align:St.Align.END});
-                this.menu.addMenuItem (title_max);
+                this.label_max = new InfoMenuItem ("Maximum", this._get_max_label ());
+                this.menu.addMenuItem (this.label_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
                 menu_max.actor.add (this.slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
@@ -1085,6 +1077,22 @@ const FrequencyIndicator = new Lang.Class({
         if (min_event != 0) Mainloop.source_remove (min_event);
         if (max_event != 0) Mainloop.source_remove (max_event);
         event = 0; install_event = 0; core_event = 0; min_event = 0; max_event = 0;
+    }
+});
+
+const InfoMenuItem = new Lang.Class ({
+    Name: 'InfoMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function (text, label_info) {
+        this.parent (text, {reactive: false, style_class: 'popup-info-item'});
+        this.label.x_expand = true;
+        this.label2 = new St.Label ({text: label_info});
+        this.actor.add_child (this.label2, {align:St.Align.END});
+    },
+
+    set_text: function (text) {
+        this.label2.set_text (text);
     }
 });
 
