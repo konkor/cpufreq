@@ -90,13 +90,8 @@ const FrequencyIndicator = new Lang.Class({
                 if (this.slider_core) {
                     this.slider_core.setValue (GLib.get_num_processors () / this.cpucount);
                     var cc = Math.floor ((this.cpucount - 1) * this.slider_core.value + 1);
-                    if (cc == 1) {
-                        this.corewarn.actor.visible = true;
-                        this.coremenu.label.text = "Single Core Online";
-                    } else {
-                        this.corewarn.actor.visible = false;
-                        this.coremenu.label.text = cc + " Cores Online";
-                    }
+                    this.coremenu.set_text (cc);
+                    this.corewarn.actor.visible = (cc == 1) ? true : false;
                 }
                 save = saves;
             }
@@ -305,7 +300,7 @@ const FrequencyIndicator = new Lang.Class({
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
-            this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false, style_class: 'popup-info-item'});
+            this.coremenu = new CoreInfoItem (GLib.get_num_processors ());
             this.profmenu = new PopupMenu.PopupSubMenuMenuItem (default_profile.name, false);
             this.corewarn = null;
             this.slider_min = null;
@@ -507,13 +502,8 @@ const FrequencyIndicator = new Lang.Class({
                     if (this.installed) {
                         var cc = Math.floor ((this.cpucount - 1) * item.value + 1);
                         this._set_cores (cc);
-                        if (cc == 1) {
-                            this.corewarn.actor.visible = true;
-                            this.coremenu.label.text = "Single Core Online";
-                        } else {
-                            this.corewarn.actor.visible = false;
-                            this.coremenu.label.text = cc + " Cores Online";
-                        }
+                        this.coremenu.set_text (cc);
+                        this.corewarn.actor.visible = (cc == 1) ? true : false;
                     }
                 }));
             }
@@ -1093,6 +1083,23 @@ const InfoMenuItem = new Lang.Class ({
 
     set_text: function (text) {
         this.label2.set_text (text);
+    }
+});
+
+const CoreInfoItem = new Lang.Class ({
+    Name: 'CoreInfoItem',
+    Extends: InfoMenuItem,
+
+    _init: function (cores) {
+        this.msg = "Cores Online";
+        this.parent (this.msg, cores.toString ());
+    },
+
+    set_text: function (cores) {
+        if (this.label2.text == '' && cores > 1) this.label.text = this.msg;
+        else if (this.label2.text != '' && cores == 1) this.label.text = "Single Core Online";
+        if (this.label2.text != '' && cores == 1)this.label2.set_text ('');
+        if (this.label2.text != cores.toString () && cores > 1)this.label2.set_text (cores.toString ());
     }
 });
 
