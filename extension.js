@@ -130,6 +130,7 @@ const FrequencyIndicator = new Lang.Class({
         if (!default_profile) default_profile = this._get_profile ('Default');
         this._build_ui ();
         if (save) this._load_settings ();
+        print (profs);
 
         this._add_event ();
         this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
@@ -666,6 +667,7 @@ const FrequencyIndicator = new Lang.Class({
             this._set_boost (prf.turbo);
         }
         if (this.profmenu) this.profmenu.label.text = prf.name;
+        this._init_streams ();
         this._add_event ();
     },
 
