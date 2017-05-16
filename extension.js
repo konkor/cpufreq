@@ -593,7 +593,7 @@ const FrequencyIndicator = new Lang.Class({
             }
         }));
         prfItem.connect ('edit', Lang.bind (this, function (o) {
-            if (this.edit_item && this.edit_item.edit_mode) this.edit_item.toggle ();
+            if (this.edit_item && this.edit_item.edit_mode && this.edit_item.ID != o.ID) this.edit_item.toggle ();
             this.edit_item = o;
         }));
         prfItem.connect ('update', Lang.bind (this, function (o) {
