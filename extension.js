@@ -108,6 +108,7 @@ const FrequencyIndicator = new Lang.Class({
         this.frequences = [];
         this.minimum_freq = -1;
         this.maximum_freq = -1;
+        this.edit_item = null;
 
         freqInfo = null;
         cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
@@ -591,8 +592,12 @@ const FrequencyIndicator = new Lang.Class({
                 if (save) this._settings.set_int (PROFILE_KEY, this.PID);
             }
         }));
+        prfItem.connect ('edit', Lang.bind (this, function (o) {
+            if (this.edit_item && this.edit_item.edit_mode) this.edit_item.toggle ();
+            this.edit_item = o;
+        }));
         prfItem.connect ('update', Lang.bind (this, function (o) {
-            profiles[o.ID].name = o.label.text;
+            profiles[o.ID] = this._get_profile (o.label.text);
             this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
         }));
         prfItem.connect ('delete', Lang.bind (this, function (o) {
@@ -1166,14 +1171,14 @@ const ProfileMenuItem = new Lang.Class ({
         this.actor.add_child (this.edit_button);
         this.edit_button.connect ('clicked', Lang.bind (this, function () {
             this.toggle ();
-            this.edit_mode = true;
             Clutter.grab_keyboard (this.entry.clutter_text);
             global.stage.set_key_focus (this.entry.clutter_text);
+            this.emit ('edit');
         }));
         this.delete_button = new St.Button ({ child: new St.Icon ({ icon_name: 'edit-delete-symbolic', icon_size: 14 }), style_class: 'delete-button'});
         this.actor.add_child (this.delete_button);
-        this.delete_button.connect ('clicked', Lang.bind (this, function (actor, event) {
-            this.emit ('delete', event);
+        this.delete_button.connect ('clicked', Lang.bind (this, function () {
+            this.emit ('delete');
         }));
     },
 
@@ -1181,13 +1186,13 @@ const ProfileMenuItem = new Lang.Class ({
         if (this.entry.text == '') this.entry.text = this.label.text;
         if (!this.edit_mode) this.emit ('activate', event);
         if (this.entry.visible) this.toggle ();
-        this.edit_mode = false;
     },
 
     toggle: function () {
         this.parent ();
         this.edit_button.visible = !this.edit_button.visible;
         this.delete_button.visible = !this.delete_button.visible;
+        this.edit_mode = this.entry.visible;
     },
 
     on_click: function () {
