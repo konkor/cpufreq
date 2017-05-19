@@ -666,6 +666,7 @@ const FrequencyIndicator = new Lang.Class({
         if (install_event > 0) return;
         print ('Loading profile...', JSON.stringify (prf));
         this.remove_events ();
+        this.statusLabel.set_text ("... \u3393");
         for (let key = 1; key < this.cpucount; key++) {
             if (key < prf.cpu) this._set_core (key, true);
             else this._set_core (key, false);
