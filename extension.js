@@ -671,7 +671,7 @@ const FrequencyIndicator = new Lang.Class({
             if (key < prf.cpu) this._set_core (key, true);
             else this._set_core (key, false);
         }
-        core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+        this._pause (250);
         if (this.pstate_present) {
             GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
             GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max 100");
@@ -693,9 +693,10 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
         }
-        this._pause (100);
+        core_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
         if (this.pstate_present) {
             this._set_turbo (prf.turbo);
+            this._pause (100);
             GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min " + prf.minf);
             GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max " + prf.maxf);
         } else {
