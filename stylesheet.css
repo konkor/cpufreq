@@ -8,7 +8,8 @@
 }
 
 .separator-item {
-    padding: 0;
+    padding: 0em 3.5em 0em 1.75em;
+    height: 11px;
 }
 
 .cpufreq-entry {
@@ -41,7 +42,6 @@
 .edit-button, .delete-button {
     border-radius: 32px;
     padding: 4px;
-/*    border: 1px solid #cccccc; */
 }
 
 .edit-button:hover, .edit-button:focus {
@@ -56,3 +56,10 @@
     padding: 4px;
 }
 
+.cpufreq-separator-menu-item {
+  padding: 0;
+  -gradient-start: rgba(68,113,191,0.0);
+  -gradient-end: rgba(255,255,255,0.4);
+  -gradient-height: 1px;
+  -margin-horizontal: 24px;
+}

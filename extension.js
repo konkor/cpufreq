@@ -413,6 +413,11 @@ const FrequencyIndicator = new Lang.Class({
                 this.slider_min.connect('value-changed', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
+                        if (item.value > this.slider_max.value) {
+                            this.slider_max.setValue (item.value);
+                            this.slider_max.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
                             this.label_min.set_text (Math.floor (item.value * 100).toString() + "%");
                             this._set_min_pstate (Math.floor (item.value * 100));
@@ -427,6 +432,11 @@ const FrequencyIndicator = new Lang.Class({
                 this.slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
+                        if (item.value < this.slider_min.value) {
+                            this.slider_min.setValue (item.value);
+                            this.slider_min.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
                             this.label_max.set_text (Math.floor (item.value * 100).toString() + "%");
                             this._set_max_pstate (Math.floor (item.value * 100));
@@ -452,6 +462,11 @@ const FrequencyIndicator = new Lang.Class({
                 this.slider_min.connect('value-changed', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
+                        if (item.value > this.slider_max.value) {
+                            this.slider_max.setValue (item.value);
+                            this.slider_max.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
                             this.label_min.set_text (this._get_label (f));
@@ -467,6 +482,11 @@ const FrequencyIndicator = new Lang.Class({
                 this.slider_max.connect('value-changed', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
+                        if (item.value < this.slider_min.value) {
+                            this.slider_min.setValue (item.value);
+                            this.slider_min.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
                             this.label_max.set_text (this._get_label (f));
@@ -615,7 +635,6 @@ const FrequencyIndicator = new Lang.Class({
             id += 2;
             for (let key = id; key < items.length; key++){
                 let item = items[key];
-                //print (key, item.ID);
                 item.ID -= 1;
             }
         }));
@@ -650,25 +669,65 @@ const FrequencyIndicator = new Lang.Class({
             if (key < prf.cpu) this._set_core (key, true);
             else this._set_core (key, false);
         }
+        this._pause (250);
+        if (this.pstate_present) {
+            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
+            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max 100");
+        } else {
+            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " minf " + this._get_freq (0));
+            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " maxf " + this._get_freq (100));
+        }
+        this._pause (0);
+        let g = "";
         for (let key = 0; key < prf.cpu; key++) {
             if (prf.core[key]) {
                 this._set_governor (key, prf.core[key].g);
-                if (!this.pstate_present) {
+                if (g != "mixed") {
+                    if (!g) {
+                        g = prf.core[key].g;
+                    } else if (g != prf.core[key].g) {
+                        g = "mixed";
+                    }
+                }
+            }
+        }
+        this._pause (100);
+        if (this.pstate_present) {
+            this._set_turbo (prf.turbo);
+            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min " + prf.minf);
+            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max " + prf.maxf);
+        } else {
+            this._set_boost (prf.turbo);
+            for (let key = 0; key < prf.cpu; key++) {
+                if (prf.core[key]) {
                     this._set_coremin (key, prf.core[key].a);
                     this._set_coremax (key, prf.core[key].b);
                 }
             }
-        }
-        if (this.pstate_present) {
-            this._set_min_pstate (prf.minf);
-            this._set_max_pstate (prf.maxf);
-            this._set_turbo (prf.turbo);
-        } else {
-            this._set_boost (prf.turbo);
+            this.slider_min.actor.reactive = true;
+            this.slider_min.actor.opacity = 255;
+            this.slider_max.actor.reactive = true;
+            this.slider_max.actor.opacity = 255;
+            if (g == 'powersave') {
+                this.slider_max.actor.reactive = false;
+                this.slider_max.actor.opacity = 50;
+            } else if (g == 'performance') {
+                this.slider_min.actor.reactive = false;
+                this.slider_min.actor.opacity = 50;
+            }
         }
         if (this.profmenu) this.profmenu.label.text = prf.name;
         this._init_streams ();
         this._add_event ();
+    },
+
+    _pause: function (msec) {
+        var t = Date.now ();
+        var i = 0;
+        while ((Date.now () - t) < msec) {
+            i++;
+        }
+        //print (msec,"ms loops:", i);
     },
 
     _get_cpu_number: function () {
@@ -1209,8 +1268,7 @@ const SeparatorItem = new Lang.Class({
 
     _init: function () {
         this.parent({ reactive: false, style_class: 'separator-item', can_focus: false});
-
-        this._separator = new Separator.HorizontalSeparator ({ style_class: 'popup-separator-menu-item' });
+        this._separator = new Separator.HorizontalSeparator ({ style_class: 'cpufreq-separator-menu-item' });
         this.actor.add (this._separator.actor, { expand: true });
     }
 });
