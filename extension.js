@@ -664,12 +664,13 @@ const FrequencyIndicator = new Lang.Class({
 
     _load_profile: function (prf) {
         if (install_event > 0) return;
+        print ('Loading profile...', JSON.stringify (prf));
         this.remove_events ();
         for (let key = 1; key < this.cpucount; key++) {
             if (key < prf.cpu) this._set_core (key, true);
             else this._set_core (key, false);
         }
-        this._pause (250);
+        core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
         if (this.pstate_present) {
             GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
             GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max 100");
@@ -719,8 +720,11 @@ const FrequencyIndicator = new Lang.Class({
         if (this.profmenu) this.profmenu.label.text = prf.name;
         this._init_streams ();
         this._add_event ();
+            core_event = 0;
+            return false;
+        }));
     },
-
+    
     _pause: function (msec) {
         var t = Date.now ();
         var i = 0;
