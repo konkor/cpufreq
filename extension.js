@@ -1292,7 +1292,7 @@ const InfoItem = new Lang.Class({
         this._icon.icon_name = 'smile';
         this.vbox = new St.BoxLayout({ vertical: true, style: 'padding: 8px; spacing: 4px;' });
         this.actor.add_child (this.vbox, { align: St.Align.END });
-        this._cpu = new St.Label ({text: "Intel® Core™ i7 CPU 920"});
+        this._cpu = new St.Label ({text: "Intel® Core™ i7 CPU 920", style: 'font-weight: bold;'});
         this.vbox.add_child (this._cpu, {align:St.Align.START});
         //uname -o -n - r
         this._linux = new St.Label ({text: "GNU/Linux Debian kernel 4.9"});
@@ -1301,7 +1301,7 @@ const InfoItem = new Lang.Class({
         this.vbox.add_child (this._load, {align:St.Align.START});
         this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
         this.vbox.add_child (this._cores, {align:St.Align.START});
-        this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE"});
+        this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE", style: 'color: orange; font-weight: bold;'});
         this.vbox.add_child (this._warn, {align:St.Align.START});
     }
 });
