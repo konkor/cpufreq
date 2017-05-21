@@ -315,6 +315,8 @@ const FrequencyIndicator = new Lang.Class({
             this.turbo_switch = null;
             this.boost_switch = null;
 
+            let info = new InfoItem ();
+            this.menu.addMenuItem (info);
             this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
                 this.slider_min = new Slider.Slider (this._get_min_pstate () / 100);
@@ -1279,9 +1281,36 @@ const SeparatorItem = new Lang.Class({
     }
 });
 
+const InfoItem = new Lang.Class({
+    Name: 'InfoItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function (params) {
+        this.parent ({ reactive: false, can_focus: false });
+        this._icon = new St.Icon ({ style_class: 'logo-icon' });
+        this.actor.add_child (this._icon, { align: St.Align.END });
+        this._icon.icon_name = 'smile';
+        this.vbox = new St.BoxLayout({ vertical: true, style: 'padding: 8px; spacing: 4px;' });
+        this.actor.add_child (this.vbox, { align: St.Align.END });
+        this._cpu = new St.Label ({text: "Intel® Core™ i7 CPU 920"});
+        this.vbox.add_child (this._cpu, {align:St.Align.START});
+        //uname -o -n - r
+        this._linux = new St.Label ({text: "GNU/Linux Debian kernel 4.9"});
+        this.vbox.add_child (this._linux, {align:St.Align.START});
+        this._load = new St.Label ({text: "◕ 170% 41.0°C Throttle 0"});
+        this.vbox.add_child (this._load, {align:St.Align.START});
+        this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
+        this.vbox.add_child (this._cores, {align:St.Align.START});
+        this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE"});
+        this.vbox.add_child (this._warn, {align:St.Align.START});
+    }
+});
+
 let freqMenu;
 
 function init () {
+    let theme = imports.gi.Gtk.IconTheme.get_default();
+    theme.append_search_path (EXTENSIONDIR + "/icons");
 }
 
 function enable () {
