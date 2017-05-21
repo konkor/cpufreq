@@ -45,7 +45,7 @@
 }
 
 .edit-button:hover, .edit-button:focus {
-    background-color: #215d9c;
+    background-color: orange;
     border: none;
     padding: 4px;
 }
