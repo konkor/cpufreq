@@ -668,10 +668,6 @@ const FrequencyIndicator = new Lang.Class({
         this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
         this.prf = prf;
-        for (let key = 1; key < this.cpucount; key++) {
-            if (key < prf.cpu) this._set_core (key, true);
-            else this._set_core (key, false);
-        }
         this.stage = 0;
         this._delayed_load (prf);
             
@@ -702,6 +698,9 @@ const FrequencyIndicator = new Lang.Class({
             case 5: // setting max frequency
                 delay = 2000;
                 break;
+            case 6: // enable/disable cores
+                delay = 2000;
+                break;
             default:
                 return;
         }
@@ -721,7 +720,11 @@ const FrequencyIndicator = new Lang.Class({
             }
         } else if (this.stage == 2) {
             this.g = "";
-            for (let key = 0; key < prf.cpu; key++) {
+            let core_count = prf.cpu;
+            if (this.pstate_present) {
+                core_count = this.cpucount;
+            }
+            for (let key = 0; key < core_count; key++) {
                 if (prf.core[key]) {
                     this._set_governor (key, prf.core[key].g);
                     if (this.g != "mixed") {
@@ -772,6 +775,11 @@ const FrequencyIndicator = new Lang.Class({
             }
             this._init_streams ();
             this._add_event ();
+        } else if (this.stage == 6) {
+            for (let key = 1; key < this.cpucount; key++) {
+                if (key < prf.cpu) this._set_core (key, true);
+                else this._set_core (key, false);
+            }
         }
     },
     
