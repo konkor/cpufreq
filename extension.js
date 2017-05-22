@@ -668,10 +668,8 @@ const FrequencyIndicator = new Lang.Class({
         this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
         this.prf = prf;
-        if (this.pstate_present) {
-            for (let key = 1; key < this.cpucount; key++) {
-                this._set_core (key, true);
-            }
+        for (let key = 1; key < this.cpucount; key++) {
+            this._set_core (key, true);
         }
         this.stage = 0;
         this._delayed_load (prf);
