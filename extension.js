@@ -1292,10 +1292,10 @@ const InfoItem = new Lang.Class({
         this._icon.icon_name = 'smile';
         this.vbox = new St.BoxLayout({ vertical: true, style: 'padding: 8px; spacing: 4px;' });
         this.actor.add_child (this.vbox, { align: St.Align.END });
-        this._cpu = new St.Label ({text: "Intel® Core™ i7 CPU 920", style: 'font-weight: bold;'});
+        this._cpu = new St.Label ({text: this.cpu_name, style: 'font-weight: bold;'});
         this.vbox.add_child (this._cpu, {align:St.Align.START});
-        //uname -o -n - r
-        this._linux = new St.Label ({text: "GNU/Linux Debian kernel 4.9"});
+        //uname -o -n - r "GNU/Linux Debian kernel 4.9"
+        this._linux = new St.Label ({text: "GNU/Linux"});
         this.vbox.add_child (this._linux, {align:St.Align.START});
         this._load = new St.Label ({text: "◕ 170% 41.0°C Throttle 0"});
         this.vbox.add_child (this._load, {align:St.Align.START});
@@ -1303,6 +1303,43 @@ const InfoItem = new Lang.Class({
         this.vbox.add_child (this._cores, {align:St.Align.START});
         this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE", style: 'color: orange; font-weight: bold;'});
         this.vbox.add_child (this._warn, {align:St.Align.START});
+        this._warn.visible = false;
+    },
+
+    get cpu_name () {
+        if (GLib.file_test ('/proc/cpuinfo', GLib.FileTest.EXISTS)) {
+            let f = Gio.File.new_for_path ('/proc/cpuinfo');
+            let dis = new Gio.DataInputStream ({ base_stream: f.read (null) });
+            let line, model = "", s, i = 0;
+            try {
+                [line, ] = dis.read_line (null);
+                while (line != null) {
+                    s = new String (line);
+                    if (s.indexOf ("model name") > -1) {
+                        model = s;
+                        i++;
+                    }
+                    if (i > 0) break;
+                    [line, ] = dis.read_line (null);
+                }
+                dis.close (null);
+                if (model) {
+                    model = model.substring (model.indexOf (":") + 1).trim ();
+                    if (model.lastIndexOf ("@") > -1)
+                        model = model.substring (0, model.lastIndexOf ("@")).trim ();
+                    model = model.replace ("(R)", "®");
+                    model = model.replace ("(TM)", "™");
+                    s = model; model = "";
+                    for each (let f in s.split (" ")) {
+                        if (f.length > 0) model += f + " ";
+                    }
+                    return model.trim ().toString ();
+                }
+            } catch (e) {
+                print ("Get CPU Error:", e.message);
+            }
+        }
+        return "unknown processor";
     }
 });
 
