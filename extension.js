@@ -668,6 +668,11 @@ const FrequencyIndicator = new Lang.Class({
         this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
         this.prf = prf;
+        if (this.pstate_present) {
+            for (let key = 1; key < this.cpucount; key++) {
+                this._set_core (key, true);
+            }
+        }
         this.stage = 0;
         this._delayed_load (prf);
             
@@ -684,22 +689,22 @@ const FrequencyIndicator = new Lang.Class({
         this.stage++;
         switch (this.stage) {
             case 1: // reset min/max frequencies
-                delay = 2000;
+                delay = 50;
                 break;
             case 2: // setting governors
-                delay = 2000;
+                delay = 50;
                 break;
             case 3: // setting boost
-                delay = 2000;
+                delay = 50;
                 break;
             case 4: // setting min frequency
-                delay = 2000;
+                delay = 50;
                 break;
             case 5: // setting max frequency
-                delay = 2000;
+                delay = 50;
                 break;
             case 6: // enable/disable cores
-                delay = 2000;
+                delay = 50;
                 break;
             default:
                 return;
