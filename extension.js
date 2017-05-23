@@ -610,7 +610,7 @@ const FrequencyIndicator = new Lang.Class({
                 //this.profmenu.label.text = o.label.text;
                 this._load_profile (profiles[o.ID]);
                 this.PID = o.ID;
-                if (save) this._settings.set_int (PROFILE_KEY, this.PID);
+                this._settings.set_int (PROFILE_KEY, this.PID);
             }
         }));
         prfItem.connect ('edit', Lang.bind (this, function (o) {
