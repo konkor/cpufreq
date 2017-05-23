@@ -15,6 +15,7 @@ This is a lightweight CPU scaling monitor and powerful CPU management tool. The 
 * CPU Boost supporting;
 * CPU Power on/off supporting;
 * Saving/Restoring settings;
+* User Profiles;
 * More.
 
 ## A Few Reasons Why You Should Not Want To Use Single Core For _Powersaving mode_:
