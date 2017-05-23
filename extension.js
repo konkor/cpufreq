@@ -130,7 +130,7 @@ const FrequencyIndicator = new Lang.Class({
         if (!default_profile) default_profile = this._get_profile ('Default');
         this._build_ui ();
         if (save) this._load_settings ();
-        print (profs);
+        //print (profs);
 
         this._add_event ();
         this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
@@ -656,7 +656,7 @@ const FrequencyIndicator = new Lang.Class({
             let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
             cores.push (core);
         }
-        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), core:cores};
+        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, core:cores};
         save = save_state;
         print (JSON.stringify (p));
         return p;
@@ -673,7 +673,6 @@ const FrequencyIndicator = new Lang.Class({
         }
         this.stage = 0;
         this._delayed_load (prf);
-            
         if (this.profmenu) this.profmenu.label.text = prf.name;
     },
 
@@ -707,12 +706,10 @@ const FrequencyIndicator = new Lang.Class({
             default:
                 return;
         }
-        print ("load delay", delay);
         core_event = Mainloop.timeout_add (delay, Lang.bind (this, this._delayed_load));
     },
 
     _load_stage: function (prf) {
-        print ("load_stage", this.stage, JSON.stringify (prf));
         if (this.stage == 1) {
             if (this.pstate_present) {
                 GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
@@ -723,11 +720,7 @@ const FrequencyIndicator = new Lang.Class({
             }
         } else if (this.stage == 2) {
             this.g = "";
-            let core_count = prf.cpu;
-            if (this.pstate_present) {
-                core_count = this.cpucount;
-            }
-            for (let key = 0; key < core_count; key++) {
+            for (let key = 0; key < this.cpucount; key++) {
                 if (prf.core[key]) {
                     this._set_governor (key, prf.core[key].g);
                     if (this.g != "mixed") {
@@ -776,13 +769,14 @@ const FrequencyIndicator = new Lang.Class({
                     this.slider_min.actor.opacity = 50;
                 }
             }
-            this._init_streams ();
-            this._add_event ();
         } else if (this.stage == 6) {
             for (let key = 1; key < this.cpucount; key++) {
                 if (key < prf.cpu) this._set_core (key, true);
                 else this._set_core (key, false);
             }
+            this._init_streams ();
+            this._update_freq ();
+            this._add_event ();
         }
     },
     
@@ -904,7 +898,9 @@ const FrequencyIndicator = new Lang.Class({
         ccore = count;
         if (core_event != 0) {
             Mainloop.source_remove (core_event);
+            core_event = 0;
         }
+        if (count == GLib.get_num_processors ()) return;
         core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
             for (let key = 1; key < this.cpucount; key++) {
                 if (key < ccore) this._set_core (key, true);
