@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION='12'
+VERSION='14'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -206,7 +206,7 @@ if [ $1 = "on" ]
 then
 	if [ $# = 1 ]
 	then
-		echo "input core number"
+		echo "cpufreqctl on CORE"
 		exit
 	fi
 	FLNM="$FLROOT/cpu"$2"/online"
@@ -218,11 +218,62 @@ if [ $1 = "off" ]
 then
 	if [ $# = 1 ]
 	then
-		echo "input core number"
+		echo "cpufreqctl off CORE"
 		exit
 	fi
 	FLNM="$FLROOT/cpu"$2"/online"
 	echo "Power off CPU Core"$2
 	echo "0" > $FLNM
+	exit
+fi
+if [ $1 = "coreg" ]
+then
+    if [ $# = 1 ]
+	then
+		echo "cpufreqctl coreg CORE [GOVERNOR]"
+		exit
+	fi
+	if [ $# = 2 ]
+	then
+	    cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_governor
+	    exit
+	fi
+    FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_governor"
+	echo "Setting $FLNM to "$3
+	echo $3 > $FLNM
+	exit
+fi
+if [ $1 = "coremin" ]
+then
+    if [ $# = 1 ]
+	then
+		echo "cpufreqctl coremin CORE [MIN_FREQUENCY]"
+		exit
+	fi
+	if [ $# = 2 ]
+	then
+		cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_min_freq
+		exit
+	fi
+	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_min_freq"
+	echo "Setting $FLNM to "$3
+	echo $3 > $FLNM
+	exit
+fi
+if [ $1 = "coremax" ]
+then
+    if [ $# = 1 ]
+	then
+		echo "cpufreqctl coremax CORE [MAX_FREQUENCY]"
+		exit
+	fi
+	if [ $# = 2 ]
+	then
+		cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_max_freq
+		exit
+	fi
+	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_max_freq"
+	echo "Setting $FLNM to "$3
+	echo $3 > $FLNM
 	exit
 fi

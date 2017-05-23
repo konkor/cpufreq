@@ -51,10 +51,16 @@
       <description>Maximum CPU Frequency</description>
     </key>
 
-    <key type="as" name="profiles">
-        <default>[ ]</default>
+    <key type="s" name="profiles">
+        <default>''</default>
         <summary>Profiles</summary>
         <description>User profiles</description>
+    </key>
+
+    <key type="i" name="profile">
+      <default>-1</default>
+      <summary>Profile ID</summary>
+      <description>Profile ID</description>
     </key>
 
   </schema>

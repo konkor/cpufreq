@@ -4,6 +4,7 @@ const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
+const Separator = imports.ui.separator;
 const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
@@ -18,6 +19,8 @@ const MIN_FREQ_KEY = 'min-freq';
 const MAX_FREQ_KEY = 'max-freq';
 const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
 const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
+const PROFILES_KEY = 'profiles';
+const PROFILE_KEY = 'profile';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -36,6 +39,8 @@ let freqInfo = null;
 let cpufreq_output = null;
 let cmd = null;
 let ccore = 0;
+let profiles = [];
+let default_profile = null;
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -51,8 +56,9 @@ const FrequencyIndicator = new Lang.Class({
         _box.add_actor(this.statusLabel);
         this.actor.add_actor(_box);
         this.actor.connect('button-press-event', Lang.bind(this, function () {
+            if (this._is_events () || !this.menu.isOpen) return;
             if (this.util_present) {
-                let gcount = 0;
+                let gcount = 0, saves = save;
                 this.governors = this._get_governors ();
                 if (this.governors.length > 0) {
                     for each (let governor in this.governors) {
@@ -63,12 +69,36 @@ const FrequencyIndicator = new Lang.Class({
                     }
                     if (gcount > 1) this.activeg.label.text = "\u26A1 mixed";
                 }
+                save = false;
+                if (this.pstate_present) {
+                    this.slider_min.setValue (this._get_min_pstate () / 100);
+                    this.slider_max.setValue (this._get_max_pstate () / 100);
+                    this.label_min.set_text (Math.floor (this.slider_min.value * 100).toString() + "%");
+                    this.label_max.set_text (Math.floor (this.slider_max.value * 100).toString() + "%");
+                    if (this.boost_present) this.turbo_switch.setToggleState (this._get_turbo ());
+                } else {
+                    if (this.boost_present) this.boost_switch.setToggleState (this._get_boost ());
+                    if (this.slider_min) {
+                        let f = this._get_coremin (0);
+                        this.slider_min.setValue (this._get_pos (f));
+                        this.label_min.set_text (this._get_label (f));
+                        f = this._get_coremax (0);
+                        this.slider_max.setValue (this._get_pos (f));
+                        this.label_max.set_text (this._get_label (f));
+                    }
+                }
+                if (this.slider_core) {
+                    this.slider_core.setValue (GLib.get_num_processors () / this.cpucount);
+                    var cc = Math.floor ((this.cpucount - 1) * this.slider_core.value + 1);
+                    this.coremenu.set_text (cc);
+                    this.corewarn.actor.visible = (cc == 1) ? true : false;
+                }
+                save = saves;
             }
         }));
         this.pkexec_path = null;
         this.cpufreqctl_path = null;
         this.cpucount = this._get_cpu_number ();
-        this.governorchanged = false;
         this.util_present = false;
         this.pstate_present = false;
         this.boost_present = false;
@@ -78,6 +108,7 @@ const FrequencyIndicator = new Lang.Class({
         this.frequences = [];
         this.minimum_freq = -1;
         this.maximum_freq = -1;
+        this.edit_item = null;
 
         freqInfo = null;
         cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
@@ -92,11 +123,25 @@ const FrequencyIndicator = new Lang.Class({
         this._check_install ();
         this._check_extensions ();
 
-        save = this._settings.get_boolean(SAVE_SETTINGS_KEY);
+        save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
+        this.PID =  this._settings.get_int (PROFILE_KEY);
+        let profs =  this._settings.get_string (PROFILES_KEY);
+        if (profs.length > 0) profiles = JSON.parse (profs);
+        if (!default_profile) default_profile = this._get_profile ('Default');
         this._build_ui ();
         if (save) this._load_settings ();
+        //print (profs);
 
         this._add_event ();
+        this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
+    },
+
+    _is_events: function () {
+        if (install_event > 0) return true;
+        if (core_event > 0) return true;
+        if (min_event > 0) return true;
+        if (max_event > 0) return true;
+        return false;
     },
 
     _check_install: function () {
@@ -137,8 +182,7 @@ const FrequencyIndicator = new Lang.Class({
             this._check_install ();
             if (this.installed && this.updated) {
                 try {
-                    Mainloop.source_remove (event);
-                    event = 0;
+                    this.remove_events ();
                     ExtensionSystem.reloadExtension (Me);
                     print ("Reloading completed");
                 } catch (e) {
@@ -151,13 +195,15 @@ const FrequencyIndicator = new Lang.Class({
 
     _check_extensions: function () {
         if (this.util_present && this.installed) {
-            let default_boost = this._get_boost ();
+            let default_boost = this.pstate_present ? this._get_turbo () : this._get_boost ();
             if (default_boost == false) {
-                this._set_boost (true);
-                let new_state = this._get_boost ();
+                if (this.pstate_present) this._set_turbo (true);
+                else this._set_boost (true);
+                let new_state = this.pstate_present ? this._get_turbo () : this._get_boost ();
                 if (default_boost != new_state) {
                     this.boost_present = true;
-                    this._set_boost (false);
+                    if (this.pstate_present) this._set_turbo (false);
+                    else this._set_boost (false);
                 }
             } else {
                 this.boost_present = true;
@@ -210,6 +256,11 @@ const FrequencyIndicator = new Lang.Class({
 
     _load_settings: function () {
         if (!this.util_present) return;
+        if (this.PID >= profiles.length) this.PID = profiles.length - 1;
+        if (this.PID > -1) {
+            this._load_profile (profiles[this.PID]);
+            return;
+        }
         var gov = this._settings.get_string (GOVERNOR_KEY);
         var freq = this._settings.get_string (CPU_FREQ_KEY);
         cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + gov;
@@ -251,25 +302,26 @@ const FrequencyIndicator = new Lang.Class({
             this.governors = this._get_governors ();
             this.frequences = this._get_frequences ();
             this.activeg = new PopupMenu.PopupSubMenuMenuItem ("Governors", false);
-            this.coremenu = new PopupMenu.PopupMenuItem (GLib.get_num_processors () + " Cores Online", {reactive: false});
-            this.menu.addMenuItem (this.activeg);
+            this.coremenu = new CoreInfoItem (GLib.get_num_processors ());
+            this.profmenu = new PopupMenu.PopupSubMenuMenuItem (default_profile.name, false);
             this.corewarn = null;
-            let slider_min = null;
-            let slider_max = null;
-            let slider_core = null;
-            let label_min = null;
-            let label_max = null;
+            this.slider_min = null;
+            this.slider_max = null;
+            this.slider_core = null;
+            this.label_min = null;
+            this.label_max = null;
             let slider_lock = false;
             let userspace = null;
-            let turbo_switch = null;
-            let boost_switch = null;
+            this.turbo_switch = null;
+            this.boost_switch = null;
 
+            this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
-                slider_min = new Slider.Slider (this._get_min_pstate () / 100);
-                slider_max = new Slider.Slider (this._get_max_pstate () / 100);
+                this.slider_min = new Slider.Slider (this._get_min_pstate () / 100);
+                this.slider_max = new Slider.Slider (this._get_max_pstate () / 100);
             } else if (this.frequences.length > 1) {
-                slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
-                slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
+                this.slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
+                this.slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
             }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
@@ -289,14 +341,16 @@ const FrequencyIndicator = new Lang.Class({
                             let u_item = new PopupMenu.PopupMenuItem (s);
                             userspace.menu.addMenuItem (u_item);
                             u_item.connect ('activate', Lang.bind (this, function () {
+                                this._changed ();
                                 if (this.installed) {
                                     GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov userspace');
                                     let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + f;
 	    	                        global.log (cmd);
 		                            Util.trySpawnCommandLine (cmd);
 		                            if (save) {
-		                                this._settings.set_string(GOVERNOR_KEY, 'userspace');
-		                                this._settings.set_string(CPU_FREQ_KEY, f.toString ());		                            }
+		                                this._settings.set_string (GOVERNOR_KEY, 'userspace');
+		                                this._settings.set_string (CPU_FREQ_KEY, f.toString ());
+		                            }
 		                        }
                             }));
                         }
@@ -304,6 +358,7 @@ const FrequencyIndicator = new Lang.Class({
                         let governorItem = new PopupMenu.PopupMenuItem (governor[0]);
                         this.activeg.menu.addMenuItem (governorItem);
                         governorItem.connect ('activate', Lang.bind (this, function () {
+                            this._changed ();
                             if (this.installed) {
                                 let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
 		                        global.log (cmd);
@@ -311,26 +366,26 @@ const FrequencyIndicator = new Lang.Class({
 		                        if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
 		                        if (this.pstate_present) {
 		                            slider_lock = true;
-                                    slider_min.setValue (this._get_min_pstate () / 100);
-                                    slider_max.setValue (this._get_max_pstate () / 100);
+                                    this.slider_min.setValue (this._get_min_pstate () / 100);
+                                    this.slider_max.setValue (this._get_max_pstate () / 100);
                                     slider_lock = false;
-                                } else if (slider_min) {
-                                    slider_min.actor.reactive = true;
-                                    slider_min.actor.opacity = 255;
-                                    slider_max.actor.reactive = true;
-                                    slider_max.actor.opacity = 255;
+                                } else if (this.slider_min) {
+                                    this.slider_min.actor.reactive = true;
+                                    this.slider_min.actor.opacity = 255;
+                                    this.slider_max.actor.reactive = true;
+                                    this.slider_max.actor.opacity = 255;
                                     if (governorItem.label.text == 'powersave') {
-                                        slider_min.setValue (0);
-                                        label_min.set_text (this._get_label (this.minimum_freq));
+                                        this.slider_min.setValue (0);
+                                        this.label_min.set_text (this._get_label (this.minimum_freq));
                                         this._set_min (this.minimum_freq);
-                                        slider_max.actor.reactive = false;
-                                        slider_max.actor.opacity = 50;
+                                        this.slider_max.actor.reactive = false;
+                                        this.slider_max.actor.opacity = 50;
                                     } else if (governorItem.label.text == 'performance') {
-                                        slider_max.setValue (1);
-                                        label_max.set_text (this._get_label (this.maximum_freq));
+                                        this.slider_max.setValue (1);
+                                        this.label_max.set_text (this._get_label (this.maximum_freq));
                                         this._set_max (this.maximum_freq);
-                                        slider_min.actor.reactive = false;
-                                        slider_min.actor.opacity = 50;
+                                        this.slider_min.actor.reactive = false;
+                                        this.slider_min.actor.opacity = 50;
                                     }
                                 }
                             } else {
@@ -342,101 +397,119 @@ const FrequencyIndicator = new Lang.Class({
             }
             if (userspace != null) this.menu.addMenuItem (userspace);
             if (this.pstate_present) {
-                turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
-                turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
+                this.turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
+                this.turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
                         this._set_turbo (item.state);
                     }
                 }));
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
-                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
-                label_min = new St.Label ({text: this._get_min_pstate().toString() + "%"});
-                title_min.actor.add_child (label_min, {align:St.Align.END});
-                this.menu.addMenuItem (title_min);
+                this.menu.addMenuItem (new SeparatorItem ());
+                this.label_min = new InfoMenuItem ("Minimum", this._get_min_pstate () + "%");
+                this.menu.addMenuItem (this.label_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_min.actor.add (slider_min.actor, {expand: true});
+                menu_min.actor.add (this.slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
-                slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
+                        if (item.value > this.slider_max.value) {
+                            this.slider_max.setValue (item.value);
+                            this.slider_max.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
-                            label_min.set_text (Math.floor (item.value * 100).toString() + "%");
+                            this.label_min.set_text (Math.floor (item.value * 100).toString() + "%");
                             this._set_min_pstate (Math.floor (item.value * 100));
                         }
                     }
                 }));
-                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
-                label_max = new St.Label ({text: this._get_max_pstate().toString() + "%"});
-                title_max.actor.add_child (label_max, {align:St.Align.END});
-                this.menu.addMenuItem (title_max);
+                this.label_max = new InfoMenuItem ("Maximum", this._get_max_pstate () + "%");
+                this.menu.addMenuItem (this.label_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_max.actor.add (slider_max.actor, {expand: true});
+                menu_max.actor.add (this.slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
-                slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
+                        if (item.value < this.slider_min.value) {
+                            this.slider_min.setValue (item.value);
+                            this.slider_min.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
-                            label_max.set_text (Math.floor (item.value * 100).toString() + "%");
+                            this.label_max.set_text (Math.floor (item.value * 100).toString() + "%");
                             this._set_max_pstate (Math.floor (item.value * 100));
                         }
                     }
                 }));
             } else if (this.boost_present) {
-                boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
-                boost_switch.connect ('toggled', Lang.bind (this, function (item) {
+                this.boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
+                this.boost_switch.connect ('toggled', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
                         this._set_boost (item.state);
                     }
                 }));
             }
             if (!this.pstate_present && (this.frequences.length > 1)) {
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
-                let title_min = new PopupMenu.PopupMenuItem ('Minimum:', {reactive: false});
-                label_min = new St.Label ({text: this._get_min_label ()});
-                title_min.actor.add_child (label_min, {align:St.Align.END});
-                this.menu.addMenuItem (title_min);
+                this.menu.addMenuItem (new SeparatorItem ());
+                this.label_min = new InfoMenuItem ("Minimum", this._get_min_label ());
+                this.menu.addMenuItem (this.label_min);
                 let menu_min = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_min.actor.add (slider_min.actor, {expand: true});
+                menu_min.actor.add (this.slider_min.actor, {expand: true});
                 this.menu.addMenuItem (menu_min);
-                slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_min.connect('value-changed', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
+                        if (item.value > this.slider_max.value) {
+                            this.slider_max.setValue (item.value);
+                            this.slider_max.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
-                            label_min.set_text (this._get_label (f));
+                            this.label_min.set_text (this._get_label (f));
                             this._set_min (f);
                         }
                     }
                 }));
-                let title_max = new PopupMenu.PopupMenuItem ('Maximum:', {reactive: false});
-                label_max = new St.Label ({text: this._get_max_label ()});
-                title_max.actor.add_child (label_max, {align:St.Align.END});
-                this.menu.addMenuItem (title_max);
+                this.label_max = new InfoMenuItem ("Maximum", this._get_max_label ());
+                this.menu.addMenuItem (this.label_max);
                 let menu_max = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                menu_max.actor.add (slider_max.actor, {expand: true});
+                menu_max.actor.add (this.slider_max.actor, {expand: true});
                 this.menu.addMenuItem (menu_max);
-                slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_max.connect('value-changed', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
+                        if (item.value < this.slider_min.value) {
+                            this.slider_min.setValue (item.value);
+                            this.slider_min.emit('value-changed', item.value);
+                            this._pause (100);
+                        }
                         if (slider_lock == false) {
                             var f = this._get_freq (Math.floor (item.value * 100));
-                            label_max.set_text (this._get_label (f));
+                            this.label_max.set_text (this._get_label (f));
                             this._set_max (f);
                         }
                     }
                 }));
             }
-            if (slider_min && !this.pstate_present) {
+            if (this.slider_min && !this.pstate_present) {
                 if (this.activeg.label.text == 'powersave') {
-                    slider_max.actor.reactive = false;
-                    slider_max.actor.opacity = 50;
+                    this.slider_max.actor.reactive = false;
+                    this.slider_max.actor.opacity = 50;
                 } else if (this.activeg.label.text == 'performance') {
-                    slider_min.actor.reactive = false;
-                    slider_min.actor.opacity = 50;
+                    this.slider_min.actor.reactive = false;
+                    this.slider_min.actor.opacity = 50;
                 }
             }
             if (this.cpucount > 1) {
                 //this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
                 this.menu.addMenuItem (this.coremenu);
                 let menu_core = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                slider_core = new Slider.Slider (GLib.get_num_processors () / this.cpucount);
-                menu_core.actor.add (slider_core.actor, {expand: true});
+                this.slider_core = new Slider.Slider (GLib.get_num_processors () / this.cpucount);
+                menu_core.actor.add (this.slider_core.actor, {expand: true});
                 this.menu.addMenuItem (menu_core);
                 this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Is Not Recommended");
                 this.corewarn.actor.effect = new Clutter.ColorizeEffect (new Clutter.Color({red: 47, green: 4, blue: 4}), 0.75);
@@ -446,36 +519,54 @@ const FrequencyIndicator = new Lang.Class({
                     cmd = "gedit --new-window " + EXTENSIONDIR + "/README.md +20";
                     Util.trySpawnCommandLine (cmd);
                 }));
-                slider_core.connect('value-changed', Lang.bind (this, function (item) {
+                this.slider_core.connect('value-changed', Lang.bind (this, function (item) {
+                    this._changed ();
                     if (this.installed) {
                         var cc = Math.floor ((this.cpucount - 1) * item.value + 1);
                         this._set_cores (cc);
-                        if (cc == 1) {
-                            this.corewarn.actor.visible = true;
-                            this.coremenu.label.text = "Single Core Online";
-                        } else {
-                            this.corewarn.actor.visible = false;
-                            this.coremenu.label.text = cc + " Cores Online";
-                        }
+                        this.coremenu.set_text (cc);
+                        this.corewarn.actor.visible = (cc == 1) ? true : false;
                     }
                 }));
             }
             if (this.boost_present || this.pstate_present) {
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                //this.menu.addMenuItem (new SeparatorItem ());
             }
-            if (boost_switch) this.menu.addMenuItem (boost_switch);
-            if (turbo_switch) this.menu.addMenuItem (turbo_switch);
+            if (this.boost_switch) this.menu.addMenuItem (this.boost_switch);
+            if (this.turbo_switch) this.menu.addMenuItem (this.turbo_switch);
+            //Profiles menu
+            let newItem = new NewMenuItem ("New ...", "", "Profile Name");
+            this.profmenu.menu.addMenuItem (newItem);
+            newItem.connect ('save', Lang.bind (this, function () {
+                profiles.push (this._get_profile (newItem.entry.text));
+                this._add_profile (profiles.length -1);
+                this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+            }));
+            this.menu.addMenuItem (new SeparatorItem ());
+            this.menu.addMenuItem (this.profmenu);
+            let resetItem = new PopupMenu.PopupMenuItem (default_profile.name);
+            this.profmenu.menu.addMenuItem (resetItem);
+            resetItem.connect ('activate', Lang.bind (this, function () {
+                if (this.installed) {
+                    this._load_profile (default_profile);
+                    if (save && (this.PID != -1)) this._settings.set_int (PROFILE_KEY, -1);
+                    this.PID = -1;
+                }
+            }));
+            for (let p in profiles) {
+                this._add_profile (p);
+            }
             if (!this.installed || !this.updated) {
                 let updates_txt = "";
                 if (!this.updated) updates_txt = " updates";
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (new SeparatorItem ());
                 let mi_install = new PopupMenu.PopupMenuItem ("\u26a0 Install" + updates_txt + "...");
                 this.menu.addMenuItem (mi_install);
                 mi_install.connect ('activate', Lang.bind (this, function () {
                     this._install ();
                 }));
             } else {
-                this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
+                this.menu.addMenuItem (new SeparatorItem ());
                 let sm = new PopupMenu.PopupSubMenuMenuItem('Preferences', false);
                 this.menu.addMenuItem (sm);
                 let save_switch = new PopupMenu.PopupSwitchMenuItem('Remember settings', save);
@@ -484,11 +575,218 @@ const FrequencyIndicator = new Lang.Class({
                     save = item.state;
                     this._settings.set_boolean(SAVE_SETTINGS_KEY, item.state);
                 }));
+                let mi_reload = new PopupMenu.PopupMenuItem ("Reload");
+                sm.menu.addMenuItem (mi_reload);
+                mi_reload.connect ('activate', Lang.bind (this, function () {
+                    try {
+                        this.remove_events ();
+                        ExtensionSystem.reloadExtension (Me);
+                        print ("Reloading completed");
+                    } catch (e) {
+                        print ("Error reloading extension", e.message);
+                    }
+                }));
             }
         } else {
             let errorItem = new PopupMenu.PopupMenuItem ("\u26a0 Please install cpufrequtils or cpupower");
             this.menu.addMenuItem (errorItem);
         }
+    },
+
+    _changed: function () {
+        if (this.PID > -1) {
+            this.PID = -1;
+            this._settings.set_int (PROFILE_KEY, -1);
+        }
+        if (this.profmenu) this.profmenu.label.text = "Custom";
+    },
+
+    _add_profile: function (idx) {
+        let prfItem = new ProfileMenuItem (profiles[idx].name);
+        prfItem.ID = idx;
+        this.profmenu.menu.addMenuItem (prfItem);
+        prfItem.connect ('activate', Lang.bind (this, function (o) {
+            if (this.installed) {
+                //this.profmenu.label.text = o.label.text;
+                this._load_profile (profiles[o.ID]);
+                this.PID = o.ID;
+                this._settings.set_int (PROFILE_KEY, this.PID);
+            }
+        }));
+        prfItem.connect ('edit', Lang.bind (this, function (o) {
+            if (this.edit_item && this.edit_item.edit_mode && this.edit_item.ID != o.ID) this.edit_item.toggle ();
+            this.edit_item = o;
+        }));
+        prfItem.connect ('update', Lang.bind (this, function (o) {
+            profiles[o.ID] = this._get_profile (o.label.text);
+            this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+        }));
+        prfItem.connect ('delete', Lang.bind (this, function (o) {
+            var id  = parseInt (o.ID);
+            if (this.PID > -1) {
+                if (id == this.PID) this.PID = -1;
+                if (this.PID > id) this.PID--;
+                this._settings.set_int (PROFILE_KEY, this.PID);
+            }
+            profiles.splice (o.ID, 1);
+            this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+            o.destroy ();
+            let items = this.profmenu.menu.box.get_children ().map (function(actor) {return actor._delegate;});
+            id += 2;
+            for (let key = id; key < items.length; key++){
+                let item = items[key];
+                item.ID -= 1;
+            }
+        }));
+    },
+
+    _get_profile: function (pname) {
+        let save_state = save;
+        let cores = [];
+        let boost = true;
+        let minf = 0, maxf = 100;
+        save = false;
+        if (this.pstate_present) boost = this._get_turbo ();
+        else boost = this._get_boost ();
+        if (this.slider_min) {
+            minf = Math.floor (this.slider_min.value * 100);
+            maxf = Math.floor (this.slider_max.value * 100);
+        }
+        for (let key = 0; key < this.cpucount; key++) {
+            let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
+            cores.push (core);
+        }
+        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, core:cores};
+        save = save_state;
+        print (JSON.stringify (p));
+        return p;
+    },
+
+    _load_profile: function (prf) {
+        if (install_event > 0) return;
+        print ('Loading profile...', JSON.stringify (prf));
+        this.remove_events ();
+        this.statusLabel.set_text ("... \u3393");
+        this.prf = prf;
+        for (let key = 1; key < this.cpucount; key++) {
+            this._set_core (key, true);
+        }
+        this.stage = 0;
+        this._delayed_load (prf);
+        if (this.profmenu) this.profmenu.label.text = prf.name;
+    },
+
+    _delayed_load: function () {
+        let delay = 1000;
+        if (core_event != 0) {
+            Mainloop.source_remove (core_event);
+            core_event = 0;
+        }
+        this._load_stage (this.prf);
+        this.stage++;
+        switch (this.stage) {
+            case 1: // reset min/max frequencies
+                delay = 50;
+                break;
+            case 2: // setting governors
+                delay = 50;
+                break;
+            case 3: // setting boost
+                delay = 50;
+                break;
+            case 4: // setting min frequency
+                delay = 50;
+                break;
+            case 5: // setting max frequency
+                delay = 50;
+                break;
+            case 6: // enable/disable cores
+                delay = 50;
+                break;
+            default:
+                return;
+        }
+        core_event = Mainloop.timeout_add (delay, Lang.bind (this, this._delayed_load));
+    },
+
+    _load_stage: function (prf) {
+        if (this.stage == 1) {
+            if (this.pstate_present) {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max 100");
+            } else {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " minf " + this._get_freq (0));
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " maxf " + this._get_freq (100));
+            }
+        } else if (this.stage == 2) {
+            this.g = "";
+            for (let key = 0; key < this.cpucount; key++) {
+                if (prf.core[key]) {
+                    this._set_governor (key, prf.core[key].g);
+                    if (this.g != "mixed") {
+                        if (!this.g) {
+                            this.g = prf.core[key].g;
+                        } else if (this.g != prf.core[key].g) {
+                            this.g = "mixed";
+                        }
+                    }
+                }
+            }
+        } else if (this.stage == 3) {
+            if (this.pstate_present) {
+                this._set_turbo (prf.turbo);
+            } else {
+                this._set_boost (prf.turbo);
+            }
+        } else if (this.stage == 4) {
+            if (this.pstate_present) {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min " + prf.minf);
+            } else {
+                for (let key = 0; key < prf.cpu; key++) {
+                    if (prf.core[key]) {
+                        this._set_coremin (key, prf.core[key].a);
+                    }
+                }
+            }
+        } else if (this.stage == 5) {
+            if (this.pstate_present) {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max " + prf.maxf);
+            } else {
+                for (let key = 0; key < prf.cpu; key++) {
+                    if (prf.core[key]) {
+                        this._set_coremax (key, prf.core[key].b);
+                    }
+                }
+                this.slider_min.actor.reactive = true;
+                this.slider_min.actor.opacity = 255;
+                this.slider_max.actor.reactive = true;
+                this.slider_max.actor.opacity = 255;
+                if (this.g == 'powersave') {
+                    this.slider_max.actor.reactive = false;
+                    this.slider_max.actor.opacity = 50;
+                } else if (this.g == 'performance') {
+                    this.slider_min.actor.reactive = false;
+                    this.slider_min.actor.opacity = 50;
+                }
+            }
+        } else if (this.stage == 6) {
+            for (let key = 1; key < this.cpucount; key++) {
+                if (key < prf.cpu) this._set_core (key, true);
+                else this._set_core (key, false);
+            }
+            this._init_streams ();
+            this._update_freq ();
+            this._add_event ();
+        }
+    },
+    
+    _pause: function (msec) {
+        var t = Date.now ();
+        var i = 0;
+        while ((Date.now () - t) < msec) {
+            i++;
+        }
+        //print (msec,"ms loops:", i);
     },
 
     _get_cpu_number: function () {
@@ -600,7 +898,9 @@ const FrequencyIndicator = new Lang.Class({
         ccore = count;
         if (core_event != 0) {
             Mainloop.source_remove (core_event);
+            core_event = 0;
         }
+        if (count == GLib.get_num_processors ()) return;
         core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
             for (let key = 1; key < this.cpucount; key++) {
                 if (key < ccore) this._set_core (key, true);
@@ -609,6 +909,81 @@ const FrequencyIndicator = new Lang.Class({
             core_event = 0;
             return false;
         }));
+    },
+
+    _get_governor: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coreg " + core);
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                let g = freqInfo;
+                return g;
+            }
+        }
+        return "unknown";
+    },
+
+    _set_governor: function (core, state) {
+        if (this.util_present) {
+            try {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coreg " + core + " " + state);
+            } catch (e) {
+                global.log ("Set governor", e.message);
+                return false;
+            }
+        }
+        return true;
+    },
+
+    _get_coremin: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremin " + core);
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                let g = parseInt (freqInfo);
+                return g;
+            }
+        }
+        return 0;
+    },
+
+    _set_coremin: function (core, state) {
+        if (this.util_present) {
+            try {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coremin " + core + " " + state);
+            } catch (e) {
+                global.log ("Set coremin", e.message);
+                return false;
+            }
+        }
+        return true;
+    },
+
+    _get_coremax: function (core) {
+        freqInfo = null;
+        if (this.util_present) {
+            cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremax " + core);
+            if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) {
+                let g = parseInt (freqInfo);
+                return g;
+            }
+        }
+        return 0;
+    },
+
+    _set_coremax: function (core, state) {
+        if (this.util_present) {
+            try {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " coremax " + core + " " + state);
+            } catch (e) {
+                global.log ("Set coremax", e.message);
+                return false;
+            }
+        }
+        return true;
     },
 
     _get_turbo: function () {
@@ -810,6 +1185,152 @@ const FrequencyIndicator = new Lang.Class({
             return state;
         }
         return false;
+    },
+
+    remove_events: function () {
+        if (event != 0) Mainloop.source_remove (event);
+        if (install_event != 0) Mainloop.source_remove (install_event);
+        if (core_event != 0) Mainloop.source_remove (core_event);
+        if (min_event != 0) Mainloop.source_remove (min_event);
+        if (max_event != 0) Mainloop.source_remove (max_event);
+        event = 0; install_event = 0; core_event = 0; min_event = 0; max_event = 0;
+    }
+});
+
+const InfoMenuItem = new Lang.Class ({
+    Name: 'InfoMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function (text, label_info) {
+        this.parent (text, {reactive: false, style_class: 'popup-info-item'});
+        this.label.x_expand = true;
+        this.label2 = new St.Label ({text: label_info});
+        this.actor.add_child (this.label2, {align:St.Align.END});
+    },
+
+    set_text: function (text) {
+        this.label2.set_text (text);
+    }
+});
+
+const CoreInfoItem = new Lang.Class ({
+    Name: 'CoreInfoItem',
+    Extends: InfoMenuItem,
+
+    _init: function (cores) {
+        this.msg = "Cores Online";
+        this.parent (this.msg, cores.toString ());
+    },
+
+    set_text: function (cores) {
+        if (this.label2.text == '' && cores > 1) this.label.text = this.msg;
+        else if (this.label2.text != '' && cores == 1) this.label.text = "Single Core Online";
+        if (this.label2.text != '' && cores == 1)this.label2.set_text ('');
+        if (this.label2.text != cores.toString () && cores > 1)this.label2.set_text (cores.toString ());
+    }
+});
+
+const NewMenuItem = new Lang.Class ({
+    Name: 'NewMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function (text, text_entry, hint_text, params) {
+        this.parent (text, params);
+        this.entry = new St.Entry ({ text:text_entry, hint_text:hint_text, style_class: 'cpufreq-entry', track_hover: true, can_focus: true, x_expand: true });
+        this.actor.add_child (this.entry);
+        this.entry.set_primary_icon (new St.Icon({ style_class: 'cpufreq-entry-icon', icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
+        //FIX to the bug https://bugzilla.gnome.org/show_bug.cgi?id=782190 only 1 button useful for 3.18-3.24.1
+        //this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
+        this.entry.connect ('primary-icon-clicked', Lang.bind(this, function () {
+            this.on_click ();
+        }));
+        this.entry.connect ('secondary-icon-clicked', Lang.bind(this, function () {
+            this.on_click ();
+        }));
+        this.entry.clutter_text.connect('key-press-event', Lang.bind (this, function (o, event) {
+            let symbol = event.get_key_symbol();
+            if (symbol == Clutter.Escape) {
+                this.toggle ();
+                return Clutter.EVENT_STOP;
+            } else if (symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+                this.on_click ();
+                this.toggle ();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
+        }));
+        this.entry.clutter_text.connect('key-focus-in', Lang.bind (this, function () {
+            Clutter.grab_keyboard (this.entry.clutter_text);
+        }));
+        this.entry.visible = false;
+    },
+
+    activate: function (event) {
+        if (this.entry.text != '') this.toggle ();
+    },
+
+    toggle: function () {
+        this.label.visible = !this.label.visible;
+        this.entry.visible = !this.entry.visible;
+        if (this.entry.visible) Clutter.grab_keyboard (this.entry.clutter_text);
+        else Clutter.ungrab_keyboard ();
+    },
+
+    on_click: function () {
+        this.emit ('save');
+    }
+});
+
+const ProfileMenuItem = new Lang.Class ({
+    Name: 'ProfileMenuItem',
+    Extends: NewMenuItem,
+
+    _init: function (text, params) {
+        this.parent (text, text, "", params);
+        this.label.x_expand = true;
+        this.edit_mode = false;
+        this.edit_button = new St.Button ({ child: new St.Icon ({ icon_name: 'open-menu-symbolic', icon_size: 14 }), style_class: 'edit-button'});
+        this.actor.add_child (this.edit_button);
+        this.edit_button.connect ('clicked', Lang.bind (this, function () {
+            this.toggle ();
+            Clutter.grab_keyboard (this.entry.clutter_text);
+            global.stage.set_key_focus (this.entry.clutter_text);
+            this.emit ('edit');
+        }));
+        this.delete_button = new St.Button ({ child: new St.Icon ({ icon_name: 'edit-delete-symbolic', icon_size: 14 }), style_class: 'delete-button'});
+        this.actor.add_child (this.delete_button);
+        this.delete_button.connect ('clicked', Lang.bind (this, function () {
+            this.emit ('delete');
+        }));
+    },
+
+    activate: function (event) {
+        if (this.entry.text == '') this.entry.text = this.label.text;
+        if (!this.edit_mode) this.emit ('activate', event);
+        if (this.entry.visible) this.toggle ();
+    },
+
+    toggle: function () {
+        this.parent ();
+        this.edit_button.visible = !this.edit_button.visible;
+        this.delete_button.visible = !this.delete_button.visible;
+        this.edit_mode = this.entry.visible;
+    },
+
+    on_click: function () {
+        this.label.text = this.entry.text;
+        this.emit ('update');
+    }
+});
+
+const SeparatorItem = new Lang.Class({
+    Name: 'SeparatorItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function () {
+        this.parent({ reactive: false, style_class: 'separator-item', can_focus: false});
+        this._separator = new Separator.HorizontalSeparator ({ style_class: 'cpufreq-separator-menu-item' });
+        this.actor.add (this._separator.actor, { expand: true });
     }
 });
 
@@ -824,12 +1345,7 @@ function enable () {
 }
 
 function disable () {
-    if (event != 0) Mainloop.source_remove (event);
-    if (install_event != 0) Mainloop.source_remove (install_event);
-    if (core_event != 0) Mainloop.source_remove (core_event);
-    if (min_event != 0) Mainloop.source_remove (min_event);
-    if (max_event != 0) Mainloop.source_remove (max_event);
-    event = 0; install_event = 0; core_event = 0; min_event = 0; max_event = 0;
+    freqMenu.remove_events ();
     freqMenu.destroy ();
     freqMenu = null;
 }
