@@ -1294,8 +1294,7 @@ const InfoItem = new Lang.Class({
         this.actor.add_child (this.vbox, { align: St.Align.END });
         this._cpu = new St.Label ({text: this.cpu_name, style: 'font-weight: bold;'});
         this.vbox.add_child (this._cpu, {align:St.Align.START});
-        //uname -o -n - r "GNU/Linux Debian kernel 4.9"
-        this._linux = new St.Label ({text: "GNU/Linux"});
+        this._linux = new St.Label ({text: this.linux_kernel});
         this.vbox.add_child (this._linux, {align:St.Align.START});
         this._load = new St.Label ({text: "◕ 170% 41.0°C Throttle 0"});
         this.vbox.add_child (this._load, {align:St.Align.START});
@@ -1340,6 +1339,24 @@ const InfoItem = new Lang.Class({
             }
         }
         return "unknown processor";
+    },
+
+    get linux_kernel () {
+        let s = "GNU/Linux";
+        cpufreq_output = GLib.spawn_command_line_sync ("lsb_release -sirc");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n");
+        if (freqInfo[0]) {
+            s = freqInfo[0];
+            if (freqInfo[1]) s += " " + freqInfo[1];
+            if (freqInfo[2]) s += " " + freqInfo[2][0].toUpperCase() + freqInfo[2].slice (1);
+        }
+        cpufreq_output = GLib.spawn_command_line_sync ("uname -r");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(".");
+        if (freqInfo[0]) {
+            s += " kernel " + freqInfo[0];
+            if (freqInfo[1]) s += "." + freqInfo[1];
+        }
+        return s;
     }
 });
 
