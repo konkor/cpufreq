@@ -130,7 +130,7 @@ const FrequencyIndicator = new Lang.Class({
         if (!default_profile) default_profile = this._get_profile ('Default');
         this._build_ui ();
         if (save) this._load_settings ();
-        print (profs);
+        //print (profs);
 
         this._add_event ();
         this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
@@ -612,7 +612,7 @@ const FrequencyIndicator = new Lang.Class({
                 //this.profmenu.label.text = o.label.text;
                 this._load_profile (profiles[o.ID]);
                 this.PID = o.ID;
-                if (save) this._settings.set_int (PROFILE_KEY, this.PID);
+                this._settings.set_int (PROFILE_KEY, this.PID);
             }
         }));
         prfItem.connect ('edit', Lang.bind (this, function (o) {
@@ -658,7 +658,7 @@ const FrequencyIndicator = new Lang.Class({
             let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
             cores.push (core);
         }
-        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), core:cores};
+        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, core:cores};
         save = save_state;
         print (JSON.stringify (p));
         return p;
@@ -669,64 +669,117 @@ const FrequencyIndicator = new Lang.Class({
         print ('Loading profile...', JSON.stringify (prf));
         this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
+        this.prf = prf;
         for (let key = 1; key < this.cpucount; key++) {
-            if (key < prf.cpu) this._set_core (key, true);
-            else this._set_core (key, false);
+            this._set_core (key, true);
         }
-        this._pause (250);
-        if (this.pstate_present) {
-            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
-            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max 100");
-        } else {
-            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " minf " + this._get_freq (0));
-            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " maxf " + this._get_freq (100));
+        this.stage = 0;
+        this._delayed_load (prf);
+        if (this.profmenu) this.profmenu.label.text = prf.name;
+    },
+
+    _delayed_load: function () {
+        let delay = 1000;
+        if (core_event != 0) {
+            Mainloop.source_remove (core_event);
+            core_event = 0;
         }
-        this._pause (0);
-        let g = "";
-        for (let key = 0; key < prf.cpu; key++) {
-            if (prf.core[key]) {
-                this._set_governor (key, prf.core[key].g);
-                if (g != "mixed") {
-                    if (!g) {
-                        g = prf.core[key].g;
-                    } else if (g != prf.core[key].g) {
-                        g = "mixed";
+        this._load_stage (this.prf);
+        this.stage++;
+        switch (this.stage) {
+            case 1: // reset min/max frequencies
+                delay = 50;
+                break;
+            case 2: // setting governors
+                delay = 50;
+                break;
+            case 3: // setting boost
+                delay = 50;
+                break;
+            case 4: // setting min frequency
+                delay = 50;
+                break;
+            case 5: // setting max frequency
+                delay = 50;
+                break;
+            case 6: // enable/disable cores
+                delay = 50;
+                break;
+            default:
+                return;
+        }
+        core_event = Mainloop.timeout_add (delay, Lang.bind (this, this._delayed_load));
+    },
+
+    _load_stage: function (prf) {
+        if (this.stage == 1) {
+            if (this.pstate_present) {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min 0");
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max 100");
+            } else {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " minf " + this._get_freq (0));
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " maxf " + this._get_freq (100));
+            }
+        } else if (this.stage == 2) {
+            this.g = "";
+            for (let key = 0; key < this.cpucount; key++) {
+                if (prf.core[key]) {
+                    this._set_governor (key, prf.core[key].g);
+                    if (this.g != "mixed") {
+                        if (!this.g) {
+                            this.g = prf.core[key].g;
+                        } else if (this.g != prf.core[key].g) {
+                            this.g = "mixed";
+                        }
                     }
                 }
             }
-        }
-        core_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-        if (this.pstate_present) {
-            this._set_turbo (prf.turbo);
-            this._pause (100);
-            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min " + prf.minf);
-            GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max " + prf.maxf);
-        } else {
-            this._set_boost (prf.turbo);
-            for (let key = 0; key < prf.cpu; key++) {
-                if (prf.core[key]) {
-                    this._set_coremin (key, prf.core[key].a);
-                    this._set_coremax (key, prf.core[key].b);
+        } else if (this.stage == 3) {
+            if (this.pstate_present) {
+                this._set_turbo (prf.turbo);
+            } else {
+                this._set_boost (prf.turbo);
+            }
+        } else if (this.stage == 4) {
+            if (this.pstate_present) {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " min " + prf.minf);
+            } else {
+                for (let key = 0; key < prf.cpu; key++) {
+                    if (prf.core[key]) {
+                        this._set_coremin (key, prf.core[key].a);
+                    }
                 }
             }
-            this.slider_min.actor.reactive = true;
-            this.slider_min.actor.opacity = 255;
-            this.slider_max.actor.reactive = true;
-            this.slider_max.actor.opacity = 255;
-            if (g == 'powersave') {
-                this.slider_max.actor.reactive = false;
-                this.slider_max.actor.opacity = 50;
-            } else if (g == 'performance') {
-                this.slider_min.actor.reactive = false;
-                this.slider_min.actor.opacity = 50;
+        } else if (this.stage == 5) {
+            if (this.pstate_present) {
+                GLib.spawn_command_line_sync (this.pkexec_path + " " + this.cpufreqctl_path + " max " + prf.maxf);
+            } else {
+                for (let key = 0; key < prf.cpu; key++) {
+                    if (prf.core[key]) {
+                        this._set_coremax (key, prf.core[key].b);
+                    }
+                }
+                this.slider_min.actor.reactive = true;
+                this.slider_min.actor.opacity = 255;
+                this.slider_max.actor.reactive = true;
+                this.slider_max.actor.opacity = 255;
+                if (this.g == 'powersave') {
+                    this.slider_max.actor.reactive = false;
+                    this.slider_max.actor.opacity = 50;
+                } else if (this.g == 'performance') {
+                    this.slider_min.actor.reactive = false;
+                    this.slider_min.actor.opacity = 50;
+                }
             }
+        } else if (this.stage == 6) {
+            for (let key = 1; key < this.cpucount; key++) {
+                if (key < prf.cpu) this._set_core (key, true);
+                else this._set_core (key, false);
+            }
+            this._init_streams ();
+            this._update_freq ();
+            this._add_event ();
         }
-        if (this.profmenu) this.profmenu.label.text = prf.name;
-        this._init_streams ();
-        this._add_event ();
-            core_event = 0;
-            return false;
-        }));
     },
     
     _pause: function (msec) {
@@ -847,7 +900,9 @@ const FrequencyIndicator = new Lang.Class({
         ccore = count;
         if (core_event != 0) {
             Mainloop.source_remove (core_event);
+            core_event = 0;
         }
+        if (count == GLib.get_num_processors ()) return;
         core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
             for (let key = 1; key < this.cpucount; key++) {
                 if (key < ccore) this._set_core (key, true);
