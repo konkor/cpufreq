@@ -69,6 +69,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                     if (gcount > 1) this.activeg.label.text = "\u26A1 mixed";
                 }
+                if (this.info) this.info.update (this.governoractual);
                 save = false;
                 if (this.pstate_present) {
                     this.slider_min.setValue (this._get_min_pstate () / 100);
@@ -315,8 +316,8 @@ const FrequencyIndicator = new Lang.Class({
             this.turbo_switch = null;
             this.boost_switch = null;
 
-            let info = new InfoItem ();
-            this.menu.addMenuItem (info);
+            this.info = new InfoItem ();
+            this.menu.addMenuItem (this.info);
             this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
                 this.slider_min = new Slider.Slider (this._get_min_pstate () / 100);
@@ -803,27 +804,45 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_governors: function () {
-        let governors = new Array();
-        let governoractual = '';
+        let governors = new Array(), gn = [], gc = [], idx = 0;
+        this.governoractual = "";
         if (this.util_present) {
-            //getting the governors list
             let cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
             if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
-            //get the actual governor
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
-            if (cpufreq_output[0]) governoractual = cpufreq_output[1].toString().split("\n")[0].toString();
-
+            if (cpufreq_output[0]) this.governoractual = cpufreq_output[1].toString().split("\n")[0].toString();
             for each (let governor in this.governorslist){
                 let governortemp;
-                if (governoractual.indexOf (governor) > -1)
+                if (this.governoractual.indexOf (governor) > -1)
                     governortemp = [governor, true];
                 else
                     governortemp = [governor, false];
-
                 if (governor.length > 0) {
                     //governortemp[0] = governortemp[0][0].toUpperCase() + governortemp[0].slice(1);
                     governors.push (governortemp);
                 }
+            }
+            for each (let governor in this.governoractual.split(" ")){
+                idx = -1;
+                for (let i = 0; i < gn.length; i++)
+                    if (gn.indexOf (governor) > -1)
+                        idx = i;
+                if (idx > -1) {
+                    gc[idx]++;
+                } else {
+                    gn.push (governor);
+                    gc.push (1);
+                }
+            }
+            this.governoractual = "";
+            if (gn.length > 1) {
+                for (let i = 0; i < gn.length; i++) {
+                    if (i > 0 && (i % 2 == 0))
+                        this.governoractual += "\n" + gc[i].toString() + " " + gn[i];
+                    else
+                        this.governoractual += " " + gc[i].toString() + " " + gn[i];
+                }
+                this.governoractual = this.governoractual.trim();
             }
         }
         return governors;
@@ -1412,6 +1431,34 @@ const InfoItem = new Lang.Class({
             if (freqInfo[1]) s += "." + freqInfo[1];
         }
         return s;
+    },
+
+    get loadavg () {
+        let s = "Loading ", i = 0 , j;
+        cpufreq_output = GLib.spawn_command_line_sync ("cat /proc/loadavg");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(" ");
+        if (freqInfo[0]) {
+            j = i = Math.round (parseFloat (freqInfo[0]) * 100);
+            while (i > 100) {
+                s += "◉";
+                i -= 100;
+            }
+            if (i < 25) s += "◌ ";
+            else if (i < 50) s += "◔ ";
+            else if (i < 75) s += "◑ ";
+            else if (i < 100) s += "◕ ";
+            else s += "◉ ";
+            s += j.toString () + "%";
+        }
+        return s;
+    },
+
+    update: function (governors) {
+        this._load.text = this.loadavg;
+        if (governors) {
+            this._cores.visible = true;
+            this._cores.text = governors;
+        } else this._cores.visible = false;
     }
 });
 
