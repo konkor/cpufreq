@@ -33,6 +33,7 @@ let install_event = 0;
 let core_event = 0;
 let min_event = 0;
 let max_event = 0;
+let info_event = 0;
 let save = false;
 let streams = [];
 let freqInfo = null;
@@ -134,7 +135,20 @@ const FrequencyIndicator = new Lang.Class({
         //print (profs);
 
         this._add_event ();
-        this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
+        this.menu.connect ('open-state-changed', Lang.bind (this, this._on_menu_state_changed));
+    },
+
+    _on_menu_state_changed: function (source, state) {
+        if (state) {
+            info_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
+                this.info.update (this.governoractual);
+                return true;
+            }));
+        } else {
+            Mainloop.source_remove (info_event);
+            info_event = 0;
+            Clutter.ungrab_keyboard ();
+        }
     },
 
     _is_events: function () {
