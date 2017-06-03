@@ -140,7 +140,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _on_menu_state_changed: function (source, state) {
         if (state) {
-            info_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
+            info_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 this.info.update (this.governoractual);
                 return true;
             }));
@@ -1375,16 +1375,18 @@ const InfoItem = new Lang.Class({
 
     _init: function (params) {
         this.parent ({ reactive: false, can_focus: false });
-        this._icon = new St.Icon ({ style_class: 'logo-icon' });
-        this.actor.add_child (this._icon, { align: St.Align.END });
-        this._icon.icon_name = 'smile';
+        this._icon = new St.Label ({text: "☺", style: 'color: #33d552; font-weight: bold; font-size: 56pt;'});//new St.Icon ({ style_class: 'logo-icon' });
+        this._icon.y_expand = true;
+        this._icon.y_align = Clutter.ActorAlign.CENTER;
+        this.actor.add_child (this._icon);
+        //this._icon.icon_name = 'smile';
         this.vbox = new St.BoxLayout({ vertical: true, style: 'padding: 8px; spacing: 4px;' });
         this.actor.add_child (this.vbox, { align: St.Align.END });
         this._cpu = new St.Label ({text: this.cpu_name, style: 'font-weight: bold;'});
         this.vbox.add_child (this._cpu, {align:St.Align.START});
         this._linux = new St.Label ({text: this.linux_kernel});
         this.vbox.add_child (this._linux, {align:St.Align.START});
-        this._load = new St.Label ({text: "◕ 170% 41.0°C Throttle 0"});
+        this._load = new St.Label ({text: "◕ 170%"});
         this.vbox.add_child (this._load, {align:St.Align.START});
         this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
         this.vbox.add_child (this._cores, {align:St.Align.START});
@@ -1448,7 +1450,7 @@ const InfoItem = new Lang.Class({
     },
 
     get loadavg () {
-        let s = "Loading ", i = 0 , j;
+        let s = "Loading ", i = 0 , j, cc = GLib.get_num_processors ();
         cpufreq_output = GLib.spawn_command_line_sync ("cat /proc/loadavg");
         if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(" ");
         if (freqInfo[0]) {
@@ -1464,6 +1466,25 @@ const InfoItem = new Lang.Class({
             else s += "◉ ";
             s += j.toString () + "%";
         }
+        if (j > cc * 100) {
+            this._icon.text = "☹";
+            this._icon.set_style ('color: red; font-weight: bold; font-size: 56pt;');
+            this._warn.visible = true;
+            this._warn.set_style ('color: red; font-weight: bold;');
+            this.warnmsg = "SYSTEM OVERLOAD";
+        } else if (j > cc * 75) {
+            this._icon.text = "😐";
+            this._icon.set_style ('color: orange; font-weight: bold; font-size: 56pt;');
+            this._warn.visible = true;
+            this._warn.set_style ('color: orange; font-weight: bold;');
+            this.warnmsg = "SYSTEM BUSY";
+        } else {
+            this._icon.text = "☺";
+            this._icon.set_style ('color: #33d552; font-weight: bold; font-size: 56pt;');
+            this._warn.visible = false;
+            this.warnmsg = "";
+        }
+        this._warn.text = this.warnmsg;
         return s;
     },
 
