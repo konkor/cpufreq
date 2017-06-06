@@ -54,6 +54,21 @@ yum install kernel-tools
 ### Official repository [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
 
+### Install from GitHub branch (default `master`)
+1. Run install script
+```
+./install.sh
+```
+or for `info` branch to example
+```
+./install.sh info
+```
+
+2. Restart Gnome to reload extensions by:
+ * user's `Log-out/Log-in` (_X11/Wayland_)
+ * Alt-F2 `r` command (_X11 only_)
+ * or just reboot PC (_X11/Wayland_)
+
 ### From source zip archive (manual method)
 1. Download zip archive from GitHub page _[cpufreq-master.zip](https://github.com/konkor/cpufreq/archive/master.zip)_.
 2. Extract _cpufreq-master.zip_ archive and copy all to the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
