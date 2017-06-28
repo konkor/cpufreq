@@ -835,7 +835,7 @@ const FrequencyIndicator = new Lang.Class({
             if (cpufreq_output[0]) frequenceslist = cpufreq_output[1].toString().split("\n")[0].split(" ");
             for each (let freq in frequenceslist){
                 if (freq.length > 0) {
-                    frequences.unshift (freq);
+                    if (parseInt (freq) > 0) frequences.unshift (freq);
                 }
             }
             if (frequences.length > 0) {
