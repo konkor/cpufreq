@@ -140,6 +140,19 @@ If you want change governors or/and frequencies You have to install it.
 sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
 ```
 
+### Complete uninstall and removing of stored settings.
+It can be useful if you have saved broken settings values or to clean up previous installation.
+You can check this values in the **dconf-editor** at `/org/gnome/shell/extensions/cpufreq/`
+```
+dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
+sudo rm /usr/share/polkit-1/actions/konkor.cpufreq.policy
+sudo rm /usr/bin/cpufreqctl
+```
+If you want reset the extension's values to defaults just run it and restart gnome-shell.
+```
+dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
+```
+
 ### Source and packages
 * [GitHub](https://github.com/konkor/cpufreq)
 * [Gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
