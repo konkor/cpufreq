@@ -1111,7 +1111,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_min: function (minimum) {
-        if (minimum <= 0) return 0;
+        if ((minimum <= 0) || !Number.isInteger (minimum)) return 0;
         if (min_event != 0) Mainloop.source_remove (min_event);
         if (this.util_present) {
             min_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
@@ -1142,7 +1142,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_max: function (maximum) {
-        if (maximum <= 0) return 0;
+        if ((maximum <= 0) || !Number.isInteger (maximum)) return 0;
         if (max_event != 0) Mainloop.source_remove (max_event);
         if (this.util_present) {
             max_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
