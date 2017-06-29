@@ -574,6 +574,8 @@ const FrequencyIndicator = new Lang.Class({
                 save_switch.connect ('toggled', Lang.bind (this, function (item) {
                     save = item.state;
                     this._settings.set_boolean(SAVE_SETTINGS_KEY, item.state);
+                    if (save && this.PID == -1)
+                        this._save_profile (this._get_profile ("Current"));
                 }));
                 let mi_reload = new PopupMenu.PopupMenuItem ("Reload");
                 sm.menu.addMenuItem (mi_reload);
@@ -672,7 +674,7 @@ const FrequencyIndicator = new Lang.Class({
             this._set_core (key, true);
         }
         this.stage = 0;
-        this._delayed_load (prf);
+        this._delayed_load ();
         if (this.profmenu) this.profmenu.label.text = prf.name;
     },
 
@@ -779,7 +781,26 @@ const FrequencyIndicator = new Lang.Class({
             this._add_event ();
         }
     },
-    
+
+    _save_profile: function (prf) {
+        let s, n = 0;
+        if (prf.core[0].g == "userspace") {
+            s = this._read_line (streams[0]);
+            if (s) {
+                n = parseInt (s);
+                if ((n > 0) && Number.isInteger (n)) {
+                    this._settings.set_string (GOVERNOR_KEY, 'userspace');
+		            this._settings.set_string (CPU_FREQ_KEY, s);
+                }
+            }
+        } else this._settings.set_string (GOVERNOR_KEY, prf.core[0].g);
+        this._settings.set_boolean (TURBO_BOOST_KEY, prf.turbo);
+        this._settings.set_int (MIN_FREQ_PSTATE_KEY, prf.minf);
+        this._settings.set_int (MAX_FREQ_PSTATE_KEY, prf.maxf);
+        this._settings.set_string (MIN_FREQ_KEY, prf.core[0].a.toString());
+        this._settings.set_string (MAX_FREQ_KEY, prf.core[0].b.toString());
+    },
+
     _pause: function (msec) {
         var t = Date.now ();
         var i = 0;
