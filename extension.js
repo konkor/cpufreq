@@ -265,9 +265,9 @@ const FrequencyIndicator = new Lang.Class({
         var freq = this._settings.get_string (CPU_FREQ_KEY);
         cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + gov;
         GLib.spawn_command_line_sync (cmd);
-		if (gov == 'userspace') {
+        if (gov == 'userspace') {
             cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + freq;
-	    	Util.trySpawnCommandLine (cmd);
+            Util.trySpawnCommandLine (cmd);
         }
     },
 
@@ -345,13 +345,13 @@ const FrequencyIndicator = new Lang.Class({
                                 if (this.installed) {
                                     GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov userspace');
                                     let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + f;
-	    	                        global.log (cmd);
-		                            Util.trySpawnCommandLine (cmd);
-		                            if (save) {
-		                                this._settings.set_string (GOVERNOR_KEY, 'userspace');
-		                                this._settings.set_string (CPU_FREQ_KEY, f.toString ());
-		                            }
-		                        }
+                                    global.log (cmd);
+                                    Util.trySpawnCommandLine (cmd);
+                                    if (save) {
+                                        this._settings.set_string (GOVERNOR_KEY, 'userspace');
+                                        this._settings.set_string (CPU_FREQ_KEY, f.toString ());
+                                    }
+                                }
                             }));
                         }
                     } else {
@@ -361,11 +361,11 @@ const FrequencyIndicator = new Lang.Class({
                             this._changed ();
                             if (this.installed) {
                                 let cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + governorItem.label.text;
-		                        global.log (cmd);
-		                        GLib.spawn_command_line_sync (cmd);
-		                        if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
-		                        if (this.pstate_present) {
-		                            slider_lock = true;
+                                global.log (cmd);
+                                GLib.spawn_command_line_sync (cmd);
+                                if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
+                                if (this.pstate_present) {
+                                    slider_lock = true;
                                     this.slider_min.setValue (this._get_min_pstate () / 100);
                                     this.slider_max.setValue (this._get_max_pstate () / 100);
                                     slider_lock = false;
@@ -790,7 +790,7 @@ const FrequencyIndicator = new Lang.Class({
                 n = parseInt (s);
                 if ((n > 0) && Number.isInteger (n)) {
                     this._settings.set_string (GOVERNOR_KEY, 'userspace');
-		            this._settings.set_string (CPU_FREQ_KEY, s);
+                    this._settings.set_string (CPU_FREQ_KEY, s);
                 }
             }
         } else this._settings.set_string (GOVERNOR_KEY, prf.core[0].g);
@@ -869,9 +869,9 @@ const FrequencyIndicator = new Lang.Class({
 
     _get_freq: function (num) {
         let n = this.frequences.length;
-        let step = Math.round ((100 - (100 % n)) / n);
+        let step = Math.round (100 / n);
         let i = Math.round (num / step);
-        if (i == n) i--;
+        if (i >= n) i = n - 1;
         return parseInt (this.frequences[i]);
     },
 
