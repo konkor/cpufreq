@@ -33,6 +33,7 @@ let install_event = 0;
 let core_event = 0;
 let min_event = 0;
 let max_event = 0;
+let info_event = 0;
 let save = false;
 let streams = [];
 let freqInfo = null;
@@ -69,6 +70,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                     if (gcount > 1) this.activeg.label.text = "\u26A1 mixed";
                 }
+                if (this.info) this.info.update (this.governoractual);
                 save = false;
                 if (this.pstate_present) {
                     this.slider_min.setValue (this._get_min_pstate () / 100);
@@ -133,7 +135,20 @@ const FrequencyIndicator = new Lang.Class({
         //print (profs);
 
         this._add_event ();
-        this.menu.connect('menu-closed', function() { Clutter.ungrab_keyboard (); });
+        this.menu.connect ('open-state-changed', Lang.bind (this, this._on_menu_state_changed));
+    },
+
+    _on_menu_state_changed: function (source, state) {
+        if (state) {
+            info_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+                this.info.update (this.governoractual);
+                return true;
+            }));
+        } else {
+            Mainloop.source_remove (info_event);
+            info_event = 0;
+            Clutter.ungrab_keyboard ();
+        }
     },
 
     _is_events: function () {
@@ -315,6 +330,8 @@ const FrequencyIndicator = new Lang.Class({
             this.turbo_switch = null;
             this.boost_switch = null;
 
+            this.info = new InfoItem ();
+            this.menu.addMenuItem (this.info);
             this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
                 this.slider_min = new Slider.Slider (this._get_min_pstate () / 100);
@@ -822,27 +839,45 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _get_governors: function () {
-        let governors = new Array();
-        let governoractual = '';
+        let governors = new Array(), gn = [], gc = [], idx = 0;
+        this.governoractual = "";
         if (this.util_present) {
-            //getting the governors list
             let cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
             if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
-            //get the actual governor
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
-            if (cpufreq_output[0]) governoractual = cpufreq_output[1].toString().split("\n")[0].toString();
-
+            if (cpufreq_output[0]) this.governoractual = cpufreq_output[1].toString().split("\n")[0].toString();
             for each (let governor in this.governorslist){
                 let governortemp;
-                if (governoractual.indexOf (governor) > -1)
+                if (this.governoractual.indexOf (governor) > -1)
                     governortemp = [governor, true];
                 else
                     governortemp = [governor, false];
-
                 if (governor.length > 0) {
                     //governortemp[0] = governortemp[0][0].toUpperCase() + governortemp[0].slice(1);
                     governors.push (governortemp);
                 }
+            }
+            for each (let governor in this.governoractual.split(" ")){
+                idx = -1;
+                for (let i = 0; i < gn.length; i++)
+                    if (gn.indexOf (governor) > -1)
+                        idx = i;
+                if (idx > -1) {
+                    gc[idx]++;
+                } else {
+                    gn.push (governor);
+                    gc.push (1);
+                }
+            }
+            this.governoractual = "";
+            if (gn.length > 1) {
+                for (let i = 0; i < gn.length; i++) {
+                    if (i > 0 && (i % 2 == 0))
+                        this.governoractual += "\n" + gc[i].toString() + " " + gn[i];
+                    else
+                        this.governoractual += " " + gc[i].toString() + " " + gn[i];
+                }
+                this.governoractual = this.governoractual.trim();
             }
         }
         return governors;
@@ -1355,9 +1390,139 @@ const SeparatorItem = new Lang.Class({
     }
 });
 
+const InfoItem = new Lang.Class({
+    Name: 'InfoItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function (params) {
+        this.parent ({ reactive: false, can_focus: false });
+        this._icon = new St.Label ({text: "☺", style: 'color: #33d552; font-weight: bold; font-size: 56pt;'});//new St.Icon ({ style_class: 'logo-icon' });
+        this._icon.y_expand = true;
+        this._icon.y_align = Clutter.ActorAlign.CENTER;
+        this.actor.add_child (this._icon);
+        //this._icon.icon_name = 'smile';
+        this.vbox = new St.BoxLayout({ vertical: true, style: 'padding: 8px; spacing: 4px;' });
+        this.actor.add_child (this.vbox, { align: St.Align.END });
+        this._cpu = new St.Label ({text: this.cpu_name, style: 'font-weight: bold;'});
+        this.vbox.add_child (this._cpu, {align:St.Align.START});
+        this._linux = new St.Label ({text: this.linux_kernel});
+        this.vbox.add_child (this._linux, {align:St.Align.START});
+        this._load = new St.Label ({text: "◕ 170%"});
+        this.vbox.add_child (this._load, {align:St.Align.START});
+        this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
+        this.vbox.add_child (this._cores, {align:St.Align.START});
+        this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE", style: 'color: orange; font-weight: bold;'});
+        this.vbox.add_child (this._warn, {align:St.Align.START});
+        this._warn.visible = false;
+    },
+
+    get cpu_name () {
+        if (GLib.file_test ('/proc/cpuinfo', GLib.FileTest.EXISTS)) {
+            let f = Gio.File.new_for_path ('/proc/cpuinfo');
+            let dis = new Gio.DataInputStream ({ base_stream: f.read (null) });
+            let line, model = "", s, i = 0;
+            try {
+                [line, ] = dis.read_line (null);
+                while (line != null) {
+                    s = new String (line);
+                    if (s.indexOf ("model name") > -1) {
+                        model = s;
+                        i++;
+                    }
+                    if (i > 0) break;
+                    [line, ] = dis.read_line (null);
+                }
+                dis.close (null);
+                if (model) {
+                    model = model.substring (model.indexOf (":") + 1).trim ();
+                    if (model.lastIndexOf ("@") > -1)
+                        model = model.substring (0, model.lastIndexOf ("@")).trim ();
+                    model = model.replace ("(R)", "®");
+                    model = model.replace ("(TM)", "™");
+                    s = model; model = "";
+                    for each (let f in s.split (" ")) {
+                        if (f.length > 0) model += f + " ";
+                    }
+                    return model.trim ().toString ();
+                }
+            } catch (e) {
+                print ("Get CPU Error:", e.message);
+            }
+        }
+        return "unknown processor";
+    },
+
+    get linux_kernel () {
+        let s = "GNU/Linux";
+        cpufreq_output = GLib.spawn_command_line_sync ("lsb_release -sirc");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n");
+        if (freqInfo[0]) {
+            s = freqInfo[0];
+            if (freqInfo[1]) s += " " + freqInfo[1];
+            if (freqInfo[2]) s += " " + freqInfo[2][0].toUpperCase() + freqInfo[2].slice (1);
+        }
+        cpufreq_output = GLib.spawn_command_line_sync ("uname -r");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(".");
+        if (freqInfo[0]) {
+            s += " kernel " + freqInfo[0];
+            if (freqInfo[1]) s += "." + freqInfo[1];
+        }
+        return s;
+    },
+
+    get loadavg () {
+        let s = "Loading ", i = 0 , j, cc = GLib.get_num_processors ();
+        cpufreq_output = GLib.spawn_command_line_sync ("cat /proc/loadavg");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(" ");
+        if (freqInfo[0]) {
+            j = i = Math.round (parseFloat (freqInfo[0]) * 100);
+            while (i > 100) {
+                s += "◉";
+                i -= 100;
+            }
+            if (i < 25) s += "◌ ";
+            else if (i < 50) s += "◔ ";
+            else if (i < 75) s += "◑ ";
+            else if (i < 100) s += "◕ ";
+            else s += "◉ ";
+            s += j.toString () + "%";
+        }
+        if (j > cc * 100) {
+            this._icon.text = "☹";
+            this._icon.set_style ('color: red; font-weight: bold; font-size: 56pt;');
+            this._warn.visible = true;
+            this._warn.set_style ('color: red; font-weight: bold;');
+            this.warnmsg = "SYSTEM OVERLOAD";
+        } else if (j > cc * 75) {
+            this._icon.text = "😐";
+            this._icon.set_style ('color: orange; font-weight: bold; font-size: 56pt;');
+            this._warn.visible = true;
+            this._warn.set_style ('color: orange; font-weight: bold;');
+            this.warnmsg = "SYSTEM BUSY";
+        } else {
+            this._icon.text = "☺";
+            this._icon.set_style ('color: #33d552; font-weight: bold; font-size: 56pt;');
+            this._warn.visible = false;
+            this.warnmsg = "";
+        }
+        this._warn.text = this.warnmsg;
+        return s;
+    },
+
+    update: function (governors) {
+        this._load.text = this.loadavg;
+        if (governors) {
+            this._cores.visible = true;
+            this._cores.text = governors;
+        } else this._cores.visible = false;
+    }
+});
+
 let freqMenu;
 
 function init () {
+    let theme = imports.gi.Gtk.IconTheme.get_default();
+    theme.append_search_path (EXTENSIONDIR + "/icons");
 }
 
 function enable () {

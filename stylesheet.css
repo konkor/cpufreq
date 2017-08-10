@@ -63,3 +63,7 @@
   -gradient-height: 1px;
   -margin-horizontal: 24px;
 }
+
+.logo-icon {
+    icon-size: 96px;
+}
