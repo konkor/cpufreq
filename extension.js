@@ -141,6 +141,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _on_menu_state_changed: function (source, state) {
         if (state) {
+            this.info.show_icon ();
             info_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
                 this.info.update (this.governoractual);
                 return true;
@@ -1536,6 +1537,14 @@ const InfoItem = new Lang.Class({
         }
         this._warn.text = this.warnmsg;
         return s;
+    },
+
+    show_icon: function () {
+        this._icon.visible = true;
+        GLib.timeout_add_seconds (0, 5, Lang.bind (this, function () {
+            this._icon.visible = false;
+            return false;
+        }));
     },
 
     update: function (governors) {
