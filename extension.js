@@ -31,8 +31,7 @@ const Convenience = Me.imports.convenience;
 let event = 0;
 let install_event = 0;
 let core_event = 0;
-let min_event = 0;
-let max_event = 0;
+let freq_event = 0;
 let info_event = 0;
 let save = false;
 let streams = [];
@@ -42,6 +41,7 @@ let cmd = null;
 let ccore = 0;
 let profiles = [];
 let default_profile = null;
+let minfreq = 0, maxfreq = 0; //new values
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -108,6 +108,7 @@ const FrequencyIndicator = new Lang.Class({
         this.updated = true;
         this.governorslist = [];
         this.frequences = [];
+        // min/max posible values
         this.minimum_freq = -1;
         this.maximum_freq = -1;
         this.edit_item = null;
@@ -154,8 +155,7 @@ const FrequencyIndicator = new Lang.Class({
     _is_events: function () {
         if (install_event > 0) return true;
         if (core_event > 0) return true;
-        if (min_event > 0) return true;
-        if (max_event > 0) return true;
+        if (freq_event > 0) return true;
         return false;
     },
 
@@ -334,11 +334,17 @@ const FrequencyIndicator = new Lang.Class({
             this.menu.addMenuItem (this.info);
             this.menu.addMenuItem (this.activeg);
             if (this.pstate_present) {
-                this.slider_min = new Slider.Slider (this._get_min_pstate () / 100);
-                this.slider_max = new Slider.Slider (this._get_max_pstate () / 100);
-            } else if (this.frequences.length > 1) {
-                this.slider_min = new Slider.Slider (this._get_pos (this._get_min ()));
-                this.slider_max = new Slider.Slider (this._get_pos (this._get_max ()));
+                minfreq = this._get_min_pstate ();
+                maxfreq = this._get_max_pstate ();
+                this.slider_min = new Slider.Slider (minfreq / 100);
+                this.slider_max = new Slider.Slider (maxfreq / 100);
+            } else {
+                minfreq = this._get_min ();
+                maxfreq = this._get_max ();
+                if (this.frequences.length > 1) {
+                    this.slider_min = new Slider.Slider (this._get_pos (minfreq));
+                    this.slider_max = new Slider.Slider (this._get_pos (maxfreq));
+                }
             }
             if (this.governors.length > 0) {
                 for each (let governor in this.governors){
@@ -432,13 +438,15 @@ const FrequencyIndicator = new Lang.Class({
                     if (this.installed) {
                         if (item.value > this.slider_max.value) {
                             this.slider_max.setValue (item.value);
-                            this.slider_max.emit('value-changed', item.value);
-                            this._pause (100);
+                            this.slider_max.emit ('value-changed', item.value);
                         }
-                        if (slider_lock == false) {
-                            this.label_min.set_text (Math.floor (item.value * 100).toString() + "%");
-                            this._set_min_pstate (Math.floor (item.value * 100));
+                        minfreq = Math.floor (item.value * 100);
+                        this.label_min.set_text (minfreq.toString() + "%");
+                        if (freq_event != 0) {
+                            Mainloop.source_remove (freq_event);
+                            freq_event = 0;
                         }
+                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
                 this.label_max = new InfoMenuItem ("Maximum", this._get_max_pstate () + "%");
@@ -451,13 +459,15 @@ const FrequencyIndicator = new Lang.Class({
                     if (this.installed) {
                         if (item.value < this.slider_min.value) {
                             this.slider_min.setValue (item.value);
-                            this.slider_min.emit('value-changed', item.value);
-                            this._pause (100);
+                            this.slider_min.emit ('value-changed', item.value);
                         }
-                        if (slider_lock == false) {
-                            this.label_max.set_text (Math.floor (item.value * 100).toString() + "%");
-                            this._set_max_pstate (Math.floor (item.value * 100));
+                        maxfreq = Math.floor (item.value * 100);
+                        this.label_max.set_text (maxfreq.toString() + "%");
+                        if (freq_event != 0) {
+                            Mainloop.source_remove (freq_event);
+                            freq_event = 0;
                         }
+                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
             } else if (this.boost_present) {
@@ -482,13 +492,14 @@ const FrequencyIndicator = new Lang.Class({
                         if (item.value > this.slider_max.value) {
                             this.slider_max.setValue (item.value);
                             this.slider_max.emit('value-changed', item.value);
-                            this._pause (100);
                         }
-                        if (slider_lock == false) {
-                            var f = this._get_freq (Math.floor (item.value * 100));
-                            this.label_min.set_text (this._get_label (f));
-                            this._set_min (f);
+                        minfreq = this._get_freq (Math.floor (item.value * 100));
+                        this.label_min.set_text (this._get_label (minfreq));
+                        if (freq_event != 0) {
+                            Mainloop.source_remove (freq_event);
+                            freq_event = 0;
                         }
+                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
                 this.label_max = new InfoMenuItem ("Maximum", this._get_max_label ());
@@ -502,13 +513,14 @@ const FrequencyIndicator = new Lang.Class({
                         if (item.value < this.slider_min.value) {
                             this.slider_min.setValue (item.value);
                             this.slider_min.emit('value-changed', item.value);
-                            this._pause (100);
                         }
-                        if (slider_lock == false) {
-                            var f = this._get_freq (Math.floor (item.value * 100));
-                            this.label_max.set_text (this._get_label (f));
-                            this._set_max (f);
+                        maxfreq = this._get_freq (Math.floor (item.value * 100));
+                        this.label_max.set_text (this._get_label (maxfreq));
+                        if (freq_event != 0) {
+                            Mainloop.source_remove (freq_event);
+                            freq_event = 0;
                         }
+                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
             }
@@ -827,6 +839,44 @@ const FrequencyIndicator = new Lang.Class({
         //print (msec,"ms loops:", i);
     },
 
+    set_frequencies: function () {
+        if (freq_event != 0) {
+            Mainloop.source_remove (freq_event);
+            freq_event = 0;
+        }
+        let cmin, cmax;
+        if (this.pstate_present) {
+            let save_state = save;
+            save = false;
+            cmin = this._get_min_pstate ();
+            cmax = this._get_max_pstate ();
+            save = save_state;
+            if ((minfreq == cmin) && (maxfreq == cmax)) return;
+            if ((minfreq > cmax) && (minfreq <= maxfreq)) {
+                this._set_max_pstate (maxfreq);
+                this._pause (100);
+                this._set_min_pstate (minfreq);
+            } else {
+                if (minfreq != cmin) this._set_min_pstate (minfreq);
+                this._pause (100);
+                if (maxfreq != cmax) this._set_max_pstate (maxfreq);
+            }
+        } else {
+            cmin = this._get_coremin (0);
+            cmax = this._get_coremax (0);
+            if ((minfreq == cmin) && (maxfreq == cmax)) return;
+            if ((minfreq > cmax) && (minfreq <= maxfreq)) {
+                this._set_max (maxfreq);
+                this._pause (100);
+                this._set_min (minfreq);
+            } else {
+                if (minfreq != cmin) this._set_min (minfreq);
+                this._pause (100);
+                if (maxfreq != cmax) this._set_max (maxfreq);
+            }
+        }
+    },
+
     _get_cpu_number: function () {
         let c = 0;
         let cpulist = null;
@@ -1088,15 +1138,10 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_min_pstate: function (minimum) {
-        if (min_event != 0) Mainloop.source_remove (min_event);
         if (this.util_present) {
-            min_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
-                Util.trySpawnCommandLine (cmd);
-                if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
-                min_event = 0;
-                return false;
-            }));
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " min " + minimum.toString();
+            Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_int(MIN_FREQ_PSTATE_KEY, minimum);
             return minimum;
         }
         return 0;
@@ -1118,15 +1163,10 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _set_max_pstate: function (maximum) {
-        if (max_event != 0) Mainloop.source_remove (max_event);
         if (this.util_present) {
-            max_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
-                Util.trySpawnCommandLine (cmd);
-                if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
-                max_event = 0;
-                return false;
-            }));
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " max " + maximum.toString();
+            Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_int(MAX_FREQ_PSTATE_KEY, maximum);
             return maximum;
         }
         return 100;
@@ -1168,15 +1208,10 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_min: function (minimum) {
         if ((minimum <= 0) || !Number.isInteger (minimum)) return 0;
-        if (min_event != 0) Mainloop.source_remove (min_event);
         if (this.util_present) {
-            min_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
-                Util.trySpawnCommandLine (cmd);
-                if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
-                min_event = 0;
-                return false;
-            }));
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " minf " + minimum.toString();
+            Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_string (MIN_FREQ_KEY, minimum.toString());
             return minimum;
         }
         return 0;
@@ -1199,15 +1234,10 @@ const FrequencyIndicator = new Lang.Class({
 
     _set_max: function (maximum) {
         if ((maximum <= 0) || !Number.isInteger (maximum)) return 0;
-        if (max_event != 0) Mainloop.source_remove (max_event);
         if (this.util_present) {
-            max_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
-                Util.trySpawnCommandLine (cmd);
-                if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
-                max_event = 0;
-                return false;
-            }));
+            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + " maxf " + maximum.toString();
+            Util.trySpawnCommandLine (cmd);
+            if (save) this._settings.set_string (MAX_FREQ_KEY, maximum.toString());
             return maximum;
         }
         return 0;
@@ -1247,9 +1277,8 @@ const FrequencyIndicator = new Lang.Class({
         if (event != 0) Mainloop.source_remove (event);
         if (install_event != 0) Mainloop.source_remove (install_event);
         if (core_event != 0) Mainloop.source_remove (core_event);
-        if (min_event != 0) Mainloop.source_remove (min_event);
-        if (max_event != 0) Mainloop.source_remove (max_event);
-        event = 0; install_event = 0; core_event = 0; min_event = 0; max_event = 0;
+        if (freq_event != 0) Mainloop.source_remove (freq_event);
+        event = 0; install_event = 0; core_event = 0; freq_event = 0;
     }
 });
 
