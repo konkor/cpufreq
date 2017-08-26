@@ -1504,6 +1504,11 @@ const InfoItem = new Lang.Class({
                     if (model.length > 11) model = model.substring (12).trim ();
                     model = model.replace (/\"/g, "");
                     model = model.replace (distro, "");
+                    i = model.indexOf ('(');
+                    if ((i > -1) && (model.length > (i+1))) {
+                        model = model.slice(0,i) + model[i+1].toUpperCase() + model.slice(i+2);
+                        model = model.replace (")", "");
+                    }
                     distro = model;
                 }
             } catch (e) {
@@ -1513,8 +1518,9 @@ const InfoItem = new Lang.Class({
         cpufreq_output = GLib.spawn_command_line_sync ("uname -r");
         if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(".");
         if (freqInfo[0]) {
-            distro += " kernel " + freqInfo[0];
-            if (freqInfo[1]) distro += "." + freqInfo[1];
+            if (distro.length > 22) distro += "\nKernel " + cpufreq_output[1].toString().split("\n")[0];
+            else {distro += " kernel " + freqInfo[0];
+            if (freqInfo[1]) distro += "." + freqInfo[1];}
         }
         return distro;
     },
