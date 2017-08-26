@@ -1482,21 +1482,40 @@ const InfoItem = new Lang.Class({
     },
 
     get linux_kernel () {
-        let s = "GNU/Linux";
-        cpufreq_output = GLib.spawn_command_line_sync ("lsb_release -sirc");
-        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n");
-        if (freqInfo[0]) {
-            s = freqInfo[0];
-            if (freqInfo[1]) s += " " + freqInfo[1];
-            if (freqInfo[2]) s += " " + freqInfo[2][0].toUpperCase() + freqInfo[2].slice (1);
+        let distro = "GNU/Linux ";
+        let f = Gio.File.new_for_path ('/etc/os-release');
+        if (f.query_exists (null)) {
+            let dis = new Gio.DataInputStream ({ base_stream: f.read (null) });
+            let line, model = "", s, i = 0;
+            try {
+                [line, ] = dis.read_line (null);
+                while (line != null) {
+                    s = new String (line);
+                    if (s.indexOf ("PRETTY_NAME=") > -1) {
+                        model = s;
+                        i++;
+                    }
+                    if (i > 0) break;
+                    [line, ] = dis.read_line (null);
+                }
+                dis.close (null);
+                if (model) {
+                    if (model.length > 11) model = model.substring (12).trim ();
+                    model = model.replace (/\"/g, "");
+                    model = model.replace (distro, "");
+                    distro = model;
+                }
+            } catch (e) {
+                print ("Get Release Error:", e.message);
+            }
         }
         cpufreq_output = GLib.spawn_command_line_sync ("uname -r");
         if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0].split(".");
         if (freqInfo[0]) {
-            s += " kernel " + freqInfo[0];
-            if (freqInfo[1]) s += "." + freqInfo[1];
+            distro += " kernel " + freqInfo[0];
+            if (freqInfo[1]) distro += "." + freqInfo[1];
         }
-        return s;
+        return distro;
     },
 
     get loadavg () {
