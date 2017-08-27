@@ -4,9 +4,7 @@ const Lang = imports.lang;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
-//const Separator = imports.ui.separator;
 const Clutter = imports.gi.Clutter;
-const Cairo = imports.cairo;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
@@ -1414,9 +1412,11 @@ const SeparatorItem = new Lang.Class({
     Extends: PopupMenu.PopupBaseMenuItem,
 
     _init: function () {
-        this.parent({ reactive: false, style_class: 'separator-item', can_focus: false});
-        this._separator = new HorizontalSeparator ({ style_class: 'cpufreq-separator-menu-item' });
-        this.actor.add (this._separator.actor, { expand: true });
+        this.parent({reactive: false, can_focus: false, style_class: 'cpufreq-separator-item'});
+        this._separator = new St.Widget({ style_class: 'cpufreq-separator-menu-item',
+                                          y_expand: true,
+                                          y_align: Clutter.ActorAlign.CENTER });
+        this.actor.add(this._separator, {expand: true});
     }
 });
 
@@ -1570,36 +1570,6 @@ const InfoItem = new Lang.Class({
             this._cores.visible = true;
             this._cores.text = governors;
         } else this._cores.visible = false;
-    }
-});
-
-const HorizontalSeparator = new Lang.Class({
-    Name: 'HorizontalSeparator',
-
-    _init: function (params) {
-        this.actor = new St.DrawingArea(params);
-        this.actor.connect('repaint', Lang.bind(this, this._onRepaint));
-    },
-
-    _onRepaint: function(area) {
-        let cr = area.get_context();
-        let themeNode = area.get_theme_node();
-        let [width, height] = area.get_surface_size();
-        let margin = themeNode.get_length('-margin-horizontal');
-        let gradientHeight = themeNode.get_length('-gradient-height');
-        let startColor = themeNode.get_color('-gradient-start');
-        let endColor = themeNode.get_color('-gradient-end');
-
-        let gradientWidth = (width - margin * 2);
-        let gradientOffset = (height - gradientHeight) / 2;
-        let pattern = new Cairo.LinearGradient(margin, gradientOffset, width - margin, gradientOffset + gradientHeight);
-        pattern.addColorStopRGBA(0, startColor.red / 255, startColor.green / 255, startColor.blue / 255, startColor.alpha / 255);
-        pattern.addColorStopRGBA(0.5, endColor.red / 255, endColor.green / 255, endColor.blue / 255, endColor.alpha / 255);
-        pattern.addColorStopRGBA(1, startColor.red / 255, startColor.green / 255, startColor.blue / 255, startColor.alpha / 255);
-        cr.setSource(pattern);
-        cr.rectangle(margin, gradientOffset, gradientWidth, gradientHeight);
-        cr.fill();
-        cr.$dispose();
     }
 });
 
