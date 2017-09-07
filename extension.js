@@ -1289,7 +1289,8 @@ const InfoMenuItem = new Lang.Class ({
         this.parent (text, {reactive: false, style_class: 'popup-info-item'});
         this.label.x_expand = true;
         this.label2 = new St.Label ({text: label_info});
-        this.actor.add_child (this.label2, {align:St.Align.END});
+        this.label2.align = St.Align.END;
+        this.actor.add_child (this.label2);
     },
 
     set_text: function (text) {
@@ -1432,17 +1433,23 @@ const InfoItem = new Lang.Class({
         this.actor.add_child (this._icon);
         //this._icon.icon_name = 'smile';
         this.vbox = new St.BoxLayout({ vertical: true, style: 'padding: 8px; spacing: 4px;' });
-        this.actor.add_child (this.vbox, { align: St.Align.END });
+        this.vbox.align = St.Align.END;
+        this.actor.add_child (this.vbox);
         this._cpu = new St.Label ({text: this.cpu_name, style: 'font-weight: bold;'});
-        this.vbox.add_child (this._cpu, {align:St.Align.START});
+        this._cpu.align = St.Align.START;
+        this.vbox.add_child (this._cpu);
         this._linux = new St.Label ({text: this.linux_kernel});
-        this.vbox.add_child (this._linux, {align:St.Align.START});
+        this._linux.align = St.Align.START;
+        this.vbox.add_child (this._linux);
         this._load = new St.Label ({text: "◕ 170%"});
-        this.vbox.add_child (this._load, {align:St.Align.START});
+        this._load.align = St.Align.START;
+        this.vbox.add_child (this._load);
         this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
-        this.vbox.add_child (this._cores, {align:St.Align.START});
+        this._cores.align = St.Align.START;
+        this.vbox.add_child (this._cores);
         this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE", style: 'color: orange; font-weight: bold;'});
-        this.vbox.add_child (this._warn, {align:St.Align.START});
+        this._warn.align = St.Align.START;
+        this.vbox.add_child (this._warn);
         this._warn.visible = false;
     },
 
