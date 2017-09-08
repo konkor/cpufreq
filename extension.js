@@ -61,12 +61,12 @@ const FrequencyIndicator = new Lang.Class({
                 let gcount = 0, saves = save;
                 this.governors = this._get_governors ();
                 if (this.governors.length > 0) {
-                    for each (let governor in this.governors) {
+                    this.governors.forEach ( (governor)=>{
                         if (governor[1] == true) {
                             this.activeg.label.text = "\u26A1 " + governor[0];
                             gcount++;
                         }
-                    }
+                    });
                     if (gcount > 1) this.activeg.label.text = "\u26A1 mixed";
                 }
                 if (this.info) this.info.update (this.governoractual);
@@ -346,13 +346,13 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
             if (this.governors.length > 0) {
-                for each (let governor in this.governors){
+                this.governors.forEach ((governor)=>{
                     if (governor[1] == true) {
                         this.activeg.label.text = governor[0];
                     }
                     if ((governor[0] == 'userspace') && (this.frequences.length > 0)) {
                         userspace = new PopupMenu.PopupSubMenuMenuItem('userspace', false);
-                        for each (let freq in this.frequences){
+                        this.frequences.forEach ((freq)=>{
                             let f = freq;
                             var s = '';
                             if (freq.length > 6) {
@@ -375,7 +375,7 @@ const FrequencyIndicator = new Lang.Class({
                                     }
                                 }
                             }));
-                        }
+                        });
                     } else {
                         let governorItem = new PopupMenu.PopupMenuItem (governor[0]);
                         this.activeg.menu.addMenuItem (governorItem);
@@ -415,7 +415,7 @@ const FrequencyIndicator = new Lang.Class({
                             }
                         }));
                     }
-                }
+                });
             }
             if (userspace != null) this.menu.addMenuItem (userspace);
             if (this.pstate_present) {
@@ -881,9 +881,9 @@ const FrequencyIndicator = new Lang.Class({
         let cpulist = null;
         let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
         if (ret[0]) cpulist = ret[1].toString().split("\n", 1)[0].split("-");
-        for each (let f in cpulist) {
+        cpulist.forEach ((f)=> {
             if (parseInt (f) > 0) c = parseInt (f);
-        }
+        });
         return c + 1;
     },
 
@@ -895,7 +895,7 @@ const FrequencyIndicator = new Lang.Class({
             if (cpufreq_output1[0]) this.governorslist = cpufreq_output1[1].toString().split("\n")[0].split(" ");
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
             if (cpufreq_output[0]) this.governoractual = cpufreq_output[1].toString().split("\n")[0].toString();
-            for each (let governor in this.governorslist){
+            this.governorslist.forEach ((governor)=> {
                 let governortemp;
                 if (this.governoractual.indexOf (governor) > -1)
                     governortemp = [governor, true];
@@ -905,8 +905,8 @@ const FrequencyIndicator = new Lang.Class({
                     //governortemp[0] = governortemp[0][0].toUpperCase() + governortemp[0].slice(1);
                     governors.push (governortemp);
                 }
-            }
-            for each (let governor in this.governoractual.split(" ")){
+            });
+            this.governoractual.split(" ").forEach ((governor)=> {
                 idx = -1;
                 for (let i = 0; i < gn.length; i++)
                     if (gn.indexOf (governor) > -1)
@@ -917,7 +917,7 @@ const FrequencyIndicator = new Lang.Class({
                     gn.push (governor);
                     gc.push (1);
                 }
-            }
+            });
             this.governoractual = "";
             if (gn.length > 1) {
                 for (let i = 0; i < gn.length; i++) {
@@ -938,11 +938,11 @@ const FrequencyIndicator = new Lang.Class({
         if (this.util_present) {
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " freq");
             if (cpufreq_output[0]) frequenceslist = cpufreq_output[1].toString().split("\n")[0].split(" ");
-            for each (let freq in frequenceslist){
+            frequenceslist.forEach ((freq)=> {
                 if (freq.length > 0) {
                     if (parseInt (freq) > 0) frequences.unshift (freq);
                 }
-            }
+            });
             if (frequences.length > 0) {
                 this.minimum_freq = frequences[0];
                 this.maximum_freq = frequences[frequences.length - 1];
@@ -1321,11 +1321,10 @@ const NewMenuItem = new Lang.Class ({
 
     _init: function (text, text_entry, hint_text, params) {
         this.parent (text, params);
+        this.edit_mode = false;
         this.entry = new St.Entry ({ text:text_entry, hint_text:hint_text, style_class: 'cpufreq-entry', track_hover: true, can_focus: true, x_expand: true });
         this.actor.add_child (this.entry);
         this.entry.set_primary_icon (new St.Icon({ style_class: 'cpufreq-entry-icon', icon_name: 'emblem-ok-symbolic', icon_size: 14 }));
-        //FIX to the bug https://bugzilla.gnome.org/show_bug.cgi?id=782190 only 1 button useful for 3.18-3.24.1
-        //this.entry.set_secondary_icon (new St.Icon({ icon_name: 'edit-delete-symbolic', icon_size: 14 }));
         this.entry.connect ('primary-icon-clicked', Lang.bind(this, function () {
             this.on_click ();
         }));
@@ -1351,7 +1350,8 @@ const NewMenuItem = new Lang.Class ({
     },
 
     activate: function (event) {
-        if (this.entry.text != '') this.toggle ();
+        if (!this.entry.visible) {this.edit_mode = true;this.toggle ();}
+        else if (!this.edit_mode) this.toggle ();
     },
 
     toggle: function () {
@@ -1362,6 +1362,7 @@ const NewMenuItem = new Lang.Class ({
     },
 
     on_click: function () {
+        this.edit_mode = false;
         this.emit ('save');
     }
 });
@@ -1373,7 +1374,6 @@ const ProfileMenuItem = new Lang.Class ({
     _init: function (text, params) {
         this.parent (text, text, "", params);
         this.label.x_expand = true;
-        this.edit_mode = false;
         this.edit_button = new St.Button ({ child: new St.Icon ({ icon_name: 'open-menu-symbolic', icon_size: 14 }), style_class: 'edit-button'});
         this.actor.add_child (this.edit_button);
         this.edit_button.connect ('clicked', Lang.bind (this, function () {
@@ -1477,9 +1477,9 @@ const InfoItem = new Lang.Class({
                     model = model.replace ("(R)", "®");
                     model = model.replace ("(TM)", "™");
                     s = model; model = "";
-                    for each (let f in s.split (" ")) {
+                    s.split (" ").forEach ((f)=>{
                         if (f.length > 0) model += f + " ";
-                    }
+                    });
                     return model.trim ().toString ();
                 }
             } catch (e) {

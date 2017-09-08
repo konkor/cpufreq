@@ -55,7 +55,7 @@ yum install kernel-tools
 You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
 
 ### Install from GitHub branch (default `master`)
-1. Run install script
+1. Run [install script](https://github.com/konkor/cpufreq/raw/master/install.sh)
 ```
 ./install.sh
 ```
