@@ -29,11 +29,15 @@ const Convenience = Me.imports.convenience;
 
 let event = 0;
 let install_event = 0;
+let init_event = 0;
 let core_event = 0;
 let freq_event = 0;
 let info_event = 0;
 let save = false;
+let cpucount = 1;
 let streams = [];
+let freqs = [];
+let cancel = null;
 let freqInfo = null;
 let cpufreq_output = null;
 let cmd = null;
@@ -89,8 +93,8 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }
                 if (this.slider_core) {
-                    this.slider_core.setValue (GLib.get_num_processors () / this.cpucount);
-                    var cc = Math.floor ((this.cpucount - 1) * this.slider_core.value + 1);
+                    this.slider_core.setValue (GLib.get_num_processors () / cpucount);
+                    var cc = Math.floor ((cpucount - 1) * this.slider_core.value + 1);
                     this.coremenu.set_text (cc);
                     this.corewarn.actor.visible = (cc == 1) ? true : false;
                 }
@@ -99,7 +103,7 @@ const FrequencyIndicator = new Lang.Class({
         }));
         this.pkexec_path = null;
         this.cpufreqctl_path = null;
-        this.cpucount = this._get_cpu_number ();
+        cpucount = this._get_cpu_number ();
         this.util_present = false;
         this.pstate_present = false;
         this.boost_present = false;
@@ -107,6 +111,8 @@ const FrequencyIndicator = new Lang.Class({
         this.updated = true;
         this.governorslist = [];
         this.frequences = [];
+        freqs = [GLib.get_num_processors ()];
+        cancel = new Gio.Cancellable ();
         // min/max posible values
         this.minimum_freq = -1;
         this.maximum_freq = -1;
@@ -243,23 +249,20 @@ const FrequencyIndicator = new Lang.Class({
 
     _update_freq: function () {
         freqInfo = null;
-        let s, m = 0, n = 0;
+        let m = 0;
         if (this.util_present) {
+            cancel.cancel ();
+            cancel = new Gio.Cancellable ();
             streams.forEach (stream => {
-                s = this._read_line (stream);
-                if (s) {
-                    n = parseInt (s);
-                    if (n > m) {
-                        m = n;
-                        freqInfo = s;
-                    }
-                }
+                this._read_line (stream);
             });
-            if (freqInfo) {
-                if (freqInfo.length > 6) {
-                    this.title = (parseInt(freqInfo)/1000000).toFixed(2).toString() + " \u3393";
+            for (let i = 0; i < cpucount; i++)
+                if (i < freqs.length && freqs[i] > m) m = freqs[i];
+            if (m > 0) {
+                if (m >= 1000000) {
+                    this.title = (m/1000000).toFixed(2).toString() + " \u3393";
                 } else {
-                    this.title = (parseInt(freqInfo)/1000).toFixed(0).toString() + "  \u3392";
+                    this.title = (m/1000).toFixed(0).toString() + "  \u3392";
                 }
             }
         } else {
@@ -286,8 +289,12 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _init_streams: function () {
+        if (init_event != 0) {
+            Mainloop.source_remove (init_event);
+            init_event = 0;
+        }
         streams = [];
-        for (let key = 0; key < this.cpucount; key++) {
+        for (let key = 0; key < cpucount; key++) {
             if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
                 let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
                 streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
@@ -298,16 +305,26 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     _read_line: function (dis) {
-        if (dis == null) return "0";
-        let line;
+        if (dis == null) return;
         try {
-            dis.seek (0, GLib.SeekType.SET, null);
-            [line,] = dis.read_line (null);
+            dis.seek (0, GLib.SeekType.SET, cancel);
+            dis.read_line_async (200, cancel, this._read_done);
         } catch (e) {
-            print ("Error: ", e.message);
-            this._init_streams ();
+            init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
         }
-        return line;
+    },
+
+    _read_done: function (stream, res) {
+        try {
+        let [line,] = stream.read_line_finish (res);
+        if (line) {
+            var n = parseInt (line);
+            if (Number.isInteger (n)) {
+                freqs.unshift (n);
+                freqs.splice (freqs.length-1, 1);
+            }
+        }} catch (e) {
+        }
     },
 
     _build_popup: function () {
@@ -532,11 +549,11 @@ const FrequencyIndicator = new Lang.Class({
                     this.slider_min.actor.opacity = 50;
                 }
             }
-            if (this.cpucount > 1) {
+            if (cpucount > 1) {
                 //this.menu.addMenuItem (new PopupMenu.PopupSeparatorMenuItem ());
                 this.menu.addMenuItem (this.coremenu);
                 let menu_core = new PopupMenu.PopupBaseMenuItem ({activate: false});
-                this.slider_core = new Slider.Slider (GLib.get_num_processors () / this.cpucount);
+                this.slider_core = new Slider.Slider (GLib.get_num_processors () / cpucount);
                 menu_core.actor.add (this.slider_core.actor, {expand: true});
                 this.menu.addMenuItem (menu_core);
                 this.corewarn = new PopupMenu.PopupMenuItem ("⚠ Single Core Is Not Recommended");
@@ -550,7 +567,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.slider_core.connect('value-changed', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
-                        var cc = Math.floor ((this.cpucount - 1) * item.value + 1);
+                        var cc = Math.floor ((cpucount - 1) * item.value + 1);
                         this._set_cores (cc);
                         this.coremenu.set_text (cc);
                         this.corewarn.actor.visible = (cc == 1) ? true : false;
@@ -682,7 +699,7 @@ const FrequencyIndicator = new Lang.Class({
             minf = Math.floor (this.slider_min.value * 100);
             maxf = Math.floor (this.slider_max.value * 100);
         }
-        for (let key = 0; key < this.cpucount; key++) {
+        for (let key = 0; key < cpucount; key++) {
             let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
             cores.push (core);
         }
@@ -698,7 +715,7 @@ const FrequencyIndicator = new Lang.Class({
         this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
         this.prf = prf;
-        for (let key = 1; key < this.cpucount; key++) {
+        for (let key = 1; key < cpucount; key++) {
             this._set_core (key, true);
         }
         this.stage = 0;
@@ -750,7 +767,7 @@ const FrequencyIndicator = new Lang.Class({
             }
         } else if (this.stage == 2) {
             this.g = "";
-            for (let key = 0; key < this.cpucount; key++) {
+            for (let key = 0; key < cpucount; key++) {
                 if (prf.core[key]) {
                     this._set_governor (key, prf.core[key].g);
                     if (this.g != "mixed") {
@@ -800,7 +817,7 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }
         } else if (this.stage == 6) {
-            for (let key = 1; key < this.cpucount; key++) {
+            for (let key = 1; key < cpucount; key++) {
                 if (key < prf.cpu) this._set_core (key, true);
                 else this._set_core (key, false);
             }
@@ -1007,7 +1024,7 @@ const FrequencyIndicator = new Lang.Class({
         }
         if (count == GLib.get_num_processors ()) return;
         core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
-            for (let key = 1; key < this.cpucount; key++) {
+            for (let key = 1; key < cpucount; key++) {
                 if (key < ccore) this._set_core (key, true);
                 else this._set_core (key, false);
             }
@@ -1277,7 +1294,8 @@ const FrequencyIndicator = new Lang.Class({
         if (install_event != 0) Mainloop.source_remove (install_event);
         if (core_event != 0) Mainloop.source_remove (core_event);
         if (freq_event != 0) Mainloop.source_remove (freq_event);
-        event = 0; install_event = 0; core_event = 0; freq_event = 0;
+        if (init_event != 0) Mainloop.source_remove (init_event);
+        event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0;
     }
 });
 
