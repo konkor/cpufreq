@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION='14'
+VERSION='15'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -275,5 +275,25 @@ then
 	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_max_freq"
 	echo "Setting $FLNM to "$3
 	echo $3 > $FLNM
+	exit
+fi
+if [ $1 = "throttle" ]
+then
+	i=1
+	V=0
+	M=$(cat "/sys/devices/system/cpu/cpu0/thermal_throttle/core_throttle_count")
+	while [ $i -ne $cpucount ]
+	do
+	    V=$(cat "/sys/devices/system/cpu/cpu"$i"/thermal_throttle/core_throttle_count")
+	    M=`expr $M + $V`
+	    i=`expr $i + 1`
+	done
+	echo "$M"
+	exit
+fi
+if [ $1 = "irqbalance" ]
+then
+	M=$(which irqbalance)
+	echo "$M"
 	exit
 fi

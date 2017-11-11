@@ -1469,6 +1469,16 @@ const InfoItem = new Lang.Class({
         this._warn.align = St.Align.START;
         this.vbox.add_child (this._warn);
         this._warn.visible = false;
+        this.tt = 0;
+        this.warn_lvl = 0;
+        this.balance = "";
+        this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
+        if (!this.cpufreqctl_path) this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
+        cpufreq_output = GLib.spawn_command_line_sync ("pkexec " + this.cpufreqctl_path + " irqbalance");
+        if (cpufreq_output[0]) {
+            freqInfo = cpufreq_output[1].toString().split("\n")[0];
+            if (freqInfo) this.balance = "IRQBALANCE DETECTED";
+        }
     },
 
     get cpu_name () {
@@ -1568,29 +1578,70 @@ const InfoItem = new Lang.Class({
             s += j.toString () + "%";
         }
         if (j > cc * 100) {
+            this.warnmsg = "SYSTEM OVERLOAD";
+            this.warn_lvl = 2;
+        } else if (j > cc * 75) {
+            this.warnmsg = "SYSTEM BUSY";
+            this.warn_lvl = 1;
+        } else {
+            this.warnmsg = "";
+            this.warn_lvl = 0;
+        }
+        return s;
+    },
+
+    set_warns: function () {
+        if (this.warn_lvl > 1) {
             this._icon.text = "☹";
             this._icon.set_style ('color: red; font-weight: bold; font-size: 56pt;');
             this._warn.visible = true;
             this._warn.set_style ('color: red; font-weight: bold;');
-            this.warnmsg = "SYSTEM OVERLOAD";
-        } else if (j > cc * 75) {
+        } else if (this.warn_lvl > 0) {
             this._icon.text = "😐";
             this._icon.set_style ('color: orange; font-weight: bold; font-size: 56pt;');
             this._warn.visible = true;
             this._warn.set_style ('color: orange; font-weight: bold;');
-            this.warnmsg = "SYSTEM BUSY";
         } else {
             this._icon.text = "☺";
             this._icon.set_style ('color: #33d552; font-weight: bold; font-size: 56pt;');
             this._warn.visible = false;
-            this.warnmsg = "";
         }
         this._warn.text = this.warnmsg;
-        return s;
+    },
+
+    get_throttle: function () {
+        let s = "", i = 0;
+        cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " throttle");
+        if (cpufreq_output[0]) freqInfo = cpufreq_output[1].toString().split("\n")[0];
+        if (freqInfo) {
+            i = parseInt (freqInfo);
+            if (!i) return;
+            s = "CPU THROTTLE: " + i;
+            if (i != this.tt) {
+                this.warn_lvl = 2;
+                s += "\nTHROTTLE SPEED: " + Math.round ((i-this.tt)/2, 1);
+            } else if (this.warn_lvl == 0) this.warn_lvl = 1;
+            this.tt = i;
+            if (this.warnmsg.length > 0) this.warnmsg += "\n" + s;
+            else this.warnmsg = s;
+        }
+    },
+
+    get_balance: function () {
+        if (this.balance) {
+            if (this.warn_lvl == 0) this.warn_lvl = 1;
+            if (this.warnmsg.length > 0) this.warnmsg += "\n" + this.balance;
+            else this.warnmsg = this.balance;
+        }
     },
 
     update: function (governors) {
+        this.warnmsg = "";
+        this.warn_lvl = 0;
         this._load.text = this.loadavg;
+        this.get_throttle ();
+        this.get_balance ();
+        this.set_warns ();
         if (governors) {
             this._cores.visible = true;
             this._cores.text = governors;
