@@ -44,7 +44,7 @@ EXTENSION_ENABLED=$(echo ${EXTENSION_LIST} | grep ${EXTENSION_UUID});
 
 if [ "$EXTENSION_ENABLED" = "" ]; then
   # Enable extension
-  if [ "$DESKTOP_SESSION" = "gnome" ]; then
+  if [ "$XDG_CURRENT_DESKTOP" = "GNOME" ] || [ "$XDG_CURRENT_DESKTOP" = "UBUNTU:GNOME" ]; then
     gsettings set org.gnome.shell enabled-extensions "[${EXTENSION_LIST},'${EXTENSION_UUID}']" 
   fi
   # Extension is now available
