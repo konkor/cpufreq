@@ -24,6 +24,7 @@
 */
 
 const Gettext = imports.gettext;
+const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 
 function initTranslations (domain) {
@@ -53,7 +54,7 @@ function getSettings (schema) {
     let schemaObj = schemaSource.lookup(schema, true);
     if (!schemaObj)
         throw new Error('Schema ' + schema + ' could not be found for extension '
-                        + 'obmin@konkor. Please check your installation.');
+                        + 'cpufreq@konkor. Please check your installation.');
 
     return new Gio.Settings({ settings_schema: schemaObj });
 }
@@ -69,4 +70,15 @@ function getCurrentFile () {
     let path = match[1];
     let file = Gio.File.new_for_path (path);
     return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
-}								  
+}
+
+function get_cpu_number () {
+    let c = 0;
+    let cpulist = null;
+    let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
+    if (ret[0]) cpulist = ret[1].toString().split("\n", 1)[0].split("-");
+    cpulist.forEach ((f)=> {
+        if (parseInt (f) > 0) c = parseInt (f);
+    });
+    return c + 1;
+}

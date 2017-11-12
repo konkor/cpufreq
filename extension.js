@@ -35,9 +35,6 @@ let freq_event = 0;
 let info_event = 0;
 let save = false;
 let cpucount = 1;
-let streams = [];
-let freqs = [];
-let cancel = null;
 let freqInfo = null;
 let cpufreq_output = null;
 let cmd = null;
@@ -103,7 +100,7 @@ const FrequencyIndicator = new Lang.Class({
         }));
         this.pkexec_path = null;
         this.cpufreqctl_path = null;
-        cpucount = this._get_cpu_number ();
+        cpucount = Convenience.get_cpu_number ();
         this.util_present = false;
         this.pstate_present = false;
         this.boost_present = false;
@@ -111,8 +108,6 @@ const FrequencyIndicator = new Lang.Class({
         this.updated = true;
         this.governorslist = [];
         this.frequences = [];
-        freqs = [GLib.get_num_processors ()];
-        cancel = new Gio.Cancellable ();
         // min/max posible values
         this.minimum_freq = -1;
         this.maximum_freq = -1;
@@ -891,17 +886,6 @@ const FrequencyIndicator = new Lang.Class({
                 if (maxfreq != cmax) this._set_max (maxfreq);
             }
         }
-    },
-
-    _get_cpu_number: function () {
-        let c = 0;
-        let cpulist = null;
-        let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
-        if (ret[0]) cpulist = ret[1].toString().split("\n", 1)[0].split("-");
-        cpulist.forEach ((f)=> {
-            if (parseInt (f) > 0) c = parseInt (f);
-        });
-        return c + 1;
     },
 
     _get_governors: function () {

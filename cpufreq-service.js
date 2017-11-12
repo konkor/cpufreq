@@ -11,6 +11,14 @@ const Convenience = imports.convenience;
 
 let settings = null;
 
+let streams = [];
+let freqs = [];
+let cancel = null;
+let cpucount = 1;
+
+let event = 0;
+let init_event = 0;
+
 var CpufreqService = new Lang.Class ({
     Name: 'CpufreqService',
     Extends: Gio.Application,
@@ -36,6 +44,88 @@ var CpufreqService = new Lang.Class ({
 
     init: function() {
         debug ("init");
+        cpucount = Convenience.get_cpu_number ();
+        this.title = "-- \u3393";
+        freqs = [GLib.get_num_processors ()];
+        cancel = new Gio.Cancellable ();
+        this._init_streams ();
+        this._update_freq ();
+        this._add_event ();
+    },
+
+     _add_event: function () {
+        if (event != 0) {
+            GLib.Source.remove (event);
+            event = 0;
+        }
+        event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
+            this._update_freq ();
+            return true;
+        }));
+    },
+
+    _init_streams: function() {
+        if (init_event != 0) {
+            GLib.Source.remove (init_event);
+            init_event = 0;
+        }
+        streams = [];
+        for (let key = 0; key < cpucount; key++) {
+            if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
+                let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
+                streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
+            } else {
+                streams.push (null);
+            }
+        }
+    },
+
+    _update_freq: function () {
+        let m = 0;
+        cancel.cancel ();
+        cancel = new Gio.Cancellable ();
+        streams.forEach (stream => {
+            this._read_line (stream);
+        });
+            for (let i = 0; i < cpucount; i++)
+                if (i < freqs.length && freqs[i] > m) m = freqs[i];
+            if (m > 0) {
+                if (m >= 1000000) {
+                    this.title = (m/1000000).toFixed(2).toString() + " \u3393";
+                } else {
+                    this.title = (m/1000).toFixed(0).toString() + "  \u3392";
+                }
+            }
+        debug (this.title);
+    },
+
+    _read_line: function (dis) {
+        if (dis == null) return;
+        try {
+            dis.seek (0, GLib.SeekType.SET, cancel);
+            dis.read_line_async (200, cancel, this._read_done);
+        } catch (e) {
+            init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
+        }
+    },
+
+    _read_done: function (stream, res) {
+        try {
+            let [line,] = stream.read_line_finish (res);
+            if (line) {
+                var n = parseInt (line);
+                if (Number.isInteger (n)) {
+                    freqs.unshift (n);
+                    freqs.splice (freqs.length-1, 1);
+                }
+            }
+        } catch (e) {}
+    },
+
+    remove_events: function () {
+        if (event != 0) GLib.Source.remove (event);
+        if (init_event != 0) GLib.Source.remove (init_event);
+        event = 0; init_event = 0;
     }
 });
 
