@@ -9,7 +9,12 @@ imports.searchPath.unshift(APPDIR);
 
 const Convenience = imports.convenience;
 
+const TITLE_KEY = 'title';
+const MONITOR_KEY = 'monitor';
+
+var DEBUGING = true;
 let settings = null;
+let monitor_timeout = 500;
 
 let streams = [];
 let freqs = [];
@@ -23,34 +28,38 @@ var CpufreqService = new Lang.Class ({
     Name: 'CpufreqService',
     Extends: Gio.Application,
 
-    _init: function (uuid) {
+    _init: function (args) {
         GLib.set_prgname ("cpufreq-service");
         this.parent ({
             application_id: "org.konkor.cpufreq.service",
-            flags: Gio.ApplicationFlags.HANDLES_OPEN
+            flags: Gio.ApplicationFlags.IS_SERVICE
         });
         GLib.set_application_name ("CPUFreq Service");
+        monitor_timeout = settings.get_int (MONITOR_KEY);
+        monitor_timeout = 500;
     },
 
     vfunc_startup: function() {
         this.parent();
         this.init ();
-    },
-
-    vfunc_activate: function() {
-        this.activate_action ('start-client', null);
-        debug ("activate");
+        this.hold ();
     },
 
     init: function() {
         debug ("init");
         cpucount = Convenience.get_cpu_number ();
+        this.max0 = 0;
         this.title = "-- \u3393";
+        this.old = this.title;
         freqs = [GLib.get_num_processors ()];
         cancel = new Gio.Cancellable ();
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
+        settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
+            monitor_timeout = settings.get_int (MONITOR_KEY);
+            this._add_event ();
+        }));
     },
 
      _add_event: function () {
@@ -58,17 +67,24 @@ var CpufreqService = new Lang.Class ({
             GLib.Source.remove (event);
             event = 0;
         }
-        event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
+        if (monitor_timeout > 0)
+            event = GLib.timeout_add (0, monitor_timeout, Lang.bind (this, function () {
             this._update_freq ();
             return true;
         }));
     },
 
     _init_streams: function() {
+        debug ("init_streams");
         if (init_event != 0) {
             GLib.Source.remove (init_event);
             init_event = 0;
         }
+        streams.forEach (stream => {
+            try {
+                if (stream) stream.close (null);
+            } catch (e) {}
+        });
         streams = [];
         for (let key = 0; key < cpucount; key++) {
             if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
@@ -87,16 +103,19 @@ var CpufreqService = new Lang.Class ({
         streams.forEach (stream => {
             this._read_line (stream);
         });
-            for (let i = 0; i < cpucount; i++)
-                if (i < freqs.length && freqs[i] > m) m = freqs[i];
-            if (m > 0) {
-                if (m >= 1000000) {
-                    this.title = (m/1000000).toFixed(2).toString() + " \u3393";
-                } else {
-                    this.title = (m/1000).toFixed(0).toString() + "  \u3392";
-                }
+        for (let i = 0; i < cpucount; i++)
+            if (i < freqs.length && freqs[i] > m) m = freqs[i];
+        if (m > 0 && m != this.max0) {
+            if (m >= 1000000) {
+                this.title = (m/1000000).toFixed(2).toString() + " \u3393";
+            } else {
+                this.title = (m/1000).toFixed(0).toString() + "  \u3392";
             }
-        debug (this.title);
+            settings.set_string (TITLE_KEY, this.title);
+            this.old = this.title;
+            this.max0 = m;
+        }
+        //debug (this.title);
     },
 
     _read_line: function (dis) {
@@ -106,6 +125,7 @@ var CpufreqService = new Lang.Class ({
             dis.read_line_async (200, cancel, this._read_done);
         } catch (e) {
             init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
+            //error (e);
         }
     },
 
@@ -162,15 +182,17 @@ function get_info_string (cmd) {
 }
 
 function debug (msg) {
-    if (msg) print ("[cpufreq][monitor] " + msg);
+    if (msg && DEBUGING) print ("[cpufreq][service] " + msg);
 }
 
 function error (msg) {
-    print ("[cpufreq][monitor] (EE) " + msg);
+    print ("[cpufreq][service] (EE) " + msg);
 }
 
 settings = Convenience.getSettings ();
-
-let app = new CpufreqService ();
-app.hold();
-app.run (ARGV);
+try {
+    let app = new CpufreqService (ARGV);
+    app.run (ARGV);
+} catch (e) {
+    print (e.message);
+}

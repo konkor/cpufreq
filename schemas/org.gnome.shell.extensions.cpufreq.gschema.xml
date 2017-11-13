@@ -63,5 +63,17 @@
       <description>Profile ID</description>
     </key>
 
+    <key type="s" name="title">
+      <default>'㎓'</default>
+      <summary>Frequency Label</summary>
+      <description>Current Frequency Label</description>
+    </key>
+
+    <key type="i" name="monitor">
+      <default>1000</default>
+      <summary>Frequency monitor interval</summary>
+      <description>Frequency monitor interval</description>
+    </key>
+
   </schema>
 </schemalist>

@@ -20,6 +20,8 @@ const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
 const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
+const TITLE_KEY = 'title';
+const MONITOR_KEY = 'monitor';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -42,6 +44,7 @@ let ccore = 0;
 let profiles = [];
 let default_profile = null;
 let minfreq = 0, maxfreq = 0; //new values
+let monitor_timeout = 1000;
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -131,12 +134,17 @@ const FrequencyIndicator = new Lang.Class({
         let profs =  this._settings.get_string (PROFILES_KEY);
         if (profs.length > 0) profiles = JSON.parse (profs);
         if (!default_profile) default_profile = this._get_profile ('Default');
+        monitor_timeout =  this._settings.get_int (MONITOR_KEY);
         this._build_ui ();
         if (save) this._load_settings ();
         //print (profs);
 
         this._add_event ();
         this.menu.connect ('open-state-changed', Lang.bind (this, this._on_menu_state_changed));
+        this._settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
+            monitor_timeout = this._settings.get_int (MONITOR_KEY);
+            this._add_event ();
+        }));
     },
 
     _on_menu_state_changed: function (source, state) {
@@ -227,43 +235,24 @@ const FrequencyIndicator = new Lang.Class({
     },
 
      _add_event: function () {
-        if (event != 0) Mainloop.source_remove (event);
-        if (this.util_present) {
-            event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-                this._update_freq ();
-                return true;
+        if (event != 0) {
+            Mainloop.source_remove (event);
+            event = 0;
+        }
+        if (monitor_timeout > 0) {
+            if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
+                log ("Unable to start cpufreq service...");
+                return;
+            }
+            this._settings.connect ("changed::" + TITLE_KEY, Lang.bind (this, function() {
+                this.title = this._settings.get_string (TITLE_KEY);
+                if (this.title) this.statusLabel.set_text (this.title);
             }));
         }
     },
 
     _build_ui: function () {
-        this._init_streams ();
-        this._update_freq ();
         this._build_popup ();
-    },
-
-    _update_freq: function () {
-        freqInfo = null;
-        let m = 0;
-        if (this.util_present) {
-            cancel.cancel ();
-            cancel = new Gio.Cancellable ();
-            streams.forEach (stream => {
-                this._read_line (stream);
-            });
-            for (let i = 0; i < cpucount; i++)
-                if (i < freqs.length && freqs[i] > m) m = freqs[i];
-            if (m > 0) {
-                if (m >= 1000000) {
-                    this.title = (m/1000000).toFixed(2).toString() + " \u3393";
-                } else {
-                    this.title = (m/1000).toFixed(0).toString() + "  \u3392";
-                }
-            }
-        } else {
-            this.title = "\u26A0";
-        }
-        this.statusLabel.set_text (this.title);
     },
 
     _load_settings: function () {
@@ -280,45 +269,6 @@ const FrequencyIndicator = new Lang.Class({
         if (gov == 'userspace') {
             cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + freq;
             Util.trySpawnCommandLine (cmd);
-        }
-    },
-
-    _init_streams: function () {
-        if (init_event != 0) {
-            Mainloop.source_remove (init_event);
-            init_event = 0;
-        }
-        streams = [];
-        for (let key = 0; key < cpucount; key++) {
-            if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
-                let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
-                streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
-            } else {
-                streams.push (null);
-            }
-        }
-    },
-
-    _read_line: function (dis) {
-        if (dis == null) return;
-        try {
-            dis.seek (0, GLib.SeekType.SET, cancel);
-            dis.read_line_async (200, cancel, this._read_done);
-        } catch (e) {
-            init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
-        }
-    },
-
-    _read_done: function (stream, res) {
-        try {
-        let [line,] = stream.read_line_finish (res);
-        if (line) {
-            var n = parseInt (line);
-            if (Number.isInteger (n)) {
-                freqs.unshift (n);
-                freqs.splice (freqs.length-1, 1);
-            }
-        }} catch (e) {
         }
     },
 
@@ -1649,4 +1599,5 @@ function disable () {
     freqMenu.remove_events ();
     freqMenu.destroy ();
     freqMenu = null;
+    GLib.spawn_command_line_async ("killall cpufreq-service");
 }
