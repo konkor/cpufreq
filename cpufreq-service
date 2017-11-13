@@ -68,7 +68,7 @@ var CpufreqService = new Lang.Class ({
             event = 0;
         }
         if (monitor_timeout > 0)
-            event = GLib.timeout_add (0, monitor_timeout, Lang.bind (this, function () {
+            event = GLib.timeout_add (300, monitor_timeout, Lang.bind (this, function () {
             this._update_freq ();
             return true;
         }));
@@ -124,7 +124,8 @@ var CpufreqService = new Lang.Class ({
             dis.seek (0, GLib.SeekType.SET, cancel);
             dis.read_line_async (200, cancel, this._read_done);
         } catch (e) {
-            init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
+            cancel.cancel ();
+            init_event = GLib.timeout_add (0, 0, Lang.bind (this, this._init_streams ));
             //error (e);
         }
     },

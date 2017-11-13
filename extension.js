@@ -381,13 +381,13 @@ const FrequencyIndicator = new Lang.Class({
             }
             if (userspace != null) this.menu.addMenuItem (userspace);
             if (this.pstate_present) {
-                this.turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
-                this.turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
-                    this._changed ();
-                    if (this.installed) {
-                        this._set_turbo (item.state);
-                    }
-                }));
+                if (this.boost_present) {
+                    this.turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
+                    this.turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
+                        this._changed ();
+                        if (this.installed) this._set_turbo (item.state);
+                    }));
+                }
                 this.menu.addMenuItem (new SeparatorItem ());
                 this.label_min = new InfoMenuItem ("Minimum", this._get_min_pstate () + "%");
                 this.menu.addMenuItem (this.label_min);
