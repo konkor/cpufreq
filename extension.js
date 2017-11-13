@@ -145,6 +145,10 @@ const FrequencyIndicator = new Lang.Class({
             monitor_timeout = this._settings.get_int (MONITOR_KEY);
             this._add_event ();
         }));
+        this._settings.connect ("changed::" + SAVE_SETTINGS_KEY, Lang.bind (this, function() {
+            save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
+            this.save_switch.setToggleState (save);
+        }));
     },
 
     _on_menu_state_changed: function (source, state) {
@@ -248,7 +252,7 @@ const FrequencyIndicator = new Lang.Class({
                 this.title = this._settings.get_string (TITLE_KEY);
                 if (this.title) this.statusLabel.set_text (this.title);
             }));
-        }
+        } else GLib.spawn_command_line_async ("killall cpufreq-service");
     },
 
     _build_ui: function () {
@@ -559,13 +563,19 @@ const FrequencyIndicator = new Lang.Class({
                 this.menu.addMenuItem (new SeparatorItem ());
                 let sm = new PopupMenu.PopupSubMenuMenuItem('Preferences', false);
                 this.menu.addMenuItem (sm);
-                let save_switch = new PopupMenu.PopupSwitchMenuItem('Remember settings', save);
-                sm.menu.addMenuItem (save_switch);
-                save_switch.connect ('toggled', Lang.bind (this, function (item) {
+                this.save_switch = new PopupMenu.PopupSwitchMenuItem('Remember settings', save);
+                sm.menu.addMenuItem (this.save_switch);
+                this.save_switch.connect ('toggled', Lang.bind (this, function (item) {
                     save = item.state;
                     this._settings.set_boolean(SAVE_SETTINGS_KEY, item.state);
                     if (save && this.PID == -1)
                         this._save_profile (this._get_profile ("Current"));
+                }));
+                this.prefs = new PopupMenu.PopupMenuItem ("Preferences...");
+                sm.menu.addMenuItem (this.prefs);
+                this.prefs.connect ('activate', Lang.bind (this, function () {
+                    GLib.spawn_command_line_async ('gnome-shell-extension-prefs ' + Me.uuid);
+                    this.emit ('activate');
                 }));
                 let mi_reload = new PopupMenu.PopupMenuItem ("Reload");
                 sm.menu.addMenuItem (mi_reload);

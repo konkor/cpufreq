@@ -12,7 +12,7 @@ const Convenience = imports.convenience;
 const TITLE_KEY = 'title';
 const MONITOR_KEY = 'monitor';
 
-var DEBUGING = true;
+var DEBUGING = false;
 let settings = null;
 let monitor_timeout = 500;
 
@@ -36,7 +36,6 @@ var CpufreqService = new Lang.Class ({
         });
         GLib.set_application_name ("CPUFreq Service");
         monitor_timeout = settings.get_int (MONITOR_KEY);
-        monitor_timeout = 500;
     },
 
     vfunc_startup: function() {
@@ -68,7 +67,7 @@ var CpufreqService = new Lang.Class ({
             event = 0;
         }
         if (monitor_timeout > 0)
-            event = GLib.timeout_add (300, monitor_timeout, Lang.bind (this, function () {
+            event = GLib.timeout_add (100, monitor_timeout, Lang.bind (this, function () {
             this._update_freq ();
             return true;
         }));
@@ -124,8 +123,7 @@ var CpufreqService = new Lang.Class ({
             dis.seek (0, GLib.SeekType.SET, cancel);
             dis.read_line_async (200, cancel, this._read_done);
         } catch (e) {
-            cancel.cancel ();
-            init_event = GLib.timeout_add (0, 0, Lang.bind (this, this._init_streams ));
+            init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
             //error (e);
         }
     },

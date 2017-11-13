@@ -70,7 +70,7 @@
     </key>
 
     <key type="i" name="monitor">
-      <default>1000</default>
+      <default>500</default>
       <summary>Frequency monitor interval</summary>
       <description>Frequency monitor interval</description>
     </key>
