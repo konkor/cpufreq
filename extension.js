@@ -240,7 +240,7 @@ const FrequencyIndicator = new Lang.Class({
 
      _add_event: function () {
         if (event != 0) {
-            Mainloop.source_remove (event);
+            this._settings.disconnect (event);
             event = 0;
         }
         if (monitor_timeout > 0) {
@@ -248,7 +248,7 @@ const FrequencyIndicator = new Lang.Class({
                 log ("Unable to start cpufreq service...");
                 return;
             }
-            this._settings.connect ("changed::" + TITLE_KEY, Lang.bind (this, function() {
+            event = this._settings.connect ("changed::" + TITLE_KEY, Lang.bind (this, function() {
                 this.title = this._settings.get_string (TITLE_KEY);
                 if (this.title) this.statusLabel.set_text (this.title);
             }));
@@ -1234,7 +1234,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     remove_events: function () {
-        if (event != 0) Mainloop.source_remove (event);
+        if (event != 0) this._settings.disconnect (event);
         if (install_event != 0) Mainloop.source_remove (install_event);
         if (core_event != 0) Mainloop.source_remove (core_event);
         if (freq_event != 0) Mainloop.source_remove (freq_event);
