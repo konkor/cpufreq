@@ -35,6 +35,8 @@ let init_event = 0;
 let core_event = 0;
 let freq_event = 0;
 let info_event = 0;
+let monitor_event = 0;
+let monitorID = 0, saveID;
 let save = false;
 let cpucount = 1;
 let freqInfo = null;
@@ -141,11 +143,14 @@ const FrequencyIndicator = new Lang.Class({
 
         this._add_event ();
         this.menu.connect ('open-state-changed', Lang.bind (this, this._on_menu_state_changed));
-        this._settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
+        if (monitorID) this._settings.disconnect (monitorID);
+        monitorID = this._settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
             monitor_timeout = this._settings.get_int (MONITOR_KEY);
-            this._add_event ();
+            if (monitor_event) GLib.source_remove (monitor_event);
+            monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
         }));
-        this._settings.connect ("changed::" + SAVE_SETTINGS_KEY, Lang.bind (this, function() {
+        if (saveID) this._settings.disconnect (saveID);
+        saveID = this._settings.connect ("changed::" + SAVE_SETTINGS_KEY, Lang.bind (this, function() {
             save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
             this.save_switch.setToggleState (save);
         }));
@@ -1235,11 +1240,16 @@ const FrequencyIndicator = new Lang.Class({
 
     remove_events: function () {
         if (event != 0) this._settings.disconnect (event);
+        if (monitorID) this._settings.disconnect (monitorID);
+        if (saveID) this._settings.disconnect (saveID);
         if (install_event != 0) Mainloop.source_remove (install_event);
         if (core_event != 0) Mainloop.source_remove (core_event);
         if (freq_event != 0) Mainloop.source_remove (freq_event);
         if (init_event != 0) Mainloop.source_remove (init_event);
-        event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0;
+        if (monitor_event) GLib.source_remove (monitor_event);
+        event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0; monitor_event = 0;
+        saveID = 0; monitorID = 0;
+        GLib.spawn_command_line_async ("killall cpufreq-service");
     }
 });
 
