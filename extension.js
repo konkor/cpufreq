@@ -781,7 +781,6 @@ const FrequencyIndicator = new Lang.Class({
                 if (key < prf.cpu) this._set_core (key, true);
                 else this._set_core (key, false);
             }
-            this._init_streams ();
             this._update_freq ();
             this._add_event ();
         }
@@ -958,7 +957,6 @@ const FrequencyIndicator = new Lang.Class({
             } else {
                 GLib.spawn_command_line_sync (this.pkexec_path + ' ' + this.cpufreqctl_path + " off " + core);
             }
-            this._init_streams ();
             this.util_present = true;
             return state;
         }
