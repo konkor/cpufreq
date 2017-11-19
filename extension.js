@@ -138,7 +138,7 @@ const FrequencyIndicator = new Lang.Class({
         if (!default_profile) default_profile = this._get_profile ('Default');
         monitor_timeout =  this._settings.get_int (MONITOR_KEY);
         this._build_ui ();
-        if (save) this._load_settings ();
+        if (this.installed && save) this._load_settings ();
         //print (profs);
 
         this._add_event ();
@@ -1425,11 +1425,12 @@ const InfoItem = new Lang.Class({
         this.warn_lvl = 0;
         this.balance = "";
         this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
-        if (!this.cpufreqctl_path) this.cpufreqctl_path = EXTENSIONDIR + '/cpufreqctl';
+        if (this.cpufreqctl_path) {
         cpufreq_output = GLib.spawn_command_line_sync ("pkexec " + this.cpufreqctl_path + " irqbalance");
         if (cpufreq_output[0]) {
             freqInfo = cpufreq_output[1].toString().split("\n")[0];
             if (freqInfo) this.balance = "IRQBALANCE DETECTED";
+        }
         }
     },
 
