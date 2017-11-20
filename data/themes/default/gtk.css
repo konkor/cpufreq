@@ -1,5 +1,5 @@
 @define-color cpufreq_base_color #343a3a;
-@define-color cpufreq_bg_color #ffcc0c;
+@define-color cpufreq_bg_color #0f6bbb;
 @define-color cpufreq_fg_color #cacaca;
 
 .hb, .hb GtkLabel, .hb label {
@@ -27,6 +27,28 @@
   color: @cpufreq_fg_color;
   background-color: @cpufreq_base_color;
   padding: 1em 0em;
-  spacing: 12px;
 }
 
+.menuitem, .submenu {
+  border-radius: 0;
+  border-style:none;
+  box-shadow:none;
+  outline-width:0;
+  border-image:none;
+  font-size: 1em;
+  padding:0.5em;
+  margin:0;
+  border:0;
+  color: #afafaf;
+  text-shadow:none;
+  background-image: none;
+  background-color: transparent;
+}
+.menuitem:hover, .submenu:hover {
+  color: #fff;
+  background-color: @cpufreq_bg_color;
+}
+.submenu-section {
+  box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
+  background-color: @cpufreq_bg_color;
+}
