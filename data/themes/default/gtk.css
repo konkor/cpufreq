@@ -1,0 +1,32 @@
+@define-color cpufreq_base_color #343a3a;
+@define-color cpufreq_bg_color #ffcc0c;
+@define-color cpufreq_fg_color #cacaca;
+
+.hb, .hb GtkLabel, .hb label {
+  color: @cpufreq_base_color;
+  background-color: @cpufreq_base_color;
+  background-image: none;
+  font-weight: bold;
+  border-width: 0;
+  border-style:none;
+  box-shadow:none;
+  outline-width:0;
+  border-image:none;
+  padding:0;
+  margin:0;
+  border:0;
+  text-shadow:none;
+}
+
+.titlebar {
+  padding:0;
+  margin:0;
+}
+
+.main {
+  color: @cpufreq_fg_color;
+  background-color: @cpufreq_base_color;
+  padding: 1em 0em;
+  spacing: 12px;
+}
+

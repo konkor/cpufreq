@@ -30,6 +30,8 @@ imports.searchPath.unshift(APPDIR);
 
 const Convenience = imports.convenience;
 
+let theme_gui = APPDIR + "/data/themes/default/gtk.css";
+let cssp = null;
 let settings = null;
 let window = null;
 
@@ -69,12 +71,29 @@ var CPUFreqApplication = new Lang.Class ({
 
     build: function() {
         window.set_default_size (400, 600);
+        cssp = get_css_provider ();
+        if (cssp) {
+            Gtk.StyleContext.add_provider_for_screen (
+                window.get_screen(), cssp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+        window.get_style_context ().add_class ("main");
         this.hb = new Gtk.HeaderBar ();
         this.hb.set_show_close_button (true);
         this.hb.get_style_context ().add_class ("hb");
         window.set_titlebar (this.hb);
     }
 });
+
+function get_css_provider () {
+    let cssp = new Gtk.CssProvider ();
+    let css_file = Gio.File.new_for_path (theme_gui);
+    try {
+        cssp.load_from_file (css_file);
+    } catch (e) {
+        cssp = null;
+    }
+    return cssp;
+}
 
 function getCurrentFile () {
     let stack = (new Error()).stack;
