@@ -50,5 +50,5 @@
 }
 .submenu-section {
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
-  background-color: @cpufreq_bg_color;
+  /*background-color: @cpufreq_bg_color;*/
 }

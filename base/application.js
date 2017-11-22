@@ -30,6 +30,7 @@ const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
 
 const Convenience = imports.convenience;
+String.prototype.format = Convenience.Format.format;
 
 const DEBUG_LVL = 2;
 const SAVE_SETTINGS_KEY = 'save-settings';
@@ -44,6 +45,14 @@ const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
 const TITLE_KEY = 'title';
 const MONITOR_KEY = 'monitor';
+
+let save = false;
+let PID = -1;
+let profiles = [];
+let default_profile = null;
+
+let core_event = 0;
+let freq_event = 0;
 
 let theme_gui = APPDIR + "/data/themes/default/gtk.css";
 let cssp = null;
@@ -81,6 +90,8 @@ var CPUFreqApplication = new Lang.Class ({
         check_install ();
         get_governors ();
         get_frequences ();
+        save = settings.get_boolean (SAVE_SETTINGS_KEY);
+        PID =  settings.get_int (PROFILE_KEY);
         this.build ();
     },
 
@@ -118,6 +129,8 @@ var Sidebar = new Lang.Class({
         this.get_style_context ().add_class ("sb");
 
         this.add_governors ();
+        if (pstate_present) this.pstate_build ();
+        else this.acpi_build ();
 
         //this.show_all ();
     },
@@ -125,10 +138,12 @@ var Sidebar = new Lang.Class({
     add_governors: function () {
         this.activeg = new Submenu ("Governors", "Active Governor", 0);
         //this.pack_start (this.activeg, true, true, 0);
+        this.activeg.connect ("activate", Lang.bind (this, this.on_submenu));
         governors.forEach (g => {
             if (g[1] == true) this.activeg.set_label (g[0]);
             if (g[0] == "userspace") {
                 this.userspace = new Submenu ("userspace", "Userspace Governor", 1);
+                this.userspace.connect ("activate", Lang.bind (this, this.on_submenu));
                 frequences.forEach ((freq)=>{
                     var s = "";
                     if (freq.length > 6) {
@@ -138,23 +153,130 @@ var Sidebar = new Lang.Class({
                     }
                     let u_item = new MenuItem (s);
                     this.userspace.add_menuitem (u_item);
-                    u_item.connect ("activate", Lang.bind (this, function () {
+                    u_item.connect ("clicked", Lang.bind (this, function () {
                         if (!installed) return;
+                        this._changed ();
                         GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov userspace");
-                        GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " set " + f);
+                        GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " set " + freq);
+                        this.activeg.set_label ("userspace");
                         if (save) {
                             settings.set_string (GOVERNOR_KEY, "userspace");
-                            settings.set_string (CPU_FREQ_KEY, f.toString ());
+                            settings.set_string (CPU_FREQ_KEY, freq.toString ());
                         }
+                        this.userspace.expanded = false;
                     }));
                 });
             } else {
                 let gi = new MenuItem (g[0]);
                 this.activeg.add_menuitem (gi);
+                gi.connect ('clicked', Lang.bind (this, this.on_governor));
             }
         });
         this.add (this.activeg);
         if (this.userspace  && (frequences.length > 0)) this.add (this.userspace);
+    },
+
+    on_submenu: function (o) {
+        if (o.id == 0) {
+            if (this.userspace) this.userspace.expanded = false;
+        } else this.activeg.expanded = false;
+    },
+
+    on_governor: function (o) {
+        if (!installed) return;
+        this._changed ();
+        GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + ' gov ' + o.label);
+        this.activeg.set_label (o.label);
+        if (save) settings.set_string (GOVERNOR_KEY, o.label);
+        //TODO SET SLIDERS
+        this.activeg.expanded = false;
+    },
+
+    acpi_build: function () {
+        if (frequences.length > 1) this.sliders_build ();
+    },
+
+    sliders_build: function () {
+        this.add (new Gtk.Separator ());
+        this.slider_min = new Slider ("Minimum", get_min_label (), "Minimum Frequency");
+        this.add (this.slider_min);
+        this.slider_max = new Slider ("Maximum", get_max_label (), "Maximum Frequency");
+        this.add (this.slider_max);
+        if (pstate_present) {
+            this.slider_min.slider.set_value (minfreq/100);
+            this.slider_max.slider.set_value (maxfreq/100);
+        } else {
+            this.slider_min.slider.set_value (get_pos (minfreq));
+            this.slider_max.slider.set_value (get_pos (maxfreq));
+        }
+        this.slider_min.slider.connect('value_changed', Lang.bind (this, function (item) {
+            if (!installed) return;
+            this._changed ();
+            if (item.get_value() > this.slider_max.slider.get_value()) {
+                this.slider_max.slider.set_value (item.get_value ());
+            }
+            if (pstate_present) minfreq = Math.floor (item.get_value() * 100);
+            else minfreq = get_freq (Math.floor (item.get_value() * 100));
+            this.slider_min.update_info (get_label (minfreq));
+            if (freq_event != 0) {
+                GLib.source_remove (freq_event);
+                freq_event = 0;
+            }
+            freq_event = GLib.timeout_add (0, 1000, set_frequencies);
+        }));
+        this.slider_max.slider.connect('value_changed', Lang.bind (this, function (item) {
+            if (!installed) return;
+            this._changed ();
+            if (item.get_value() < this.slider_min.slider.get_value()) {
+                this.slider_min.slider.set_value (item.get_value ());
+            }
+            maxfreq = get_freq (Math.floor (item.get_value() * 100));
+            this.slider_max.update_info (get_label (maxfreq));
+            if (freq_event != 0) {
+                GLib.source_remove (freq_event);
+                freq_event = 0;
+            }
+            freq_event = GLib.timeout_add (0, 1000, set_frequencies);
+        }));
+    },
+
+    pstate_build: function () {
+        this.sliders_build ();
+    },
+
+    _changed: function () {
+        if (PID > -1) {
+            PID = -1;
+            settings.set_int (PROFILE_KEY, -1);
+        }
+        if (this.profmenu) this.profmenu.label = "Custom";
+    }
+});
+
+var Slider = new Lang.Class({
+    Name: "Slider",
+    Extends: Gtk.Box,
+
+    _init: function (text, info, tooltip) {
+        this.parent ({orientation:Gtk.Orientation.VERTICAL});
+        this.get_style_context ().add_class ("slider-item");
+        this.tooltip_text = tooltip;
+
+        let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL,margin:8});
+        this.add (box);
+        this.label = new Gtk.Label ({label:"<b>"+text+"</b>", use_markup:true, xalign:0});
+        box.pack_start (this.label, true, true, 0);
+        this.info = new Gtk.Label ({label:"<i>" + info + "</i>", use_markup:true});
+        box.pack_end (this.info, false, false, 0);
+        this.slider = Gtk.Scale.new_with_range (Gtk.Orientation.HORIZONTAL, 0, 1, 0.05);
+        this.slider.draw_value = false;
+        this.add (this.slider);
+
+        this.show_all ();
+    },
+
+    update_info: function (info) {
+        this.info.set_markup ("<i>" + info + "</i>");
     }
 });
 
@@ -163,8 +285,10 @@ var Submenu = new Lang.Class({
     Extends: Gtk.Expander,
 
     _init: function (text, tooltip, id) {
-        this.parent ({label:text, label_fill:true, expanded:false, resize_toplevel:true});
+        this.parent ({label:text, label_fill:true, expanded:false, resize_toplevel:false});
         this.get_style_context ().add_class ("submenu");
+        this.tooltip_text = tooltip;
+        this.id = id;
 
         this.scroll = new Gtk.ScrolledWindow ();
         this.scroll.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
@@ -199,6 +323,28 @@ var MenuItem = new Lang.Class({
     }
 });
 
+function get_label (num, n) {
+    if (pstate_present) return num + "%";
+    n = (typeof n !== 'undefined') ?  n : 3;
+    if (num >= 1000000) {
+        return (num/1000000).toFixed(n).toString() + " \u3393";
+    } else {
+        return (num/1000).toFixed(0).toString() + " \u3392";
+    }
+}
+
+function get_min_label (n) {
+    n = (typeof n !== 'undefined') ?  n : 3;
+    if (pstate_present) return minfreq + "%";
+    return get_label (get_min (), n);
+}
+
+function get_max_label (n) {
+    n = (typeof n !== 'undefined') ?  n : 3;
+    if (pstate_present) return maxfreq + "%";
+    return get_label (get_max (), n);
+}
+
 let governors = [];
 let governoractual = "";
 let util_present = false;
@@ -210,6 +356,7 @@ let updated = true;
 let frequences = [];
 let minimum_freq = 0;
 let maximum_freq = 0;
+let minfreq = 0, maxfreq = 0;
 
 function check_install () {
     pkexec_path = GLib.find_program_in_path ("pkexec");
@@ -290,6 +437,171 @@ function get_frequences () {
         minimum_freq = frequences[0];
         maximum_freq = frequences[frequences.length - 1];
     }
+    if (pstate_present) {
+        minfreq = get_min_pstate ();
+        maxfreq = get_max_pstate ();
+    } else {
+        minfreq = get_min ();
+        maxfreq = get_max ();
+    }
+}
+
+function set_frequencies () {
+    if (freq_event != 0) {
+        GLib.source_remove (freq_event);
+        freq_event = 0;
+    }
+    let cmin, cmax;
+    if (pstate_present) {
+        let save_state = save;
+        save = false;
+        cmin = get_min_pstate ();
+        cmax = get_max_pstate ();
+        save = save_state;
+        debug ("%d:%d - %d:%d".format (cmin,cmax,minfreq,maxfreq));
+        if ((minfreq == cmin) && (maxfreq == cmax)) return;
+        if ((minfreq > cmax) && (minfreq <= maxfreq)) {
+            set_max_pstate (maxfreq);
+            pause (100);
+            set_min_pstate (minfreq);
+        } else {
+            if (minfreq != cmin) set_min_pstate (minfreq);
+            pause (100);
+            if (maxfreq != cmax) set_max_pstate (maxfreq);
+        }
+    } else {
+        cmin = get_coremin (0);
+        cmax = get_coremax (0);
+        debug ("%d:%d - %d:%d".format (cmin,cmax,minfreq,maxfreq));
+        if ((minfreq == cmin) && (maxfreq == cmax)) return;
+        if ((minfreq > cmax) && (minfreq <= maxfreq)) {
+            set_max (maxfreq);
+            pause (100);
+            set_min (minfreq);
+        } else {
+            if (minfreq != cmin) set_min (minfreq);
+            pause (100);
+            if (maxfreq != cmax) set_max (maxfreq);
+        }
+    }
+}
+
+function get_coremin (core) {
+    if (!util_present) return 0;
+    var res = get_info_string (cpufreqctl_path + " coremin " + core);
+    if (res) return parseInt (res);
+    return 0;
+}
+
+function set_coremin (core, state) {
+    if (!util_present) return false;
+    try {
+        GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " coremin " + core + " " + state);
+    } catch (e) {
+        error ("Set coremin" + e.message);
+        return false;
+    }
+    return true;
+}
+
+function get_coremax (core) {
+    if (!util_present) return 0;
+    var res = get_info_string (cpufreqctl_path + " coremax " + core);
+    if (res) return parseInt (res);
+    return 0;
+}
+
+function set_coremax (core, state) {
+    if (!util_present) return false;
+    try {
+        GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " coremax " + core + " " + state);
+    } catch (e) {
+        error ("Set coremax" + e.message);
+        return false;
+    }
+    return true;
+}
+
+function get_min () {
+    if (!util_present) return minimum_freq;
+    if (save) return set_min (parseInt (settings.get_string (MIN_FREQ_KEY)));
+    var res = get_info_string (cpufreqctl_path + " minf");
+    if (res) return parseInt (res);
+    return minimum_freq;
+}
+
+function set_min (minimum) {
+    if ((minimum <= 0) || !Number.isInteger (minimum)) return 0;
+    if (!util_present) return 0;
+    GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " minf " + minimum.toString());
+    if (save) settings.set_string (MIN_FREQ_KEY, minimum.toString());
+    return minimum;
+}
+
+function get_max () {
+    if (!util_present) return maximum_freq;
+    if (save) return set_max (parseInt (settings.get_string (MAX_FREQ_KEY)));
+    var res = get_info_string (cpufreqctl_path + " maxf");
+    if (res) return parseInt (res);
+    return maximum_freq;
+}
+
+function set_max (maximum) {
+    if ((maximum <= 0) || !Number.isInteger (maximum)) return 0;
+    if (!util_present) return 0;
+    GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " maxf " + maximum.toString());
+    if (save) settings.set_string (MAX_FREQ_KEY, maximum.toString());
+    return maximum;
+}
+
+function get_min_pstate () {
+    if (!util_present) return 0;
+    if (save) return set_min_pstate (settings.get_int (MIN_FREQ_PSTATE_KEY));
+    var res = get_info_string (cpufreqctl_path + " min");
+    if (res) return parseInt (res);
+    return 0;
+}
+
+function set_min_pstate (minimum) {
+    if (!util_present) return 0;
+    GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " min " + minimum.toString());
+    if (save) settings.set_int (MIN_FREQ_PSTATE_KEY, minimum);
+    return minimum;
+}
+
+function get_max_pstate () {
+    if (!util_present) return 0;
+    if (save) return set_max_pstate (settings.get_int (MAX_FREQ_PSTATE_KEY));
+    var res = get_info_string (cpufreqctl_path + " max");
+    if (res) return parseInt (res);
+    return 0;
+}
+
+function set_max_pstate (maximum) {
+    if (!util_present) return 100;
+    GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " max " + maximum.toString());
+    if (save) settings.set_int (MAX_FREQ_PSTATE_KEY, maximum);
+    return maximum;
+}
+
+function pause (msec) {
+    var t = Date.now ();
+    var i = 0;
+    while ((Date.now () - t) < msec) i++;
+}
+
+function get_freq (num) {
+    let n = frequences.length;
+    let step = Math.round (100 / n);
+    let i = Math.round (num / step);
+    if (i >= n) i = n - 1;
+    return parseInt (frequences[i]);
+}
+
+function get_pos (num) {
+    let m = parseFloat (frequences[frequences.length -1]) - parseFloat (frequences[0]);
+    let p = (parseFloat (num) - parseFloat (frequences[0]))/m;
+    return p;
 }
 
 let cmd_out, info_out;

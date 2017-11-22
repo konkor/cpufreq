@@ -27,6 +27,9 @@ const Gettext = imports.gettext;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 
+var Format = imports.format;
+String.prototype.format = Format.format;
+
 function initTranslations (domain) {
     domain = domain || 'gnome-shell-extensions-cpufreq';
 
