@@ -164,6 +164,7 @@ var Sidebar = new Lang.Class({
                             settings.set_string (CPU_FREQ_KEY, freq.toString ());
                         }
                         this.userspace.expanded = false;
+                        this.check_sliders ();
                     }));
                 });
             } else {
@@ -188,12 +189,37 @@ var Sidebar = new Lang.Class({
         GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + ' gov ' + o.label);
         this.activeg.set_label (o.label);
         if (save) settings.set_string (GOVERNOR_KEY, o.label);
-        //TODO SET SLIDERS
         this.activeg.expanded = false;
+        this.check_sliders ();
+    },
+
+    check_sliders: function () {
+        if (pstate_present) {
+            this.slider_min.slider.set_value (get_min_pstate() / 100);
+            this.slider_max.slider.set_value (get_max_pstate() / 100);
+        } else if (this.slider_min) {
+            this.slider_min.sensitive = true;
+            this.slider_max.sensitive = true;
+            if (this.activeg.label.indexOf ("powersave") > -1) {
+                this.slider_min.slider.set_value (0);
+                this.slider_max.sensitive = false;
+            } else if (this.activeg.label.indexOf ("performance") > -1) {
+                this.slider_max.slider.set_value (1);
+                this.slider_min.sensitive = false;
+            }
+        }
     },
 
     acpi_build: function () {
-        if (frequences.length > 1) this.sliders_build ();
+        if (frequences.length > 1) {
+            this.sliders_build ();
+            if (this.activeg.label.indexOf ("powersave") > -1) {
+                this.slider_max.sensitive = false;
+                debug (this.activeg.label);
+            } else if (this.activeg.label.indexOf ("performance") > -1) {
+                this.slider_min.sensitive = false;
+            }
+        }
     },
 
     sliders_build: function () {
