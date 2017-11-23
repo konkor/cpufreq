@@ -90,6 +90,8 @@ var CPUFreqApplication = new Lang.Class ({
         check_install ();
         get_governors ();
         get_frequences ();
+        cpucount = Convenience.get_cpu_number ();
+
         save = settings.get_boolean (SAVE_SETTINGS_KEY);
         PID =  settings.get_int (PROFILE_KEY);
         this.build ();
@@ -101,10 +103,11 @@ var CPUFreqApplication = new Lang.Class ({
         });
         window.show_all ();
         window.present ();
+        this.sidebar.post_init ();
     },
 
     build: function() {
-        //window.set_default_size (400, 600);
+        window.set_default_size (400, 200);
         cssp = get_css_provider ();
         if (cssp) {
             Gtk.StyleContext.add_provider_for_screen (
@@ -131,8 +134,14 @@ var Sidebar = new Lang.Class({
         this.add_governors ();
         if (pstate_present) this.pstate_build ();
         else this.acpi_build ();
+        if (cpucount > 1) this.add_cores ();
 
         //this.show_all ();
+    },
+
+    post_init: function () {
+        if (cpucount > 1)
+            this.corewarn.visible = GLib.get_num_processors () == 1;
     },
 
     add_governors: function () {
@@ -168,7 +177,7 @@ var Sidebar = new Lang.Class({
                     }));
                 });
             } else {
-                let gi = new MenuItem (g[0]);
+                let gi = new MenuItem (g[0], g[0] + " governor");
                 this.activeg.add_menuitem (gi);
                 gi.connect ('clicked', Lang.bind (this, this.on_governor));
             }
@@ -270,6 +279,29 @@ var Sidebar = new Lang.Class({
         this.sliders_build ();
     },
 
+    add_cores: function () {
+        this.slider_core = new Slider ("Cores Online",
+            GLib.get_num_processors (), "Number Of Active Core Threads");
+        this.add (this.slider_core);
+        this.slider_core.slider.set_value (GLib.get_num_processors () / cpucount);
+        this.corewarn = new MenuItem ("⚠ Single Core","Single Core Is Not Recommended");
+        this.corewarn.get_style_context ().add_class ("warn");
+        this.corewarn.xalign = 0.5;
+        this.add (this.corewarn);
+        this.corewarn.connect ('clicked', Lang.bind (this, function () {
+            let app = Gio.AppInfo.get_default_for_type ("text/plain", false);
+            app.launch_uris (["file://" + APPDIR + "/README.md"], null);
+        }));
+        this.slider_core.slider.connect('value_changed', Lang.bind (this, function (item) {
+            if (!installed) return;
+            this._changed ();
+            var cc = Math.floor ((cpucount - 1) * item.get_value() + 1);
+            set_cores (cc);
+            this.slider_core.update_info (cc);
+            this.corewarn.visible = cc == 1;
+        }));
+    },
+
     _changed: function () {
         if (PID > -1) {
             PID = -1;
@@ -284,17 +316,21 @@ var Slider = new Lang.Class({
     Extends: Gtk.Box,
 
     _init: function (text, info, tooltip) {
-        this.parent ({orientation:Gtk.Orientation.VERTICAL});
+        this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:22});
+        this.margin_top = 8;
+        this.margin_bottom = 8;
         this.get_style_context ().add_class ("slider-item");
         this.tooltip_text = tooltip;
 
-        let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL,margin:8});
+        let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
+        box.get_style_context ().add_class ("info-item");
         this.add (box);
         this.label = new Gtk.Label ({label:"<b>"+text+"</b>", use_markup:true, xalign:0});
         box.pack_start (this.label, true, true, 0);
         this.info = new Gtk.Label ({label:"<i>" + info + "</i>", use_markup:true});
         box.pack_end (this.info, false, false, 0);
         this.slider = Gtk.Scale.new_with_range (Gtk.Orientation.HORIZONTAL, 0, 1, 0.05);
+        this.get_style_context ().add_class ("slider");
         this.slider.draw_value = false;
         this.add (this.slider);
 
@@ -343,8 +379,9 @@ var MenuItem = new Lang.Class({
     Name: "MenuItem",
     Extends: Gtk.Button,
 
-    _init: function (text) {
-        this.parent ({label:text, xalign:0});
+    _init: function (text, tooltip) {
+        tooltip = tooltip || "";
+        this.parent ({label:text, tooltip_text:tooltip, xalign:0});
         this.get_style_context ().add_class ("menuitem");
     }
 });
@@ -383,6 +420,7 @@ let frequences = [];
 let minimum_freq = 0;
 let maximum_freq = 0;
 let minfreq = 0, maxfreq = 0;
+let cpucount = 1;
 
 function check_install () {
     pkexec_path = GLib.find_program_in_path ("pkexec");
@@ -608,6 +646,33 @@ function set_max_pstate (maximum) {
     GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " max " + maximum.toString());
     if (save) settings.set_int (MAX_FREQ_PSTATE_KEY, maximum);
     return maximum;
+}
+
+function set_core (core, state) {
+    if (!util_present) return false;
+    util_present = false;
+    if (state)
+        GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " on " + core);
+    else
+        GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " off " + core);
+    util_present = true;
+    return state;
+}
+
+function set_cores (count) {
+    let ccore = count;
+    if (core_event != 0) {
+        GLib.source_remove (core_event);
+        core_event = 0;
+    }
+    if (count == GLib.get_num_processors ()) return;
+    core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+        for (let key = 1; key < cpucount; key++) {
+            set_core (key, key < ccore);
+        }
+        core_event = 0;
+        return false;
+    }));
 }
 
 function pause (msec) {

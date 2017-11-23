@@ -17,18 +17,15 @@
   border:0;
   text-shadow:none;
 }
-
 .titlebar {
   padding:0;
   margin:0;
 }
-
 .main {
   color: @cpufreq_fg_color;
   background-color: @cpufreq_base_color;
   padding: 1em 0em;
 }
-
 .menuitem, .submenu {
   border-radius: 0;
   border-style:none;
@@ -44,11 +41,33 @@
   background-image: none;
   background-color: transparent;
 }
-.menuitem:hover, .submenu:hover {
+.menuitem:hover, .submenu:hover, .slider-item:hover {
   color: #fff;
   background-color: @cpufreq_bg_color;
 }
 .submenu-section {
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
   /*background-color: @cpufreq_bg_color;*/
+}
+.slider-item {
+
+}
+.warn {
+  background-color: alpha (red, 0.4);;
+}
+.warn:hover {
+  background-color: shade (red, 0.8);;
+}
+.scale
+{
+  -GtkRange-slider-width: 11;
+  -GtkRange-trough-border: -3;
+  -GtkScale-slider-length: 11;
+  margin:0px;
+}
+
+.scale.trough.highlight
+{
+  background-color:@cpufreq_bg_color;
+  background-image:none;
 }
