@@ -88,6 +88,7 @@ var CPUFreqApplication = new Lang.Class ({
             if (res == "intel_pstate") pstate_present = true;
         }
         check_install ();
+        check_extensions ();
         get_governors ();
         get_frequences ();
         cpucount = Convenience.get_cpu_number ();
@@ -135,6 +136,7 @@ var Sidebar = new Lang.Class({
         if (pstate_present) this.pstate_build ();
         else this.acpi_build ();
         if (cpucount > 1) this.add_cores ();
+        if (boost_present) this.add_boost ();
 
         //this.show_all ();
     },
@@ -284,7 +286,7 @@ var Sidebar = new Lang.Class({
             GLib.get_num_processors (), "Number Of Active Core Threads");
         this.add (this.slider_core);
         this.slider_core.slider.set_value (GLib.get_num_processors () / cpucount);
-        this.corewarn = new MenuItem ("⚠ Single Core","Single Core Is Not Recommended");
+        this.corewarn = new MenuItem ("⚠ Single Core Thread","Single Core Thread Is Not Recommended");
         this.corewarn.get_style_context ().add_class ("warn");
         this.corewarn.xalign = 0.5;
         this.add (this.corewarn);
@@ -302,12 +304,44 @@ var Sidebar = new Lang.Class({
         }));
     },
 
+    add_boost: function () {
+        this.boost = new Switch ("Turbo Boost", get_turbo(), "Enable/Disable Processor Boost");
+        this.add (this.boost);
+        this.boost.sw.connect ('state_set', Lang.bind (this, function () {
+            this._changed ();
+            if (installed) set_turbo (this.boost.sw.active);
+        }));
+    },
+
     _changed: function () {
         if (PID > -1) {
             PID = -1;
             settings.set_int (PROFILE_KEY, -1);
         }
         if (this.profmenu) this.profmenu.label = "Custom";
+    }
+});
+
+var Switch = new Lang.Class({
+    Name: "Switch",
+    Extends: Gtk.Box,
+
+    _init: function (text, state, tooltip) {
+        this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:22});
+        state = state || false;
+        this.margin_top = 8;
+        this.margin_bottom = 8;
+        this.get_style_context ().add_class ("switch");
+        this.tooltip_text = tooltip;
+
+        this.label = new Gtk.Label ({label:"<b>"+text+"</b>", use_markup:true, xalign:0});
+        this.pack_start (this.label, true, true, 0);
+        this.sw = new Gtk.Switch ();
+        this.sw.get_style_context ().add_class ("switch-item");
+        this.sw.active = state;
+        this.pack_end (this.sw, false, false, 0);
+
+        this.show_all ();
     }
 });
 
@@ -421,6 +455,7 @@ let minimum_freq = 0;
 let maximum_freq = 0;
 let minfreq = 0, maxfreq = 0;
 let cpucount = 1;
+let boost_present = false;
 
 function check_install () {
     pkexec_path = GLib.find_program_in_path ("pkexec");
@@ -441,6 +476,47 @@ function check_install () {
         localctl = get_info_string (APPDIR + "/cpufreqctl version");
         if (localctl != globalctl) updated = false;
     }
+}
+
+function check_extensions () {
+    if (!util_present || !installed) return;
+    let default_boost = get_turbo ();
+    if (default_boost == false) {
+        set_turbo (true);
+        let new_state = get_turbo ();
+        if (default_boost != new_state) {
+            boost_present = true;
+            set_turbo (false);
+        }
+    } else boost_present = true;
+}
+
+function get_turbo () {
+    if (!util_present) return false;
+    if (save) return set_turbo (settings.get_boolean (TURBO_BOOST_KEY));
+    var res = null;
+    if (pstate_present) res = get_info_string (cpufreqctl_path + " turbo");
+    else res = get_info_string (cpufreqctl_path + " boost");
+    if (res) {
+        if (pstate_present && res == '0') return true;
+        if (!pstate_present && res == '1') return true;
+    }
+    return false;
+}
+
+function set_turbo (state) {
+    if (!util_present) return false;
+    if (pstate_present) {
+        if (state)
+            GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " turbo 0");
+        else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " turbo 1");
+    } else {
+        if (state)
+            GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " boost 1");
+        else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " boost 0");
+    }
+    if (save) settings.set_boolean (TURBO_BOOST_KEY, state);
+    return state;
 }
 
 function get_governors () {

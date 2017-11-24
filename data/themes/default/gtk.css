@@ -1,12 +1,4 @@
-@define-color cpufreq_base_color #343a3a;
-@define-color cpufreq_bg_color #0f6bbb;
-@define-color cpufreq_fg_color #cacaca;
-
 .hb, .hb GtkLabel, .hb label {
-  color: @cpufreq_base_color;
-  background-color: @cpufreq_base_color;
-  background-image: none;
-  font-weight: bold;
   border-width: 0;
   border-style:none;
   box-shadow:none;
@@ -21,11 +13,6 @@
   padding:0;
   margin:0;
 }
-.main {
-  color: @cpufreq_fg_color;
-  background-color: @cpufreq_base_color;
-  padding: 1em 0em;
-}
 .menuitem, .submenu {
   border-radius: 0;
   border-style:none;
@@ -36,14 +23,14 @@
   padding:0.5em;
   margin:0;
   border:0;
-  color: #afafaf;
+  color: #7f7f7f;
   text-shadow:none;
   background-image: none;
   background-color: transparent;
 }
 .menuitem:hover, .submenu:hover, .slider-item:hover {
   color: #fff;
-  background-color: @cpufreq_bg_color;
+  background-color: #215d9c;
 }
 .submenu-section {
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
@@ -53,21 +40,10 @@
 
 }
 .warn {
-  background-color: alpha (red, 0.4);;
+  color: orange;
+  font-weight: bold;
 }
 .warn:hover {
-  background-color: shade (red, 0.8);;
-}
-.scale
-{
-  -GtkRange-slider-width: 11;
-  -GtkRange-trough-border: -3;
-  -GtkScale-slider-length: 11;
-  margin:0px;
+  background-color: shade (red, 0.8);
 }
 
-.scale.trough.highlight
-{
-  background-color:@cpufreq_bg_color;
-  background-image:none;
-}
