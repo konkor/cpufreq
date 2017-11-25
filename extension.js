@@ -163,7 +163,7 @@ const FrequencyIndicator = new Lang.Class({
                 return true;
             }));
         } else {
-            Mainloop.source_remove (info_event);
+            GLib.source_remove (info_event);
             info_event = 0;
             Clutter.ungrab_keyboard ();
         }
@@ -208,7 +208,7 @@ const FrequencyIndicator = new Lang.Class({
         cmd = this.pkexec_path + " " + EXTENSIONDIR + '/cpufreqctl install';
         Util.trySpawnCommandLine (cmd);
         if (install_event != 0) {
-            Mainloop.source_remove (install_event);
+            GLib.source_remove (install_event);
         }
         install_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
             this._check_install ();
@@ -344,6 +344,12 @@ const FrequencyIndicator = new Lang.Class({
                                         this._settings.set_string (GOVERNOR_KEY, 'userspace');
                                         this._settings.set_string (CPU_FREQ_KEY, f.toString ());
                                     }
+                                    if (this.slider_min) {
+                                        this.slider_min.actor.reactive = true;
+                                        this.slider_min.actor.opacity = 255;
+                                        this.slider_max.actor.reactive = true;
+                                        this.slider_max.actor.opacity = 255;
+                                    }
                                 }
                             }));
                         });
@@ -413,10 +419,10 @@ const FrequencyIndicator = new Lang.Class({
                         minfreq = Math.floor (item.value * 100);
                         this.label_min.set_text (minfreq.toString() + "%");
                         if (freq_event != 0) {
-                            Mainloop.source_remove (freq_event);
+                            GLib.source_remove (freq_event);
                             freq_event = 0;
                         }
-                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
+                        freq_event = GLib.timeout_add (0, 1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
                 this.label_max = new InfoMenuItem ("Maximum", this._get_max_pstate () + "%");
@@ -434,10 +440,10 @@ const FrequencyIndicator = new Lang.Class({
                         maxfreq = Math.floor (item.value * 100);
                         this.label_max.set_text (maxfreq.toString() + "%");
                         if (freq_event != 0) {
-                            Mainloop.source_remove (freq_event);
+                            GLib.source_remove (freq_event);
                             freq_event = 0;
                         }
-                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
+                        freq_event = GLib.timeout_add (0, 1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
             } else if (this.boost_present) {
@@ -466,10 +472,10 @@ const FrequencyIndicator = new Lang.Class({
                         minfreq = this._get_freq (Math.floor (item.value * 100));
                         this.label_min.set_text (this._get_label (minfreq));
                         if (freq_event != 0) {
-                            Mainloop.source_remove (freq_event);
+                            GLib.source_remove (freq_event);
                             freq_event = 0;
                         }
-                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
+                        freq_event = GLib.timeout_add (0, 1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
                 this.label_max = new InfoMenuItem ("Maximum", this._get_max_label ());
@@ -487,10 +493,10 @@ const FrequencyIndicator = new Lang.Class({
                         maxfreq = this._get_freq (Math.floor (item.value * 100));
                         this.label_max.set_text (this._get_label (maxfreq));
                         if (freq_event != 0) {
-                            Mainloop.source_remove (freq_event);
+                            GLib.source_remove (freq_event);
                             freq_event = 0;
                         }
-                        freq_event = Mainloop.timeout_add (1000, Lang.bind (this, this.set_frequencies));
+                        freq_event = GLib.timeout_add (0, 1000, Lang.bind (this, this.set_frequencies));
                     }
                 }));
             }
@@ -686,7 +692,7 @@ const FrequencyIndicator = new Lang.Class({
     _delayed_load: function () {
         let delay = 1000;
         if (core_event != 0) {
-            Mainloop.source_remove (core_event);
+            GLib.source_remove (core_event);
             core_event = 0;
         }
         this._load_stage (this.prf);
@@ -713,7 +719,7 @@ const FrequencyIndicator = new Lang.Class({
             default:
                 return;
         }
-        core_event = Mainloop.timeout_add (delay, Lang.bind (this, this._delayed_load));
+        core_event = GLib.timeout_add (0, delay, Lang.bind (this, this._delayed_load));
     },
 
     _load_stage: function (prf) {
@@ -781,7 +787,6 @@ const FrequencyIndicator = new Lang.Class({
                 if (key < prf.cpu) this._set_core (key, true);
                 else this._set_core (key, false);
             }
-            this._update_freq ();
             this._add_event ();
         }
     },
@@ -816,7 +821,7 @@ const FrequencyIndicator = new Lang.Class({
 
     set_frequencies: function () {
         if (freq_event != 0) {
-            Mainloop.source_remove (freq_event);
+            GLib.source_remove (freq_event);
             freq_event = 0;
         }
         let cmin, cmax;
@@ -966,7 +971,7 @@ const FrequencyIndicator = new Lang.Class({
     _set_cores: function (count) {
         ccore = count;
         if (core_event != 0) {
-            Mainloop.source_remove (core_event);
+            GLib.source_remove (core_event);
             core_event = 0;
         }
         if (count == GLib.get_num_processors ()) return;
@@ -1240,10 +1245,10 @@ const FrequencyIndicator = new Lang.Class({
         if (event != 0) this._settings.disconnect (event);
         if (monitorID) this._settings.disconnect (monitorID);
         if (saveID) this._settings.disconnect (saveID);
-        if (install_event != 0) Mainloop.source_remove (install_event);
-        if (core_event != 0) Mainloop.source_remove (core_event);
-        if (freq_event != 0) Mainloop.source_remove (freq_event);
-        if (init_event != 0) Mainloop.source_remove (init_event);
+        if (install_event != 0) GLib.source_remove (install_event);
+        if (core_event != 0) GLib.source_remove (core_event);
+        if (freq_event != 0) GLib.source_remove (freq_event);
+        if (init_event != 0) GLib.source_remove (init_event);
         if (monitor_event) GLib.source_remove (monitor_event);
         event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0; monitor_event = 0;
         saveID = 0; monitorID = 0;
