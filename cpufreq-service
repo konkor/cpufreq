@@ -172,14 +172,6 @@ function get_appdir () {
     return s;
 }
 
-let cmd_out, info_out;
-function get_info_string (cmd) {
-    cmd_out = GLib.spawn_command_line_sync (cmd);
-    if (cmd_out[0]) info_out = cmd_out[1].toString().split("\n")[0];
-    if (info_out) return info_out;
-    return "";
-}
-
 function debug (msg) {
     if (msg && DEBUGING) print ("[cpufreq][service] " + msg);
 }
