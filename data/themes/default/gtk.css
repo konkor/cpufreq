@@ -28,7 +28,7 @@
   background-image: none;
   background-color: transparent;
 }
-.menuitem:hover, .submenu:hover, .slider-item:hover {
+.menuitem:hover, .submenu:hover, .slider-item:hover, .submenu *:hover {
   color: #fff;
   background-color: #215d9c;
 }
