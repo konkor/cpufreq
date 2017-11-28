@@ -46,4 +46,8 @@
 .warn:hover {
   background-color: shade (red, 0.8);
 }
-
+.info-widget {
+  box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
+  color: #fff;
+  background-color: #215d9c;
+}

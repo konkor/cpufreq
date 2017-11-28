@@ -120,7 +120,25 @@ var CPUFreqApplication = new Lang.Class ({
         this.hb.get_style_context ().add_class ("hb");
         window.set_titlebar (this.hb);
         this.sidebar = new Sidebar ();
-        window.add (this.sidebar);
+        //window.add (this.sidebar);
+        let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
+        window.add (box);
+        this.info = new InfoItem ();
+        box.pack_start (this.info, true, true, 8);
+        box.pack_end (this.sidebar, false, false, 0);
+        this.sidebar.set_size_request (320, 160);
+    }
+});
+
+
+var InfoItem = new Lang.Class({
+    Name: "InfoItem",
+    Extends: Gtk.Box,
+
+    _init: function () {
+        this.parent ({orientation:Gtk.Orientation.VERTICAL});
+        this.margin_bottom = 8;
+        this.get_style_context ().add_class ("info-widget");
     }
 });
 
