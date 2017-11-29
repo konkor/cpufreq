@@ -1396,6 +1396,8 @@ const SeparatorItem = new Lang.Class({
     }
 });
 
+let tt = 0, tt_time = 0;
+
 const InfoItem = new Lang.Class({
     Name: 'InfoItem',
     Extends: PopupMenu.PopupBaseMenuItem,
@@ -1426,7 +1428,6 @@ const InfoItem = new Lang.Class({
         this._warn.align = St.Align.START;
         this.vbox.add_child (this._warn);
         this._warn.visible = false;
-        this.tt = 0;
         this.warn_lvl = 0;
         this.balance = "";
         this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
@@ -1575,11 +1576,12 @@ const InfoItem = new Lang.Class({
             i = parseInt (freqInfo);
             if (!i) return;
             s = "CPU THROTTLE: " + i;
-            if (i != this.tt) {
+            if (i != tt) {
                 this.warn_lvl = 2;
-                s += "\nTHROTTLE SPEED: " + Math.round ((i-this.tt)/2, 1);
-            } else if (this.warn_lvl == 0) this.warn_lvl = 1;
-            this.tt = i;
+                s += "\nTHROTTLE SPEED: " + Math.round ((i-tt)/2, 1);
+                tt_time = Date.now ();
+            } else if ((this.warn_lvl == 0) && ((Date.now() - tt_time) < 600000)) this.warn_lvl = 1;
+            tt = i;
             if (this.warnmsg.length > 0) this.warnmsg += "\n" + s;
             else this.warnmsg = s;
         }
