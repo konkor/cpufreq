@@ -9,7 +9,6 @@ imports.searchPath.unshift(APPDIR);
 
 const Convenience = imports.convenience;
 
-const TITLE_KEY = 'title';
 const MONITOR_KEY = 'monitor';
 
 var DEBUGING = false;
@@ -23,6 +22,17 @@ let cpucount = 1;
 
 let event = 0;
 let init_event = 0;
+
+const OBJECT_PATH = '/org/konkor/cpufreq/service';
+const CpufreqServiceIface = '<node> \
+<interface name="org.konkor.cpufreq.service"> \
+<property name="Frequency" type="t" access="read"/> \
+<signal name="FrequencyChanged"> \
+  <arg name="title" type="s"/> \
+</signal> \
+</interface> \
+</node>';
+const CpufreqServiceInfo  = Gio.DBusInterfaceInfo.new_for_xml (CpufreqServiceIface);
 
 var CpufreqService = new Lang.Class ({
     Name: 'CpufreqService',
@@ -46,6 +56,8 @@ var CpufreqService = new Lang.Class ({
 
     init: function() {
         debug ("init");
+        this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
+        this.dbus.export (Gio.DBus.session, OBJECT_PATH);
         cpucount = Convenience.get_cpu_number ();
         this.max0 = 0;
         this.title = "-- \u3393";
@@ -110,7 +122,7 @@ var CpufreqService = new Lang.Class ({
             } else {
                 this.title = (m/1000).toFixed(0).toString() + "  \u3392";
             }
-            settings.set_string (TITLE_KEY, this.title);
+            this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
         }

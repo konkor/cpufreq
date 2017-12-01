@@ -20,7 +20,6 @@ const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
 const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
-const TITLE_KEY = 'title';
 const MONITOR_KEY = 'monitor';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -47,6 +46,18 @@ let profiles = [];
 let default_profile = null;
 let minfreq = 0, maxfreq = 0; //new values
 let monitor_timeout = 1000;
+
+const BUS_NAME = 'org.konkor.cpufreq.service';
+const OBJECT_PATH = '/org/konkor/cpufreq/service';
+const CpufreqServiceIface = '<node> \
+<interface name="org.konkor.cpufreq.service"> \
+<property name="Frequency" type="t" access="read"/> \
+<signal name="FrequencyChanged"> \
+  <arg name="title" type="s"/> \
+</signal> \
+</interface> \
+</node>';
+const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -146,7 +157,10 @@ const FrequencyIndicator = new Lang.Class({
         if (monitorID) this._settings.disconnect (monitorID);
         monitorID = this._settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
             monitor_timeout = this._settings.get_int (MONITOR_KEY);
-            if (monitor_event) GLib.source_remove (monitor_event);
+            if (monitor_event) {
+                GLib.source_remove (monitor_event);
+                monitor_event = 0;
+            }
             monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
         }));
         if (saveID) this._settings.disconnect (saveID);
@@ -244,18 +258,24 @@ const FrequencyIndicator = new Lang.Class({
     },
 
      _add_event: function () {
-        if (event != 0) {
-            this._settings.disconnect (event);
-            event = 0;
+        if (this.proxy) {
+            this.proxy.disconnectSignal (event);
+            delete this.proxy;
+            this.proxy = null;
         }
         if (monitor_timeout > 0) {
             if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
                 log ("Unable to start cpufreq service...");
                 return;
             }
-            event = this._settings.connect ("changed::" + TITLE_KEY, Lang.bind (this, function() {
-                this.title = this._settings.get_string (TITLE_KEY);
-                if (this.title) this.statusLabel.set_text (this.title);
+            this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, Lang.bind (this, function (proxy, e) {
+                if (e) {
+                    log (e.message);
+                    return;
+                }
+                event = this.proxy.connectSignal ('FrequencyChanged', Lang.bind(this, function (o, s, title) {
+                    if (title) this.statusLabel.set_text (title.toString());
+                }));
             }));
         } else GLib.spawn_command_line_async ("killall cpufreq-service");
     },
@@ -1242,7 +1262,11 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     remove_events: function () {
-        if (event != 0) this._settings.disconnect (event);
+        if (this.proxy) {
+            this.proxy.disconnectSignal (event);
+            delete this.proxy;
+            this.proxy = null;
+        }
         if (monitorID) this._settings.disconnect (monitorID);
         if (saveID) this._settings.disconnect (saveID);
         if (install_event != 0) GLib.source_remove (install_event);
