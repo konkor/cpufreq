@@ -54,6 +54,12 @@ var CpufreqService = new Lang.Class ({
         this.hold ();
     },
 
+    vfunc_activate: function() {
+        this.connect("destroy", () => {
+            this.remove_events ();
+        });
+    },
+
     init: function() {
         debug ("init");
         this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
@@ -80,9 +86,10 @@ var CpufreqService = new Lang.Class ({
         }
         if (monitor_timeout > 0)
             event = GLib.timeout_add (100, monitor_timeout, Lang.bind (this, function () {
-            this._update_freq ();
-            return true;
-        }));
+                this._update_freq ();
+                return true;
+            }));
+        else this.quit ();
     },
 
     _init_streams: function() {
@@ -157,6 +164,7 @@ var CpufreqService = new Lang.Class ({
         if (event != 0) GLib.Source.remove (event);
         if (init_event != 0) GLib.Source.remove (init_event);
         event = 0; init_event = 0;
+        if (this.dbus) this.dbus.unexport ();
     }
 });
 
