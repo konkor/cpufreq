@@ -17,7 +17,6 @@ let monitor_timeout = 500;
 
 let streams = [];
 let freqs = [];
-let cancel = null;
 let cpucount = 1;
 
 let event = 0;
@@ -69,7 +68,6 @@ var CpufreqService = new Lang.Class ({
         this.title = "-- \u3393";
         this.old = this.title;
         freqs = [GLib.get_num_processors ()];
-        cancel = new Gio.Cancellable ();
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
@@ -116,8 +114,6 @@ var CpufreqService = new Lang.Class ({
 
     _update_freq: function () {
         let m = 0;
-        cancel.cancel ();
-        cancel = new Gio.Cancellable ();
         streams.forEach (stream => {
             this._read_line (stream);
         });
@@ -139,8 +135,8 @@ var CpufreqService = new Lang.Class ({
     _read_line: function (dis) {
         if (dis == null) return;
         try {
-            dis.seek (0, GLib.SeekType.SET, cancel);
-            dis.read_line_async (200, cancel, this._read_done);
+            dis.seek (0, GLib.SeekType.SET, null);
+            dis.read_line_async (200, null, this._read_done);
         } catch (e) {
             init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
             //error (e);
