@@ -75,5 +75,17 @@
       <description>Frequency monitor interval</description>
     </key>
 
+    <key type="s" name="charging">
+      <default>''</default>
+      <summary>Charging Profile</summary>
+      <description>Profile On Battery Charging</description>
+    </key>
+
+    <key type="s" name="discharging">
+      <default>''</default>
+      <summary>Discharging Profile</summary>
+      <description>Profile On Battery Discharging</description>
+    </key>
+
   </schema>
 </schemalist>
