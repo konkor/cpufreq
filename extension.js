@@ -21,6 +21,8 @@ const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
 const MONITOR_KEY = 'monitor';
+const CHARGING_KEY = 'charging';
+const DISCHARGING_KEY = 'discharging';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -35,7 +37,7 @@ let core_event = 0;
 let freq_event = 0;
 let info_event = 0;
 let monitor_event = 0;
-let monitorID = 0, saveID;
+let monitorID = 0, saveID, powerID, accuID, lineID;
 let save = false;
 let cpucount = 1;
 let freqInfo = null;
@@ -45,7 +47,9 @@ let ccore = 0;
 let profiles = [];
 let default_profile = null;
 let minfreq = 0, maxfreq = 0; //new values
-let monitor_timeout = 1000;
+let monitor_timeout = 500;
+let charging_profile = {percent:0, guid:""};
+let discharging_profile = {percent:100, guid:""};
 
 const BUS_NAME = 'org.konkor.cpufreq.service';
 const OBJECT_PATH = '/org/konkor/cpufreq/service';
@@ -147,6 +151,7 @@ const FrequencyIndicator = new Lang.Class({
         let profs =  this._settings.get_string (PROFILES_KEY);
         if (profs.length > 0) profiles = JSON.parse (profs);
         if (!default_profile) default_profile = this._get_profile ('Default');
+        this.get_power_profiles ();
         monitor_timeout =  this._settings.get_int (MONITOR_KEY);
         this._build_ui ();
         if (this.installed && save) this._load_settings ();
@@ -168,6 +173,14 @@ const FrequencyIndicator = new Lang.Class({
             save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
             this.save_switch.setToggleState (save);
         }));
+        lineID = this._settings.connect ("changed::" + CHARGING_KEY, Lang.bind (this, function() {
+            this.get_power_profiles ();
+        }));
+        accuID = this._settings.connect ("changed::" + DISCHARGING_KEY, Lang.bind (this, function() {
+            this.get_power_profiles ();
+        }));
+        this.power = Main.panel.statusArea["aggregateMenu"]._power._proxy;
+        if (this.power) powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
     },
 
     _on_menu_state_changed: function (source, state) {
@@ -181,6 +194,38 @@ const FrequencyIndicator = new Lang.Class({
             info_event = 0;
             Clutter.ungrab_keyboard ();
         }
+    },
+
+    on_power_state: function () {
+        let id = -1;
+        print ("on_power_state", this.power.State, this.power.Percentage);
+        if (this.power.State == 1) {
+            id = this.get_profile_id (charging_profile.guid);
+            if (id == -1 || id == this.PID) return;
+            if (this.power.Percentage >= charging_profile.percent)
+                this._load_profile (profiles[id]);
+        } else if (this.power.State == 2) {
+            id = this.get_profile_id (discharging_profile.guid);
+            if (id == -1 || id == this.PID) return;
+            if (this.power.Percentage <= charging_profile.percent)
+                this._load_profile (profiles[id]);
+        }
+    },
+
+    get_power_profiles: function () {
+        let s = settings.get_string (CHARGING_KEY);
+        if (s) charging_profile = JSON.parse (s);
+        s = settings.get_string (DISCHARGING_KEY);
+        if (s) discharging_profile = JSON.parse (s);
+        discharging_profile.id = this.get_profile_id (discharging_profile.guid);
+    },
+
+    get_profile_id: function (guid) {
+        let i = -1;
+        for (let i = 0; i < profiles.length; i++) {
+            if (profiles[i].guid == guid) return i;
+        }
+        return i;
     },
 
     _is_events: function () {
@@ -1269,13 +1314,16 @@ const FrequencyIndicator = new Lang.Class({
         }
         if (monitorID) this._settings.disconnect (monitorID);
         if (saveID) this._settings.disconnect (saveID);
+        if (lineID) this._settings.disconnect (lineID);
+        if (accuID) this._settings.disconnect (accuID);
+        if (powerID) this.power.disconnect (powerID);
         if (install_event != 0) GLib.source_remove (install_event);
         if (core_event != 0) GLib.source_remove (core_event);
         if (freq_event != 0) GLib.source_remove (freq_event);
         if (init_event != 0) GLib.source_remove (init_event);
         if (monitor_event) GLib.source_remove (monitor_event);
         event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0; monitor_event = 0;
-        saveID = 0; monitorID = 0;
+        saveID = 0; monitorID = 0; powerID = 0; lineID = 0; accuID = 0;
         GLib.spawn_command_line_async ("killall cpufreq-service");
     }
 });
