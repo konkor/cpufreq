@@ -51,6 +51,21 @@ let monitor_timeout = 500;
 let charging_profile = {percent:0, guid:""};
 let discharging_profile = {percent:100, guid:""};
 
+const UP_BUS_NAME = 'org.freedesktop.UPower';
+const UP_OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
+const DisplayDeviceInterface = '<node> \
+<interface name="org.freedesktop.UPower.Device"> \
+  <property name="Type" type="u" access="read"/> \
+  <property name="State" type="u" access="read"/> \
+  <property name="Percentage" type="d" access="read"/> \
+  <property name="TimeToEmpty" type="x" access="read"/> \
+  <property name="TimeToFull" type="x" access="read"/> \
+  <property name="IsPresent" type="b" access="read"/> \
+  <property name="IconName" type="s" access="read"/> \
+</interface> \
+</node>';
+const PowerManagerProxy = Gio.DBusProxy.makeProxyWrapper(DisplayDeviceInterface);
+
 const BUS_NAME = 'org.konkor.cpufreq.service';
 const OBJECT_PATH = '/org/konkor/cpufreq/service';
 const CpufreqServiceIface = '<node> \
@@ -179,8 +194,16 @@ const FrequencyIndicator = new Lang.Class({
         accuID = this._settings.connect ("changed::" + DISCHARGING_KEY, Lang.bind (this, function() {
             this.get_power_profiles ();
         }));
-        this.power = Main.panel.statusArea["aggregateMenu"]._power._proxy;
-        if (this.power) powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
+        //this.power = Main.panel.statusArea["aggregateMenu"]._power._proxy;
+        //if (this.power) powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
+        this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, Lang.bind (this, function (proxy, e) {
+            if (e) {
+                log(e.message);
+                return;
+            }
+            this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
+            this.on_power_state ();
+        }));
     },
 
     _on_menu_state_changed: function (source, state) {
@@ -198,8 +221,8 @@ const FrequencyIndicator = new Lang.Class({
 
     on_power_state: function () {
         let id = -1;
-        print ("on_power_state", this.power.State, this.power.Percentage);
-        if (this.power.State == 1) {
+        //print ("on_power_state", this.power.State, this.power.Percentage);
+        if (this.power.State == 1 || this.power.State == 4) {
             id = this.get_profile_id (charging_profile.guid);
             if (id == -1 || id == this.PID) return;
             if (this.power.Percentage >= charging_profile.percent) {
