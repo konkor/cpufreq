@@ -204,28 +204,28 @@ const FrequencyIndicator = new Lang.Class({
             if (id == -1 || id == this.PID) return;
             if (this.power.Percentage >= charging_profile.percent)
                 this._load_profile (profiles[id]);
+            this.PID = id;
         } else if (this.power.State == 2) {
             id = this.get_profile_id (discharging_profile.guid);
             if (id == -1 || id == this.PID) return;
             if (this.power.Percentage <= charging_profile.percent)
                 this._load_profile (profiles[id]);
+            this.PID = id;
         }
     },
 
     get_power_profiles: function () {
-        let s = settings.get_string (CHARGING_KEY);
+        let s = this._settings.get_string (CHARGING_KEY);
         if (s) charging_profile = JSON.parse (s);
-        s = settings.get_string (DISCHARGING_KEY);
+        s = this._settings.get_string (DISCHARGING_KEY);
         if (s) discharging_profile = JSON.parse (s);
-        discharging_profile.id = this.get_profile_id (discharging_profile.guid);
     },
 
     get_profile_id: function (guid) {
-        let i = -1;
         for (let i = 0; i < profiles.length; i++) {
             if (profiles[i].guid == guid) return i;
         }
-        return i;
+        return -1;
     },
 
     _is_events: function () {
@@ -624,6 +624,10 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }));
             for (let p in profiles) {
+                if (!profiles[p].guid) {
+                    profiles[p].guid = Gio.dbus_generate_guid ();
+                    this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+                }
                 this._add_profile (p);
             }
             if (!this.installed || !this.updated) {
@@ -734,7 +738,7 @@ const FrequencyIndicator = new Lang.Class({
             let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
             cores.push (core);
         }
-        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, core:cores};
+        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, guid:Gio.dbus_generate_guid (), core:cores};
         save = save_state;
         print (JSON.stringify (p));
         return p;
