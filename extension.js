@@ -202,15 +202,17 @@ const FrequencyIndicator = new Lang.Class({
         if (this.power.State == 1) {
             id = this.get_profile_id (charging_profile.guid);
             if (id == -1 || id == this.PID) return;
-            if (this.power.Percentage >= charging_profile.percent)
+            if (this.power.Percentage >= charging_profile.percent) {
                 this._load_profile (profiles[id]);
-            this.PID = id;
+                this.PID = id;
+            }
         } else if (this.power.State == 2) {
             id = this.get_profile_id (discharging_profile.guid);
             if (id == -1 || id == this.PID) return;
-            if (this.power.Percentage <= charging_profile.percent)
+            if (this.power.Percentage <= discharging_profile.percent) {
                 this._load_profile (profiles[id]);
-            this.PID = id;
+                this.PID = id;
+            }
         }
     },
 
