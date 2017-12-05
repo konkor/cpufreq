@@ -32,7 +32,6 @@ const Convenience = Me.imports.convenience;
 
 let event = 0;
 let install_event = 0;
-let init_event = 0;
 let core_event = 0;
 let freq_event = 0;
 let info_event = 0;
@@ -769,7 +768,7 @@ const FrequencyIndicator = new Lang.Class({
     _load_profile: function (prf) {
         if (install_event > 0) return;
         print ('Loading profile...', JSON.stringify (prf));
-        this.remove_events ();
+        //this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
         this.prf = prf;
         for (let key = 1; key < cpucount; key++) {
@@ -785,6 +784,10 @@ const FrequencyIndicator = new Lang.Class({
         if (core_event != 0) {
             GLib.source_remove (core_event);
             core_event = 0;
+        }
+        if (freq_event != 0) {
+            GLib.source_remove (freq_event);
+            freq_event = 0;
         }
         this._load_stage (this.prf);
         this.stage++;
@@ -1347,9 +1350,8 @@ const FrequencyIndicator = new Lang.Class({
         if (install_event != 0) GLib.source_remove (install_event);
         if (core_event != 0) GLib.source_remove (core_event);
         if (freq_event != 0) GLib.source_remove (freq_event);
-        if (init_event != 0) GLib.source_remove (init_event);
         if (monitor_event) GLib.source_remove (monitor_event);
-        event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0; monitor_event = 0;
+        event = 0; install_event = 0; core_event = 0; freq_event = 0; monitor_event = 0;
         saveID = 0; monitorID = 0; powerID = 0; lineID = 0; accuID = 0;
         GLib.spawn_command_line_async ("killall cpufreq-service");
     }
