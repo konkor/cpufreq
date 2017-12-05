@@ -188,12 +188,8 @@ const FrequencyIndicator = new Lang.Class({
             save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
             this.save_switch.setToggleState (save);
         }));
-        lineID = this._settings.connect ("changed::" + CHARGING_KEY, Lang.bind (this, function() {
-            this.get_power_profiles ();
-        }));
-        accuID = this._settings.connect ("changed::" + DISCHARGING_KEY, Lang.bind (this, function() {
-            this.get_power_profiles ();
-        }));
+        lineID = this._settings.connect ("changed::" + CHARGING_KEY, Lang.bind (this, this.get_power_profiles));
+        accuID = this._settings.connect ("changed::" + DISCHARGING_KEY, Lang.bind (this, this.get_power_profiles));
         //this.power = Main.panel.statusArea["aggregateMenu"]._power._proxy;
         //if (this.power) powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
         this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, Lang.bind (this, function (proxy, e) {
@@ -201,7 +197,7 @@ const FrequencyIndicator = new Lang.Class({
                 log(e.message);
                 return;
             }
-            this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
+            powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
             this.on_power_state ();
         }));
     },
