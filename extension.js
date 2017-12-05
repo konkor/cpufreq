@@ -325,9 +325,10 @@ const FrequencyIndicator = new Lang.Class({
 
      _add_event: function () {
         if (this.proxy) {
-            this.proxy.disconnectSignal (event);
+            if (event) this.proxy.disconnectSignal (event);
             delete this.proxy;
             this.proxy = null;
+            event = 0;
         }
         if (monitor_timeout > 0) {
             if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
@@ -1333,9 +1334,10 @@ const FrequencyIndicator = new Lang.Class({
 
     remove_events: function () {
         if (this.proxy) {
-            this.proxy.disconnectSignal (event);
+            if (event) this.proxy.disconnectSignal (event);
             delete this.proxy;
             this.proxy = null;
+            event = 0;
         }
         if (monitorID) this._settings.disconnect (monitorID);
         if (saveID) this._settings.disconnect (saveID);
