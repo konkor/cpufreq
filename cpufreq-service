@@ -3,6 +3,7 @@
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
+const System = imports.system;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
@@ -18,6 +19,7 @@ let monitor_timeout = 500;
 let streams = [];
 let freqs = [];
 let cpucount = 1;
+let gcc = 0;
 
 let event = 0;
 let init_event = 0;
@@ -128,6 +130,11 @@ var CpufreqService = new Lang.Class ({
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
+            gcc++;
+            if (gcc == 10) {
+                gcc = 0;
+                System.gc ();
+            }
         }
         //debug (this.title);
     },
