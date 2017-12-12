@@ -27,9 +27,8 @@ const Gtk = imports.gi.Gtk;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const PROFILES_KEY = 'profiles';
+const EPROFILES_KEY = 'event-profiles';
 const MONITOR_KEY = 'monitor';
-const CHARGING_KEY = 'charging';
-const DISCHARGING_KEY = 'discharging';
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
 const _ = Gettext.gettext;
@@ -38,11 +37,18 @@ const EXTENSIONDIR = getCurrentFile ()[1];
 imports.searchPath.unshift (EXTENSIONDIR);
 const Convenience = imports.convenience;
 
+var EventType = {
+CHARGING:     0,
+DISCHARGING:  1
+};
+
 let save = false;
 let profiles = [];
 let monitor_timeout = 500;
-let charging_profile = {percent:0, guid:""};
-let discharging_profile = {percent:100, guid:""};
+let eprofiles = [
+    {percent:0, event:EventType.CHARGING, guid:""},
+    {percent:100, event:EventType.DISCHARGING, guid:""}
+];
 
 let settings = false;
 
@@ -56,10 +62,8 @@ var CPUFreqPreferences = new Lang.Class({
         settings = Convenience.getSettings ();
         save = settings.get_boolean (SAVE_SETTINGS_KEY);
         monitor_timeout = settings.get_int (MONITOR_KEY);
-        s = settings.get_string (CHARGING_KEY);
-        if (s) charging_profile = JSON.parse (s);
-        s = settings.get_string (DISCHARGING_KEY);
-        if (s) discharging_profile = JSON.parse (s);
+        s = settings.get_string (EPROFILES_KEY);
+        if (s) eprofiles = JSON.parse (s);
         s =  settings.get_string (PROFILES_KEY);
         if (s) profiles = JSON.parse (s);
 
@@ -123,27 +127,29 @@ var PagePowerCPUFreq = new Lang.Class({
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
         this.border_width = 6;
 
-        this.unplug = new PowerProfile (discharging_profile, "Battery discharging");
+        this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING], "Battery discharging");
         this.add (this.unplug);
-        this.plug = new PowerProfile (charging_profile, "Battery charging");
+        this.plug = new PowerProfile (eprofiles[EventType.CHARGING], "Battery charging");
         this.add (this.plug);
         this.unplug.combo.connect ('changed', Lang.bind (this, (o)=>{
-            if (o.active == 0) discharging_profile.guid = "";
-            else discharging_profile.guid = profiles[o.active - 1].guid;
-            settings.set_string (DISCHARGING_KEY, JSON.stringify (discharging_profile));
+            if (o.active == 0) eprofiles[EventType.DISCHARGING].guid = "";
+            else eprofiles[EventType.DISCHARGING].guid = profiles[o.active - 1].guid;
+            this.unplug.slider.set_value (100);
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
         }));
         this.unplug.slider.connect('value_changed', Lang.bind (this, function (o) {
-            discharging_profile.percent = Math.round (o.get_value ());
-            settings.set_string (DISCHARGING_KEY, JSON.stringify (discharging_profile));
+            eprofiles[EventType.DISCHARGING].percent = Math.round (o.get_value ());
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
         }));
         this.plug.combo.connect ('changed', Lang.bind (this, (o)=>{
-            if (o.active == 0) charging_profile.guid = "";
-            else charging_profile.guid = profiles[o.active - 1].guid;
-            settings.set_string (CHARGING_KEY, JSON.stringify (charging_profile));
+            if (o.active == 0) eprofiles[EventType.CHARGING].guid = "";
+            else eprofiles[EventType.CHARGING].guid = profiles[o.active - 1].guid;
+            this.plug.slider.set_value (0);
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
         }));
         this.plug.slider.connect('value_changed', Lang.bind (this, function (o) {
-            charging_profile.percent = Math.round (o.get_value ());
-            settings.set_string (CHARGING_KEY, JSON.stringify (charging_profile));
+            eprofiles[EventType.CHARGING].percent = Math.round (o.get_value ());
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
         }));
 
         this.show_all ();
@@ -180,7 +186,7 @@ var PowerProfile = new Lang.Class({
         hbox.pack_start (this.label, true, true, 0);
         this.info = new Gtk.Label ({label:"<i>"+profile.percent+"%</i>", use_markup:true});
         hbox.pack_end (this.info, false, false, 0);
-        this.slider = Gtk.Scale.new_with_range (Gtk.Orientation.HORIZONTAL, 1, 100, 1);
+        this.slider = Gtk.Scale.new_with_range (Gtk.Orientation.HORIZONTAL, 0, 100, 1);
         this.slider.draw_value = false;
         this.slider.set_value (profile.percent);
         this.add (this.slider);

@@ -75,16 +75,10 @@
       <description>Frequency monitor interval</description>
     </key>
 
-    <key type="s" name="charging">
+    <key type="s" name="event-profiles">
       <default>''</default>
       <summary>Charging Profile</summary>
       <description>Profile On Battery Charging</description>
-    </key>
-
-    <key type="s" name="discharging">
-      <default>''</default>
-      <summary>Discharging Profile</summary>
-      <description>Profile On Battery Discharging</description>
     </key>
 
   </schema>

@@ -21,8 +21,7 @@ const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
 const MONITOR_KEY = 'monitor';
-const CHARGING_KEY = 'charging';
-const DISCHARGING_KEY = 'discharging';
+const EPROFILES_KEY = 'event-profiles';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -36,7 +35,7 @@ let core_event = 0;
 let freq_event = 0;
 let info_event = 0;
 let monitor_event = 0;
-let monitorID = 0, saveID, powerID, accuID, lineID;
+let monitorID = 0, saveID, powerID, eprofilesID;
 let save = false;
 let cpucount = 1;
 let freqInfo = null;
@@ -47,8 +46,10 @@ let profiles = [];
 let default_profile = null;
 let minfreq = 0, maxfreq = 0; //new values
 let monitor_timeout = 500;
-let charging_profile = {percent:0, guid:""};
-let discharging_profile = {percent:100, guid:""};
+let eprofiles = [
+    {percent:0, event:0, guid:""},
+    {percent:100, event:1, guid:""}
+];
 
 const UP_BUS_NAME = 'org.freedesktop.UPower';
 const UP_OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
@@ -187,8 +188,7 @@ const FrequencyIndicator = new Lang.Class({
             save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
             this.save_switch.setToggleState (save);
         }));
-        lineID = this._settings.connect ("changed::" + CHARGING_KEY, Lang.bind (this, this.get_power_profiles));
-        accuID = this._settings.connect ("changed::" + DISCHARGING_KEY, Lang.bind (this, this.get_power_profiles));
+        eprofilesID = this._settings.connect ("changed::" + EPROFILES_KEY, Lang.bind (this, this.get_power_profiles));
         //this.power = Main.panel.statusArea["aggregateMenu"]._power._proxy;
         //if (this.power) powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
         this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, Lang.bind (this, function (proxy, e) {
@@ -218,16 +218,16 @@ const FrequencyIndicator = new Lang.Class({
         let id = -1;
         //print ("on_power_state", this.power.State, this.power.Percentage);
         if (this.power.State == 1 || this.power.State == 4) {
-            id = this.get_profile_id (charging_profile.guid);
+            id = this.get_profile_id (eprofiles[0].guid);
             if (id == -1 || id == this.PID) return;
-            if (this.power.Percentage >= charging_profile.percent) {
+            if (this.power.Percentage >= eprofiles[0].percent) {
                 this._load_profile (profiles[id]);
                 this.PID = id;
             }
         } else if (this.power.State == 2) {
-            id = this.get_profile_id (discharging_profile.guid);
+            id = this.get_profile_id (eprofiles[1].guid);
             if (id == -1 || id == this.PID) return;
-            if (this.power.Percentage <= discharging_profile.percent) {
+            if (this.power.Percentage <= eprofiles[1].percent) {
                 this._load_profile (profiles[id]);
                 this.PID = id;
             }
@@ -235,10 +235,8 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     get_power_profiles: function () {
-        let s = this._settings.get_string (CHARGING_KEY);
-        if (s) charging_profile = JSON.parse (s);
-        s = this._settings.get_string (DISCHARGING_KEY);
-        if (s) discharging_profile = JSON.parse (s);
+        let s = this._settings.get_string (EPROFILES_KEY);
+        if (s) eprofiles = JSON.parse (s);
     },
 
     get_profile_id: function (guid) {
@@ -1342,15 +1340,14 @@ const FrequencyIndicator = new Lang.Class({
         }
         if (monitorID) this._settings.disconnect (monitorID);
         if (saveID) this._settings.disconnect (saveID);
-        if (lineID) this._settings.disconnect (lineID);
-        if (accuID) this._settings.disconnect (accuID);
+        if (eprofilesID) this._settings.disconnect (eprofilesID);
         if (powerID) this.power.disconnect (powerID);
         if (install_event != 0) GLib.source_remove (install_event);
         if (core_event != 0) GLib.source_remove (core_event);
         if (freq_event != 0) GLib.source_remove (freq_event);
         if (monitor_event) GLib.source_remove (monitor_event);
         event = 0; install_event = 0; core_event = 0; freq_event = 0; monitor_event = 0;
-        saveID = 0; monitorID = 0; powerID = 0; lineID = 0; accuID = 0;
+        saveID = 0; monitorID = 0; powerID = 0; eprofilesID = 0;
         GLib.spawn_command_line_async ("killall cpufreq-service");
     }
 });
