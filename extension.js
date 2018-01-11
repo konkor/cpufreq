@@ -8,7 +8,6 @@ const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
-const Mainloop = imports.mainloop;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const TURBO_BOOST_KEY = 'turbo-boost';

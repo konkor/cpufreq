@@ -77,8 +77,8 @@
 
     <key type="s" name="event-profiles">
       <default>''</default>
-      <summary>Charging Profile</summary>
-      <description>Profile On Battery Charging</description>
+      <summary>Events Profiles</summary>
+      <description>Power Events Profiles</description>
     </key>
 
   </schema>
