@@ -26,6 +26,8 @@ const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
+const PROFILES_KEY = 'profiles';
+const EPROFILES_KEY = 'event-profiles';
 const MONITOR_KEY = 'monitor';
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
@@ -35,8 +37,18 @@ const EXTENSIONDIR = getCurrentFile ()[1];
 imports.searchPath.unshift (EXTENSIONDIR);
 const Convenience = imports.convenience;
 
+var EventType = {
+CHARGING:     0,
+DISCHARGING:  1
+};
+
 let save = false;
+let profiles = [];
 let monitor_timeout = 500;
+let eprofiles = [
+    {percent:0, event:EventType.CHARGING, guid:""},
+    {percent:100, event:EventType.DISCHARGING, guid:""}
+];
 
 let settings = false;
 
@@ -45,11 +57,15 @@ var CPUFreqPreferences = new Lang.Class({
 
     _init: function () {
         this.parent (0.0, "CPUFreq Preferences", false);
-        let label;
+        let label, s;
 
         settings = Convenience.getSettings ();
         save = settings.get_boolean (SAVE_SETTINGS_KEY);
         monitor_timeout = settings.get_int (MONITOR_KEY);
+        s = settings.get_string (EPROFILES_KEY);
+        if (s) eprofiles = JSON.parse (s);
+        s =  settings.get_string (PROFILES_KEY);
+        if (s) profiles = JSON.parse (s);
 
         this.notebook = new Gtk.Notebook ({expand:true});
 
@@ -58,11 +74,16 @@ var CPUFreqPreferences = new Lang.Class({
         label = new Gtk.Label ({label: _("General")});
         this.notebook.set_tab_label (this.general, label);
 
+        this.power = new PagePowerCPUFreq ();
+        this.notebook.add (this.power);
+        label = new Gtk.Label ({label: _("Power")});
+        this.notebook.set_tab_label (this.power, label);
+
         this.notebook.show_all ();
     }
 });
 
-const PageGeneralCPUFreq = new Lang.Class({
+var PageGeneralCPUFreq = new Lang.Class({
     Name: 'PageGeneralCPUFreq',
     Extends: Gtk.Box,
 
@@ -95,6 +116,89 @@ const PageGeneralCPUFreq = new Lang.Class({
         hbox.pack_end (this.timeout, false, false, 0);
 
         this.show_all ();
+    }
+});
+
+var PagePowerCPUFreq = new Lang.Class({
+    Name: 'PagePowerCPUFreq',
+    Extends: Gtk.Box,
+
+    _init: function () {
+        this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
+        this.border_width = 6;
+
+        this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING], "Battery discharging");
+        this.add (this.unplug);
+        this.plug = new PowerProfile (eprofiles[EventType.CHARGING], "Battery charging");
+        this.add (this.plug);
+        this.unplug.combo.connect ('changed', Lang.bind (this, (o)=>{
+            if (o.active == 0) eprofiles[EventType.DISCHARGING].guid = "";
+            else eprofiles[EventType.DISCHARGING].guid = profiles[o.active - 1].guid;
+            this.unplug.slider.set_value (100);
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
+        }));
+        this.unplug.slider.connect('value_changed', Lang.bind (this, function (o) {
+            eprofiles[EventType.DISCHARGING].percent = Math.round (o.get_value ());
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
+        }));
+        this.plug.combo.connect ('changed', Lang.bind (this, (o)=>{
+            if (o.active == 0) eprofiles[EventType.CHARGING].guid = "";
+            else eprofiles[EventType.CHARGING].guid = profiles[o.active - 1].guid;
+            this.plug.slider.set_value (0);
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
+        }));
+        this.plug.slider.connect('value_changed', Lang.bind (this, function (o) {
+            eprofiles[EventType.CHARGING].percent = Math.round (o.get_value ());
+            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
+        }));
+
+        this.show_all ();
+    }
+});
+
+var PowerProfile = new Lang.Class({
+    Name: 'PowerProfile',
+    Extends: Gtk.Box,
+
+    _init: function (profile, text) {
+        this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
+        this.border_width = 6;
+        let id = 0, i = 1;
+
+        this.add (new Gtk.Label ({label:"<b>"+text+"</b>",use_markup:true,xalign:0,margin_top:8}));
+
+        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
+        this.pack_start (hbox, false, false, 0);
+        hbox.add (new Gtk.Label ({label: _("Power Profile")}));
+        this.combo = new Gtk.ComboBoxText ();
+        this.combo.append_text (_("do nothing"));
+        profiles.forEach (s => {
+            this.combo.append_text (s.name);
+            if (s.guid == profile.guid) id = i;
+            i++;
+        });
+        this.combo.active = id;
+        hbox.pack_end (this.combo, false, false, 0);
+
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
+        this.add (hbox);
+        this.label = new Gtk.Label ({label:"when battery level", use_markup:true, xalign:0});
+        hbox.pack_start (this.label, true, true, 0);
+        this.info = new Gtk.Label ({label:"<i>"+profile.percent+"%</i>", use_markup:true});
+        hbox.pack_end (this.info, false, false, 0);
+        this.slider = Gtk.Scale.new_with_range (Gtk.Orientation.HORIZONTAL, 0, 100, 1);
+        this.slider.draw_value = false;
+        this.slider.set_value (profile.percent);
+        this.add (this.slider);
+        this.slider.connect('value_changed', Lang.bind (this, function (o) {
+            this.update_info (Math.round (o.get_value ()).toString ());
+        }));
+
+        this.show_all ();
+    },
+
+    update_info: function (info) {
+        this.info.set_markup ("<i>" + info + "%</i>");
     }
 });
 

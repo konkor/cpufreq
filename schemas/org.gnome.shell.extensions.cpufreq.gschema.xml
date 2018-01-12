@@ -75,5 +75,11 @@
       <description>Frequency monitor interval</description>
     </key>
 
+    <key type="s" name="event-profiles">
+      <default>''</default>
+      <summary>Events Profiles</summary>
+      <description>Power Events Profiles</description>
+    </key>
+
   </schema>
 </schemalist>

@@ -3,13 +3,13 @@
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
+const System = imports.system;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
 
 const Convenience = imports.convenience;
 
-const TITLE_KEY = 'title';
 const MONITOR_KEY = 'monitor';
 
 var DEBUGING = false;
@@ -18,11 +18,22 @@ let monitor_timeout = 500;
 
 let streams = [];
 let freqs = [];
-let cancel = null;
 let cpucount = 1;
+let gcc = 0;
 
 let event = 0;
 let init_event = 0;
+
+const OBJECT_PATH = '/org/konkor/cpufreq/service';
+const CpufreqServiceIface = '<node> \
+<interface name="org.konkor.cpufreq.service"> \
+<property name="Frequency" type="t" access="read"/> \
+<signal name="FrequencyChanged"> \
+  <arg name="title" type="s"/> \
+</signal> \
+</interface> \
+</node>';
+const CpufreqServiceInfo  = Gio.DBusInterfaceInfo.new_for_xml (CpufreqServiceIface);
 
 var CpufreqService = new Lang.Class ({
     Name: 'CpufreqService',
@@ -44,14 +55,21 @@ var CpufreqService = new Lang.Class ({
         this.hold ();
     },
 
+    vfunc_activate: function() {
+        this.connect("destroy", () => {
+            this.remove_events ();
+        });
+    },
+
     init: function() {
         debug ("init");
+        this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
+        this.dbus.export (Gio.DBus.session, OBJECT_PATH);
         cpucount = Convenience.get_cpu_number ();
         this.max0 = 0;
         this.title = "-- \u3393";
         this.old = this.title;
         freqs = [GLib.get_num_processors ()];
-        cancel = new Gio.Cancellable ();
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
@@ -68,9 +86,10 @@ var CpufreqService = new Lang.Class ({
         }
         if (monitor_timeout > 0)
             event = GLib.timeout_add (100, monitor_timeout, Lang.bind (this, function () {
-            this._update_freq ();
-            return true;
-        }));
+                this._update_freq ();
+                return true;
+            }));
+        else this.quit ();
     },
 
     _init_streams: function() {
@@ -97,8 +116,6 @@ var CpufreqService = new Lang.Class ({
 
     _update_freq: function () {
         let m = 0;
-        cancel.cancel ();
-        cancel = new Gio.Cancellable ();
         streams.forEach (stream => {
             this._read_line (stream);
         });
@@ -110,9 +127,14 @@ var CpufreqService = new Lang.Class ({
             } else {
                 this.title = (m/1000).toFixed(0).toString() + "  \u3392";
             }
-            settings.set_string (TITLE_KEY, this.title);
+            this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
+            gcc++;
+            if (gcc == 10) {
+                gcc = 0;
+                System.gc ();
+            }
         }
         //debug (this.title);
     },
@@ -120,8 +142,8 @@ var CpufreqService = new Lang.Class ({
     _read_line: function (dis) {
         if (dis == null) return;
         try {
-            dis.seek (0, GLib.SeekType.SET, cancel);
-            dis.read_line_async (200, cancel, this._read_done);
+            dis.seek (0, GLib.SeekType.SET, null);
+            dis.read_line_async (200, null, this._read_done);
         } catch (e) {
             init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
             //error (e);
@@ -145,6 +167,7 @@ var CpufreqService = new Lang.Class ({
         if (event != 0) GLib.Source.remove (event);
         if (init_event != 0) GLib.Source.remove (init_event);
         event = 0; init_event = 0;
+        if (this.dbus) this.dbus.unexport ();
     }
 });
 

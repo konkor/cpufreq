@@ -8,7 +8,6 @@ const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
-const Mainloop = imports.mainloop;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const TURBO_BOOST_KEY = 'turbo-boost';
@@ -20,8 +19,8 @@ const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
 const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
-const TITLE_KEY = 'title';
 const MONITOR_KEY = 'monitor';
+const EPROFILES_KEY = 'event-profiles';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -31,12 +30,11 @@ const Convenience = Me.imports.convenience;
 
 let event = 0;
 let install_event = 0;
-let init_event = 0;
 let core_event = 0;
 let freq_event = 0;
 let info_event = 0;
 let monitor_event = 0;
-let monitorID = 0, saveID;
+let monitorID = 0, saveID, powerID, eprofilesID;
 let save = false;
 let cpucount = 1;
 let freqInfo = null;
@@ -46,7 +44,38 @@ let ccore = 0;
 let profiles = [];
 let default_profile = null;
 let minfreq = 0, maxfreq = 0; //new values
-let monitor_timeout = 1000;
+let monitor_timeout = 500;
+let eprofiles = [
+    {percent:0, event:0, guid:""},
+    {percent:100, event:1, guid:""}
+];
+
+const UP_BUS_NAME = 'org.freedesktop.UPower';
+const UP_OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
+const DisplayDeviceInterface = '<node> \
+<interface name="org.freedesktop.UPower.Device"> \
+  <property name="Type" type="u" access="read"/> \
+  <property name="State" type="u" access="read"/> \
+  <property name="Percentage" type="d" access="read"/> \
+  <property name="TimeToEmpty" type="x" access="read"/> \
+  <property name="TimeToFull" type="x" access="read"/> \
+  <property name="IsPresent" type="b" access="read"/> \
+  <property name="IconName" type="s" access="read"/> \
+</interface> \
+</node>';
+const PowerManagerProxy = Gio.DBusProxy.makeProxyWrapper(DisplayDeviceInterface);
+
+const BUS_NAME = 'org.konkor.cpufreq.service';
+const OBJECT_PATH = '/org/konkor/cpufreq/service';
+const CpufreqServiceIface = '<node> \
+<interface name="org.konkor.cpufreq.service"> \
+<property name="Frequency" type="t" access="read"/> \
+<signal name="FrequencyChanged"> \
+  <arg name="title" type="s"/> \
+</signal> \
+</interface> \
+</node>';
+const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
 const FrequencyIndicator = new Lang.Class({
     Name: 'Cpufreq',
@@ -136,6 +165,7 @@ const FrequencyIndicator = new Lang.Class({
         let profs =  this._settings.get_string (PROFILES_KEY);
         if (profs.length > 0) profiles = JSON.parse (profs);
         if (!default_profile) default_profile = this._get_profile ('Default');
+        this.get_power_profiles ();
         monitor_timeout =  this._settings.get_int (MONITOR_KEY);
         this._build_ui ();
         if (this.installed && save) this._load_settings ();
@@ -146,13 +176,27 @@ const FrequencyIndicator = new Lang.Class({
         if (monitorID) this._settings.disconnect (monitorID);
         monitorID = this._settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
             monitor_timeout = this._settings.get_int (MONITOR_KEY);
-            if (monitor_event) GLib.source_remove (monitor_event);
+            if (monitor_event) {
+                GLib.source_remove (monitor_event);
+                monitor_event = 0;
+            }
             monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
         }));
         if (saveID) this._settings.disconnect (saveID);
         saveID = this._settings.connect ("changed::" + SAVE_SETTINGS_KEY, Lang.bind (this, function() {
             save = this._settings.get_boolean (SAVE_SETTINGS_KEY);
             this.save_switch.setToggleState (save);
+        }));
+        eprofilesID = this._settings.connect ("changed::" + EPROFILES_KEY, Lang.bind (this, this.get_power_profiles));
+        //this.power = Main.panel.statusArea["aggregateMenu"]._power._proxy;
+        //if (this.power) powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
+        this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, Lang.bind (this, function (proxy, e) {
+            if (e) {
+                log(e.message);
+                return;
+            }
+            powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
+            this.on_power_state ();
         }));
     },
 
@@ -167,6 +211,38 @@ const FrequencyIndicator = new Lang.Class({
             info_event = 0;
             Clutter.ungrab_keyboard ();
         }
+    },
+
+    on_power_state: function () {
+        let id = -1;
+        //print ("on_power_state", this.power.State, this.power.Percentage);
+        if (this.power.State == 1 || this.power.State == 4) {
+            id = this.get_profile_id (eprofiles[0].guid);
+            if (id == -1 || id == this.PID) return;
+            if (this.power.Percentage >= eprofiles[0].percent) {
+                this._load_profile (profiles[id]);
+                this.PID = id;
+            }
+        } else if (this.power.State == 2) {
+            id = this.get_profile_id (eprofiles[1].guid);
+            if (id == -1 || id == this.PID) return;
+            if (this.power.Percentage <= eprofiles[1].percent) {
+                this._load_profile (profiles[id]);
+                this.PID = id;
+            }
+        }
+    },
+
+    get_power_profiles: function () {
+        let s = this._settings.get_string (EPROFILES_KEY);
+        if (s) eprofiles = JSON.parse (s);
+    },
+
+    get_profile_id: function (guid) {
+        for (let i = 0; i < profiles.length; i++) {
+            if (profiles[i].guid == guid) return i;
+        }
+        return -1;
     },
 
     _is_events: function () {
@@ -244,8 +320,10 @@ const FrequencyIndicator = new Lang.Class({
     },
 
      _add_event: function () {
-        if (event != 0) {
-            this._settings.disconnect (event);
+        if (this.proxy) {
+            if (event) this.proxy.disconnectSignal (event);
+            delete this.proxy;
+            this.proxy = null;
             event = 0;
         }
         if (monitor_timeout > 0) {
@@ -253,11 +331,16 @@ const FrequencyIndicator = new Lang.Class({
                 log ("Unable to start cpufreq service...");
                 return;
             }
-            event = this._settings.connect ("changed::" + TITLE_KEY, Lang.bind (this, function() {
-                this.title = this._settings.get_string (TITLE_KEY);
-                if (this.title) this.statusLabel.set_text (this.title);
+            this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, Lang.bind (this, function (proxy, e) {
+                if (e) {
+                    log (e.message);
+                    return;
+                }
+                event = this.proxy.connectSignal ('FrequencyChanged', Lang.bind(this, function (o, s, title) {
+                    if (title) this.statusLabel.set_text (title.toString());
+                }));
             }));
-        } else GLib.spawn_command_line_async ("killall cpufreq-service");
+        }
     },
 
     _build_ui: function () {
@@ -559,6 +642,10 @@ const FrequencyIndicator = new Lang.Class({
                 }
             }));
             for (let p in profiles) {
+                if (!profiles[p].guid) {
+                    profiles[p].guid = Gio.dbus_generate_guid ();
+                    this._settings.set_string (PROFILES_KEY, JSON.stringify (profiles));
+                }
                 this._add_profile (p);
             }
             if (!this.installed || !this.updated) {
@@ -669,7 +756,7 @@ const FrequencyIndicator = new Lang.Class({
             let core = {g:this._get_governor (key), a:this._get_coremin (key), b:this._get_coremax (key)};
             cores.push (core);
         }
-        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, core:cores};
+        let p = {name:pname, minf:minf, maxf:maxf, turbo:boost, cpu:GLib.get_num_processors (), acpi:!this.pstate_present, guid:Gio.dbus_generate_guid (), core:cores};
         save = save_state;
         print (JSON.stringify (p));
         return p;
@@ -678,7 +765,6 @@ const FrequencyIndicator = new Lang.Class({
     _load_profile: function (prf) {
         if (install_event > 0) return;
         print ('Loading profile...', JSON.stringify (prf));
-        this.remove_events ();
         this.statusLabel.set_text ("... \u3393");
         this.prf = prf;
         for (let key = 1; key < cpucount; key++) {
@@ -694,6 +780,10 @@ const FrequencyIndicator = new Lang.Class({
         if (core_event != 0) {
             GLib.source_remove (core_event);
             core_event = 0;
+        }
+        if (freq_event != 0) {
+            GLib.source_remove (freq_event);
+            freq_event = 0;
         }
         this._load_stage (this.prf);
         this.stage++;
@@ -787,7 +877,6 @@ const FrequencyIndicator = new Lang.Class({
                 if (key < prf.cpu) this._set_core (key, true);
                 else this._set_core (key, false);
             }
-            this._add_event ();
         }
     },
 
@@ -1242,16 +1331,22 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     remove_events: function () {
-        if (event != 0) this._settings.disconnect (event);
+        if (this.proxy) {
+            if (event) this.proxy.disconnectSignal (event);
+            delete this.proxy;
+            this.proxy = null;
+            event = 0;
+        }
         if (monitorID) this._settings.disconnect (monitorID);
         if (saveID) this._settings.disconnect (saveID);
+        if (eprofilesID) this._settings.disconnect (eprofilesID);
+        if (powerID) this.power.disconnect (powerID);
         if (install_event != 0) GLib.source_remove (install_event);
         if (core_event != 0) GLib.source_remove (core_event);
         if (freq_event != 0) GLib.source_remove (freq_event);
-        if (init_event != 0) GLib.source_remove (init_event);
         if (monitor_event) GLib.source_remove (monitor_event);
-        event = 0; install_event = 0; core_event = 0; freq_event = 0; init_event = 0; monitor_event = 0;
-        saveID = 0; monitorID = 0;
+        event = 0; install_event = 0; core_event = 0; freq_event = 0; monitor_event = 0;
+        saveID = 0; monitorID = 0; powerID = 0; eprofilesID = 0;
         GLib.spawn_command_line_async ("killall cpufreq-service");
     }
 });
@@ -1396,6 +1491,8 @@ const SeparatorItem = new Lang.Class({
     }
 });
 
+let tt = 0, tt_time = 0;
+
 const InfoItem = new Lang.Class({
     Name: 'InfoItem',
     Extends: PopupMenu.PopupBaseMenuItem,
@@ -1426,7 +1523,6 @@ const InfoItem = new Lang.Class({
         this._warn.align = St.Align.START;
         this.vbox.add_child (this._warn);
         this._warn.visible = false;
-        this.tt = 0;
         this.warn_lvl = 0;
         this.balance = "";
         this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
@@ -1575,11 +1671,12 @@ const InfoItem = new Lang.Class({
             i = parseInt (freqInfo);
             if (!i) return;
             s = "CPU THROTTLE: " + i;
-            if (i != this.tt) {
+            if (i != tt) {
                 this.warn_lvl = 2;
-                s += "\nTHROTTLE SPEED: " + Math.round ((i-this.tt)/2, 1);
-            } else if (this.warn_lvl == 0) this.warn_lvl = 1;
-            this.tt = i;
+                s += "\nTHROTTLE SPEED: " + Math.round ((i-tt)/2, 1);
+                tt_time = Date.now ();
+            } else if ((this.warn_lvl == 0) && ((Date.now() - tt_time) < 600000)) this.warn_lvl = 1;
+            tt = i;
             if (this.warnmsg.length > 0) this.warnmsg += "\n" + s;
             else this.warnmsg = s;
         }
