@@ -356,12 +356,14 @@ const FrequencyIndicator = new Lang.Class({
         }
         var gov = this._settings.get_string (GOVERNOR_KEY);
         var freq = this._settings.get_string (CPU_FREQ_KEY);
-        cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' gov ' + gov;
-        GLib.spawn_command_line_sync (cmd);
-        if (gov == 'userspace') {
-            cmd = this.pkexec_path + ' ' + this.cpufreqctl_path + ' set ' + freq;
-            Util.trySpawnCommandLine (cmd);
+        var cores = [];
+        for (let key = 0; key < cpucount; key++) {
+            let core = {g:gov,a:minfreq,b:maxfreq};
+            if (gov == "userspace") core = {g:gov,a:freq,b:freq};
+            cores.push (core);
         }
+        var p = {name:"Saved settings",minf:minfreq,maxf:maxfreq,turbo:this._get_boost(),cpu:cpucount,acpi:!this.pstate_present,core:cores};
+        this._load_profile (p);
     },
 
     _build_popup: function () {
