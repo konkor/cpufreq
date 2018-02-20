@@ -104,11 +104,12 @@ var CPUFreqApplication = new Lang.Class ({
         });
         window.show_all ();
         window.present ();
-        this.sidebar.post_init ();
+        this.cpanel.post_init ();
     },
 
     build: function() {
-        window.set_default_size (400, 200);
+        window.window_position = Gtk.WindowPosition.MOUSE;
+        window.set_default_size (480, 2400);
         cssp = get_css_provider ();
         if (cssp) {
             Gtk.StyleContext.add_provider_for_screen (
@@ -119,28 +120,20 @@ var CPUFreqApplication = new Lang.Class ({
         this.hb.set_show_close_button (false);
         this.hb.get_style_context ().add_class ("hb");
         window.set_titlebar (this.hb);
-        this.sidebar = new Sidebar ();
+        this.cpanel = new ControlPanel ();
         //window.add (this.sidebar);
         let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
         window.add (box);
-        this.info = new InfoItem ();
-        box.pack_start (this.info, true, true, 8);
-        box.pack_end (this.sidebar, false, false, 0);
-        this.sidebar.set_size_request (320, 160);
+        this.sidebar = new Sidebar ();
+        box.pack_start (this.sidebar, false, false, 8);
+        box.pack_end (this.cpanel, true, true, 0);
+        this.cpanel.set_size_request (320, 160);
+        this.sidebar.set_size_request (48, 160);
+
+        window.connect ("focus-out-event", ()=>{ app.quit();});
     }
 });
 
-
-var InfoItem = new Lang.Class({
-    Name: "InfoItem",
-    Extends: Gtk.Box,
-
-    _init: function () {
-        this.parent ({orientation:Gtk.Orientation.VERTICAL});
-        this.margin_bottom = 8;
-        this.get_style_context ().add_class ("info-widget");
-    }
-});
 
 var Sidebar = new Lang.Class({
     Name: "Sidebar",
@@ -148,7 +141,17 @@ var Sidebar = new Lang.Class({
 
     _init: function () {
         this.parent ({orientation:Gtk.Orientation.VERTICAL});
-        this.get_style_context ().add_class ("sb");
+        this.margin_bottom = 8;
+        this.get_style_context ().add_class ("sidebar-widget");
+    }
+});
+
+var ControlPanel = new Lang.Class({
+    Name: "ControlPanel",
+    Extends: Gtk.Box,
+
+    _init: function () {
+        this.parent ({orientation:Gtk.Orientation.VERTICAL});
 
         this.add_governors ();
         if (pstate_present) this.pstate_build ();
