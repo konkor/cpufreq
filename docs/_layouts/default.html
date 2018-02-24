@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include head.html %}
+  <body>
+    <div id="root">
+      <div class="wrapper">
+
+        {% include sidebar.html %}
+
+        <div class="container">
+          <div class="header">
+            <h1>CPUFREQ - {{ page.title | escape }}</h1>
+            <ul class="pull-right">
+              <li><a href="https://github.com/{{ site.github_username }}{{ site.baseurl }}" target="_blank"><img src="https://img.shields.io/github/stars/konkor/cpufreq.svg?style=social&label=Star&style=flat-square" alt="GitHub"></a></li>
+              <li><a href="https://github.com/{{ site.github_username }}{{ site.baseurl }}" target="_blank"><img src="https://img.shields.io/github/license/konkor/cpufreq.svg" alt="GPL-3"></a></li>
+            </ul>
+          </div>
+
+          <div class="content">
+            {{ content }}
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <script src="{{ "/assets/highlight.min.js" | relative_url }}"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+      window.onload = function () {
+        var routes = document.querySelector('.routes')
+        var menuIcon = document.querySelector('.menu-icon')
+        menuIcon.addEventListener("click", function(e) {
+          e.preventDefault()
+          routes.classList.toggle('open')
+        });
+      };
+    </script>
+  </body>
+</html>
