@@ -1,6 +1,6 @@
 ---
 title: Install Script
-description: Installing the extension via installation script available on GitHub repo.
+description: Installing the extension via installation script available at the GitHub repository.
 ---
 
 ## Installation via `install.sh` script
