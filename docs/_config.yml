@@ -2,9 +2,6 @@ title: CPUFREQ
 description: A cpufreq extension description.
 
 collections:
-  installation:
-    permalink: /install/:path/
-    output: true
   frontend:
     permalink: /frontend/:path/
     output: true
