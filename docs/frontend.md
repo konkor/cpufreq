@@ -9,16 +9,16 @@ description: This section describes the user interface and features.
 <img alt="elements" src="{{ "/assets/images/elements.png" | relative_url }}" align="left" height="576" style="margin:0 32px">
 ## UI Elements
 
-1. Frequency Indicator
-2. Info Panel
-3. CPU Governors Section
-4. Userspace Governor Section
-5. Minimal Frequency Slider
-6. Maximum Frequency Slider
-7. CPU Core Threads Slider
-8. CPU Turbo Mode Switcher
-9. User Profiles Section
-10. Preferences Section
+1. [Frequency Indicator](#1-frequency-indicator)
+2. [Info Panel](#2-info-panel)
+3. [CPU Governors Section](#3-cpu-governors-section)
+4. [Userspace Governor Section](#4-userspace-governor-section)
+5. [Minimal Frequency Slider](#5-minimal-frequency-slider)
+6. [Maximum Frequency Slider](#6-maximum-frequency-slider)
+7. [CPU Core Threads Slider](#7-cpu-core-threads-slider)
+8. [CPU Turbo Mode Switcher](#8-cpu-turbo-mode-switcher)
+9. [User Profiles Section](#9-user-profiles-section)
+10. [Preferences Section](#10-preferences-section)
 
 ## 1. Frequency Indicator
 
@@ -26,7 +26,7 @@ The Frequency Indicator shows the current maximum CPU frequency on the active CP
 
 The default frequency monitoring interval can be changed in the _Preferences_ window.
 
-_IMPORTANT: frequency monitoring doesn't require a lot system resources but It'd be nice to not go to the very low values. **It's milliseconds (1000 times per second)** Otherwise your system could be buzy by the monitoring only or even have a bugs. I recommend you open the system monitor and check `cpufreq-service` process when you are changing the settings to see the service loading. You can check system journal for fail messages._
+_IMPORTANT: frequency monitoring doesn't require a lot system resources but It'd be nice to not go to the very low values. **It's milliseconds (1000 times per second)** Otherwise your system could be busy by the monitoring only or even have a bugs. I recommend you open the system monitor and check `cpufreq-service` process when you are changing the settings to see the service loading. You can check system journal for fail messages._
 
 ## 2. Info Panel
 
@@ -54,5 +54,23 @@ They are trying to make your attention to some issues on your system. The extens
 * **THROTTLE SPEED** shows CPU has _critical temperature_ **right now** and shows _NUMBER MISSING CPU CYCLES_ per second.
 _**TODO** CPU THERMAL THROTTLE_
 3. **IRQBALANCE DETECTED** _irqbalance_ package can affect the system stability and power usage. It's important, especially, for mobile devices in the first place but it affect all devices and can reduce the battery life or system devices lifetime.
+4. **Governors** You can see the information about governors if there is a **mixed mode** when different CPU could have different active governors.
 
-_See discussion on GitHub about it_ [issue](https://github.com/konkor/cpufreq/issues/48)
+_See discussion on GitHub about_ [the issue](https://github.com/konkor/cpufreq/issues/48)
+
+## 3. CPU Governors Section
+![]({{ "/assets/images/governors.png" | relative_url }})
+## 4. Userspace Governor Section
+![]({{ "/assets/images/userspace.png" | relative_url }})
+## 5. Minimal Frequency Slider
+
+## 6. Maximum Frequency Slider
+
+## 7. CPU Core Threads Slider
+
+## 8. CPU Turbo Mode Switcher
+
+## 9. User Profiles Section
+![]({{ "/assets/images/profiles.png" | relative_url }})
+## 10. Preferences Section
+![]({{ "/assets/images/preferences.png" | relative_url }})
