@@ -1,4 +1,4 @@
-# cpufreq
+# cpufreq [website](https://konkor.github.io/cpufreq/)
 Gnome Shell CPU Frequency Monitor and Governor Manager.
 
 https://extensions.gnome.org/extension/1082/cpufreq/
