@@ -36,4 +36,4 @@ exclude:
 - ".gitignore"
 - CNAME
 - icomoon-selection.json
-- readme.md
+- README.md

@@ -1,7 +1,8 @@
 *~
 *.bak
 *.zip
-_site
-.sass-cache
-.jekyll-metadata
-/Gemfile.lock
+/docs/_site
+/docs/.sass-cache
+/docs/.jekyll-metadata
+/docs/Gemfile.lock
+
