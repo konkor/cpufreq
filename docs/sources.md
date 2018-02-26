@@ -1,7 +1,7 @@
 ---
 title: Sources and packages
 permalink: /sources/
-description: The place is where you can find the project sources and packages.
+description: Links to the project sources and packages.
 ---
 
 ## Sources and packages

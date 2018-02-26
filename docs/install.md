@@ -1,7 +1,7 @@
 ---
 title: Installation
 permalink: /install/
-description: Here is the extension dependencies, methods of installations and other manipulations.
+description: List of extension dependencies, methods of installations and other manipulations.
 ---
 
 # Table of contents
@@ -22,7 +22,7 @@ description: Here is the extension dependencies, methods of installations and ot
 * supported cpufreq modules...
 
 # Gnome extensions
-<p class="description">Official and the easiest way to install the extension on the Gnome Desktop.</p>
+<p class="description">The official and easiest way to install the extension on the Gnome Desktop.</p>
 _Official repository of the extension on_ [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 
 You have to select `Install...` or `Install Updates...` in the extension menu after installation/updating to finish the configuration.
@@ -55,7 +55,7 @@ chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 4. [Restart Gnome Shell](#restarting-gnome-shell) to reload extensions.
 5. Enable the cpufreq extension. _See_ [Managing Extensions](#managing-extensions).
 
-_PS: I'd recommend you the installing through the [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/) repository and just update files from the GitHub [archive](https://github.com/konkor/cpufreq/archive/master.zip). That's how you could avoid a few steps of the manual method._
+_PS: I recommend you to install it through the [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/) repository and just update files from the GitHub [archive](https://github.com/konkor/cpufreq/archive/master.zip). This makes you avoid a few steps of the manual method._
 
 # Gnome Tweak Tool
 <p class="description">installation of the source archive from GitHub through Gnome Tweak Tool.</p>
@@ -79,14 +79,13 @@ cpufreq extension => ⚠ Install...
 ```
 
 # Restarting Gnome Shell
-<p class="description">Here is methods how to restart or re-log current Gnome Shell session</p>
-There are a few methods to do it:
+<p class="description">Different ways to restart or re-log current Gnome Shell session</p>
  * user's **Log-out / Log-in** (_X11/Wayland_)
  * <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command (_X11 only_)
  * or just **reboot** PC (_X11/Wayland_)
 
 # Managing Extensions
-<p class="description">Here is methods how you can manipulate with your Gnome extensions through the enabling, disabling, installing, updating, removing, settings so.</p>
+<p class="description">Here are some ways to manipulate the extension state (enabling, disabling, installing, updating, removing settings...).</p>
 
 You can manage your extensions in many ways:
 * `gnome-shell-extension-prefs`
@@ -96,7 +95,7 @@ You can manage your extensions in many ways:
 * `Manual method` by removing any extension folder you will remove the extension. After this operation you have to [restart current Gnome session](#restarting-gnome-shell).
 
 # Finishing the installation
-<p class="description">After system installing or updating of the extension you have to finish it inside the extension menu to grant access for the managing power settings in your system</p>
+<p class="description">After installing/updating the extension on the system, you have to finalize the procedure in order to allow it to manage the system's power settings</p>
 
 A couple ways to do so:
 * **In the extension menu** Select _⚠ Install..._ or _⚠ Install Updates..._ menu item.
@@ -106,13 +105,13 @@ sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
 ```
 
 # Upgrading the extension
-<p class="description">Here is a description of methods how to upgrade the extension</p>
+<p class="description">Here are some ways to upgrade the extension</p>
 
-Fortunately, sometimes the extension releases new versions and causes of it may be a lot like fixing bugs, documentation's updating, new features and abilities.
+Hopefuly frequently, the extension will receives updates to fix bugs, update the documentation or add new features and abilities.
 So here is a few ways to do this:
 1. You can update the extension through the `web browser page` [Installed Extensions](https://extensions.gnome.org/local/)
 2. You can do this in the `Gnome Software Center`.
-3. You could want to try some development version from GitHub.
+3. You can get the development version from GitHub.
  * Download desired archive from GitHub
 ```
 wget https://github.com/konkor/cpufreq/archive/master.zip
@@ -124,17 +123,17 @@ wget https://github.com/konkor/cpufreq/archive/master.zip
 ```
 ./install.sh [GITHUB_BRANCH]
 ```
-**After Upgrading you could have to finish the [installation](#finishing-the-installation). Sometimes the extension could update API too.**
+**After Upgrading you may have to finish the [installation](#finishing-the-installation) as the extension could also update its API.**
 
 # Uninstalling
-<p class="description">Sometimes we need to remove some extension. The cause could be complete reinstalling or bugs to example. It can be useful if you have saved broken settings values or to clean up previous installation.</p>
+<p class="description">Sometimes we need to remove some extension. The cause could be for example complete reinstallation or bugs. It can be useful if you have saved broken settings values or to clean up previous installations.</p>
 
-Complete removing the extension and stored settings.
+Completly removing the extension and stored settings.
 1. Remove the extension folder
 ```
 rm -Rf ~/.local/share/gnome-shell/extensions/cpufreq@konkor
 ```
-**Be careful with this command any mistake could cause a data loss!!!**
+**Be careful with this command as any mistake could cause a data loss!!!**
 
 2. You can check this values in the **dconf-editor** at `/org/gnome/shell/extensions/cpufreq/`
 ```

@@ -1,7 +1,7 @@
 ---
 title: Home
 permalink: /
-description: Gnome Shell CPU Frequency Monitor and Governor Manager. This is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.
+description: A Gnome-Shell CPU Frequency Monitor and Governor Manager extension. <br />This is a lightweight CPU scaling monitor and a powerful CPU management tool using standard cpufreq kernel modules to collect information and manage governors.
 ---
 
 ## Features
@@ -11,16 +11,16 @@ description: Gnome Shell CPU Frequency Monitor and Governor Manager. This is a l
 * CPU Frequency monitoring;
 * CPU Governor management;
 * CPU Frequency speed limits;
-* CPU Boost supporting;
-* CPU Power on/off supporting;
-* Saving/Restoring settings;
+* CPU Boost support;
+* CPU Power on/off support;
+* Back-Up and Restore settings;
 * User Profiles;
-* More.
+* And More!
 
 # TIPS
-## A Few Reasons Why You Should Not Want To Use Single Core For _powersaving mode_:
-* Modern OS/kernel works better on multi-core architectures.
-* You need at least 1 core for a foreground application and 1 for the background system services.
-* Linux Kernel is changing CPU cores to avoid overheating, thermal throttle and to balance system loading.
-* Many CPUs have enabled Hyper-Threading (HT) technology. So there is no big sense to run 0.5 physical CPU core.
+## A Few Reasons Why You Should Not Use Single Core For _powersaving mode_:
+* Moderns OS/kernel work better on multi-core architectures.
+* You need at least 1 core for a foreground application and 1 for background system services.
+* Linux Kernel switches between CPU cores to avoid overheating, CPU thermal throttling and to balance system load.
+* Many CPUs have Hyper-Threading (HT) technology enabled by default. So there is no reason to run half of a physical CPU core.
 * ...

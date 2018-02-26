@@ -1,7 +1,7 @@
 ---
 title: Contributions
 permalink: /contributions/
-description: Here is you can find the information how to help the project.
+description: The different ways to contribute to the project.
 ---
 # Contributions
 * Report [a bug](https://github.com/konkor/cpufreq/issues).
