@@ -24,8 +24,14 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 ```
 Follow [the instructions](https://wiki.archlinux.org/index.php/CPU_frequency_scaling) for Arch kernel module loading and add the acpi-cpufreq module.
 
-## What is this CPU loading
+## What is CPU governors
 //TODO
 
-## What is this CPU thermal throttle
+## What is a MIXED mode
+//TODO
+
+## What is CPU loading in Linux
+//TODO
+
+## What is CPU thermal throttle
 //TODO
