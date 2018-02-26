@@ -28,7 +28,7 @@
     display: block;
     height: 75px;
     background: #222222 url(./assets/images/logo.png) no-repeat center;
-    background-size: 110px 32px;
+    /*background-size: 110px 32px;*/
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
     &:hover {
       -webkit-filter: brightness(1.2);

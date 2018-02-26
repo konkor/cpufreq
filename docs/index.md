@@ -4,8 +4,9 @@ permalink: /
 description: Gnome Shell CPU Frequency Monitor and Governor Manager. This is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.
 ---
 
-<img alt="screenshot" src="{{ "/assets/images/screenshot.png" | relative_url }}" align="right" height="192" style="margin:0 32px">
 ## Features
+<img alt="screenshot" src="{{ "/assets/images/screenshot.png" | relative_url }}" align="right" height="192" style="margin:0 32px">
+
 * Compatible with many hardware architectures (x86, x64, arm ...);
 * CPU Frequency monitoring;
 * CPU Governor management;

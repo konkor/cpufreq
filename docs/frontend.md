@@ -59,12 +59,13 @@ _See more here:_ [What is CPU thermal throttle?]({{ "/faq/#what-is-cpu-thermal-t
 _See discussion on GitHub about_ [the issue](https://github.com/konkor/cpufreq/issues/48)
 
 ## 3. CPU Governors Section
-![]({{ "/assets/images/governors.png" | relative_url }})
-Here is you can select an available CPU governor. The governors allow managing the CPU in different ways. Also, their names tell about them in most cases like powersave is for power saving etc. You can have the different number of available governors it depends on the current ACPI mode and loaded kernel modules.
+<img alt="governors" src="{{ "/assets/images/governors.png" | relative_url }}" align="left" style="margin:0 48px">
 
-The head of the section (submenu) shows the active governor. Also, it can show [Mixed mode]({{ "/faq/#what-is-a-mixed-mode" | relative_url }}) when core threads have different governors.  The child menu items present system governors.
+Here is you can select the available CPU governor. The governors allow managing the CPU in different ways. Also, their names tell about them in most cases like _powersave_ is for power saving etc. You can have the different number of available governors it depends on the current ACPI mode and loaded kernel modules.
 
-_See more about_ [CPU governors]({{ "/faq/#what-is-cpu-governors" | relative_url }})
+The header of the section (submenu) shows the active governor. Also, it can show [Mixed mode]({{ "/faq/#what-is-a-mixed-mode" | relative_url }}) when core threads have different governors. The child menu items present system governors.
+
+_See more about_ [CPU governors]({{ "/faq/#what-is-a-cpu-governor" | relative_url }})
 
 ## 4. Userspace Governor Section
 <img alt="userspace" src="{{ "/assets/images/userspace.png" | relative_url }}" align="right" height="240" style="margin:0 48px">
@@ -93,13 +94,30 @@ You can just turn off or on the processor cores through the Linux kernel. It can
 _This feature is available on the supported processor models only._
 
 You can just turn off or on a processor boosting feature through the Linux kernel. A processor boosting feature allows CPU to go to higher of the standard frequencies for short time only. It's dramatically increasing processor power consumption and heating.
-It's a good idea to turn it off for laptops because usually laptop cooling system is weak and can easily get hot but not down.
+It's a good idea to turn it off for laptops because usually laptop cooling system is weak and can easily get hot but not cool.
 
 _It's usually good idea to switch turbo boost off on laptops. If you want to increase the system responding on a laptop you could just increase minimal frequency value to do so._
 
 ## 9. User Profiles Section
 <img alt="profiles" src="{{ "/assets/images/profiles.png" | relative_url }}" align="right" style="margin:0 32px">
 
+User profiles allow creating of custom power profiles to the quick switching between various application settings. The profiles header shows the current profile. The profile manager has two items by default. First, it's the **New...** item creating a new profile from current setting. You just have to give it a name and press _Enter_ to confirm the creation. Second, it's the default profile automatically created on the application loading.
+
+After creating a custom user profile you can switch to saved settings (profile) anytime by clicking on the profile name.
+You can remove any user profile just by clicking on its close button **X**. Also, you can replace any profile with current setting and rename it by clicking on edit button. So just to change some settings you have to load it, make some changes in the settings and click profile edit button to save current changes to it.
 
 ## 10. Preferences Section
-![]({{ "/assets/images/preferences.png" | relative_url }})
+<img alt="preferences" src="{{ "/assets/images/preferences.png" | relative_url }}" align="left" style="margin:0 32px">
+
+Here are general settings for the extension:
+* **Remember setting** if it's on every changes will be saved and restored after next start. Default value is off.
+* **Preferences...** will open the preferences window with extra options.
+* **Reload** restarting the extension without Gnome shell reloading.
+
+### Preferences Window
+![]({{ "/assets/images/prefs.png" | relative_url }})
+
+You can do here:
+* Set Remember settings option too.
+* Set Frequency Updating interval option. It's time interval describes how often the application monitor will be checking for the current core frequencies. Default value is 500 **milliseconds** (it means 2 times per second). _Don't go to very low values! It could make extra system loading. So human eye even cannot see this changes_
+* Assign user profiles on charging and discharging battery events.
