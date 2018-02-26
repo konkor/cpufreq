@@ -1,0 +1,32 @@
+---
+layout: default
+---
+
+<section class="post">
+
+  {% if page.description %}
+    <p class="description">{{ page.description }}</p>
+  {% endif %}
+
+  <br>
+  <ul class="post-list">
+    {% for doc in site.posts %}
+      <li>
+        <span class="post-meta">{{ doc.date | date_to_long_string }}</span>
+        <a href="{{ doc.url | relative_url }}">
+          <h3 class="post-title">{{ doc.title }}</h3>
+        </a>
+        {% if doc.image %}
+          <img alt="" src="{{ doc.image | relative_url }}" align="left" height="160" style="display:inline-block;margin:0 32px 0 0">
+        {% endif %}
+        {% if doc.description %}
+          <p class="">{{ doc.description }}<a href="{{ doc.url | relative_url }}"> Read...</a></p>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="post-content">
+    {{ content }}
+  </div>
+
+</section>
