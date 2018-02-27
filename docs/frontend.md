@@ -52,7 +52,7 @@ Focus your attention to some potential issues on your system among the following
 2. **THERMAL THROTTLING issues** Two message types:
 * **CPU THROTTLING** means your CPU hit a critical temperature and some core threads went off for the _COUNT OF MISSED CPU CYCLES_.
 * **THROTTLING SPEED** means your CPU is hitting _critical temperature_ **right now** and shows _NUMBER MISSING CPU CYCLES_ per second.
-_See more here:_ [What is CPU thermal throttling?]({{ "/faq/#what-is-cpu-thermal-throttle" | relative_url }})
+_See more about_ [thermal throttling?]({{ "/faq/#what-is-cpu-thermal-throttle" | relative_url }})
 3. **IRQBALANCE DETECTED** _irqbalance_ package can affect the system stability and power usage. It's important, especially, for mobile devices in the first place but it affects all devices and can reduce the battery life or system devices lifetime.
 _See more about_ [IRQBALANCE DETECTED]({{ "/faq/#irqbalance-detected" | relative_url }})
 4. **Governors** You can see governors information if you set up a **mixed mode** where different CPU core are assigned to different active governors.
@@ -115,8 +115,8 @@ Here are general settings for the extension:
 * **Remember setting** if changes will be automatically saved and restored on next start. The default value is off.
 * **Preferences...** opens the preferences window with extra options.
 * **Reload** restarting the extension without reloading Gnome Shell.
-<br>
-### Preferences Window
+
+## Preferences Window
 ![]({{ "/assets/images/prefs.png" | relative_url }})
 
 From here you can:
