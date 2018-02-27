@@ -30,9 +30,9 @@ For more information, check out [the kernel documentation about governors](https
 
 ## What is a MIXED mode
 <img alt="" src="{{ "/assets/images/mixed_mode.png" | relative_url }}" align="right" style="margin:0 48px">
-The mixed mode is a system state when processor cores can have different active governors (see picture). This mode can be used for the power saving like an alternative to the switching cores off by selecting less power hungry governors and frequencies on desired cores.
+The mixed mode is a system state when processor cores can have different active governors (see [the picture](/assets/images/mixed_mode.png)). This mode can be used for the power saving like an alternative to the switching cores off by selecting less power hungry governors and frequencies on desired cores.
 
-**The example of usage of mixed mode:**
+**the mixed mode usage:**
 
 We have 4 cores processor and want to make two groups: 1 core - performance mode and 3 cores in powersave mode. To do so we have to repeat next steps:
 1. Turn off _Remember Settings_ option.
