@@ -31,8 +31,11 @@ For more information, check out [the kernel documentation about governors](https
 ## What is a MIXED mode
 // TODO
 
-## What is CPU load in Linux
-Accessible through ``top`` or ``uptime`` on UNIX systems, the cpu/system load is an averaged representation of the computer's charge of work during a certain period of time. It's calculated based on the number of process running or waiting for the CPU.                                                                
+## What is CPU loading in Linux
+Accessible through ``top`` or ``uptime`` on UNIX systems, the cpu/system load is an averaged representation of the computer's charge of work during a certain period of time. It's calculated based on the number of process running or waiting for the CPU.
 
 ## What is CPU thermal throttling
 CPU thermal throttling is a security measure put in place to dynamically scale down the processor frequency when reaching a high temperature threshold.
+
+## IRQBALANCE DETECTED
+_See discussion on GitHub about_ [the issue](https://github.com/konkor/cpufreq/issues/48)
