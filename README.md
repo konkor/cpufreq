@@ -1,6 +1,6 @@
-# Gnome Shell CPU Frequency Monitor and Governor Manager. <img alt="cpufreq" src="/docs/assets/images/logo.png?raw=true" align="right"  style="margin:0 32px">
+# Gnome CPU Frequency Monitor and Governor Manager. <img alt="cpufreq" src="/docs/assets/images/logo.png?raw=true" align="right"  style="margin:0">
 
-[project website](https://konkor.github.io/cpufreq/)
+[Project website](https://konkor.github.io/cpufreq/)
 
 https://extensions.gnome.org/extension/1082/cpufreq/
 
