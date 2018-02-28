@@ -4,7 +4,7 @@ permalink: /faq/
 description: Frequently Asked Questions.
 ---
 
-## A Few Reasons Why You Should Not Use Single Core For _powersaving mode_
+## Why I should not use a single core for power saving
 * Moderns OS/kernel work better on multi-core architectures.
 * You need at least 1 core for a foreground application and 1 for background system services.
 * Linux Kernel switches between CPU cores to avoid overheating, CPU thermal throttling and to balance system load.
