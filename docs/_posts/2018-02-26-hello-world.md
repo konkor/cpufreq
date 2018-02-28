@@ -13,7 +13,7 @@ image: "/assets/images/posts/welcome.png"
 I know I'm late but better later than never. Many Linux users are geeks but times change and more and more non-technician people are coming to our beloved desktop. They start to ask questions about many aspects of Linux OS and how to find the right solution. I will post news, collect and share our knowledge base and more.<br>
 It was my first Gnome Extension and Gnome JavaScript experience! My not too old laptop had fried and this driven me to take control under my system and find some solution for monitoring and managing system parameters. Unfortunately, there was no supported version's extension for my modern Gnome desktop 3.14:). I decided to adopt an old extension it moved me to learn a lot about Gnome creation Gnome extensions and GJS. But first working prototype I got in less than 24 hours! So guys let it doesn't stop you! Sadly, I couldn't find the blog that helped me understand step by step how to convert standard extension template to something useful.
 ## History
-<img title="Version 1" src="{{ "/assets/images/posts/version_1.png" | relative_url }}" align="left" height="280px" style="margin:0 32px 0 0">
+<img title="Version 1" src="{{ "/assets/images/posts/version_1.png" | relative_url }}" align="left" height="280px" style="margin:0 48px 12px 0">
 We'll do not look back to all old versions. We are looking forward! I just wanted to mention the creation of the 1st version, what we achieved and where are we going here.<br>
 There is the image of my first version on intel_pstate mode. ACPI cpufreq version didn't have frequency sliders at all. I'm not sure even about the turbo boost switch. **The first release features:**
 * a simple frequency monitor on GLib timeout for every 2 seconds;

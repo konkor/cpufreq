@@ -84,7 +84,7 @@ Each processor core (thread) can have maximum allowed frequency value and core f
 It can be used to reduce the system power consumption when processor cores can't go too high.
 
 ## 7. CPU Core Threads Slider
-**First, you have to disable/remove IRQBALANCE package for the system stability!**
+<p class="description">First, you have to disable/remove IRQBALANCE package for the system stability!</p>
 
 _This feature is only available for multi-core processors._
 
