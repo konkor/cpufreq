@@ -4,6 +4,12 @@ permalink: /faq/
 description: Frequently Asked Questions.
 ---
 
+## A Few Reasons Why You Should Not Use Single Core For _powersaving mode_
+* Moderns OS/kernel work better on multi-core architectures.
+* You need at least 1 core for a foreground application and 1 for background system services.
+* Linux Kernel switches between CPU cores to avoid overheating, CPU thermal throttling and to balance system load.
+* Many CPUs have Hyper-Threading (HT) technology enabled by default. So there is no reason to run half of a physical CPU core.
+
 ## How-to disable  Intel pstate driver
 
 _(default for Intel Sandy Bridge and Ivy Bridge CPUs on kernel 3.9 and upper)_
