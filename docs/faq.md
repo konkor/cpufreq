@@ -57,4 +57,17 @@ Accessible through ``top`` or ``uptime`` on UNIX systems, the cpu/system load is
 CPU thermal throttling is a security measure put in place to dynamically scale down the processor frequency when reaching a high temperature threshold.
 
 ## IRQBALANCE DETECTED
+1. irqbalance doesn't support fully all kernel features to an example a turning on/off core threads supported by the extension. If you have installed irqbalance package and turn off some cores you can get freezes or not working devices like wi-fi, bluetooth, video cards, sound cards...
+2. irqbalance is not a part of the Linux kernel.
+3. It designed for special server configurations with many RAID/HDD/SDD controllers.
+4. Only Debian Flowers have the irqbalance installed because Debian is very Server oriented. Red Hat doesn't have installed irqbalance by default but it doesn't make Red Hat less server OS.
+5. It keeps all Linux core threads working so its not good for power saving, especially for laptops.
+6. Any user-space application (like games, compilation...) can not get 100% of CPU resources on any thread because it's always sharing this resources with IO tasks.
+...
+
+Uninstall it and reboot your machine
+```
+sudo apt-get remove irqbalance
+```
+
 _See discussion on GitHub about_ [the issue](https://github.com/konkor/cpufreq/issues/48)
