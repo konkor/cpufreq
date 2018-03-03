@@ -1,4 +1,4 @@
-# Gnome CPU Frequency Monitor and Governor Manager. <img alt="cpufreq" src="/docs/assets/images/logo.png?raw=true" align="right"  style="margin:0">
+# CPUFREQ - _Gnome Power Manager_. <img alt="cpufreq" src="/docs/assets/images/logo.png?raw=true" align="right"  style="margin:0">
 
 [Project website](https://konkor.github.io/cpufreq/)
 
