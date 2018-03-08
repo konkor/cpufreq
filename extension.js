@@ -49,6 +49,7 @@ let eprofiles = [
     {percent:0, event:0, guid:""},
     {percent:100, event:1, guid:""}
 ];
+let first_boot = true;
 
 const UP_BUS_NAME = 'org.freedesktop.UPower';
 const UP_OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
@@ -168,7 +169,9 @@ const FrequencyIndicator = new Lang.Class({
         this.get_power_profiles ();
         monitor_timeout =  this._settings.get_int (MONITOR_KEY);
         this._build_ui ();
-        if (this.installed && save) this._load_settings ();
+        //print ("First boot:", first_boot);
+        if (this.installed && save && first_boot) this._load_settings ();
+        first_boot = false;
         //print (profs);
 
         this._add_event ();
