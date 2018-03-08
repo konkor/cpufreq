@@ -485,7 +485,7 @@ const FrequencyIndicator = new Lang.Class({
             if (userspace != null) this.menu.addMenuItem (userspace);
             if (this.pstate_present) {
                 if (this.boost_present) {
-                    this.turbo_switch = new TurboSwitchMenuItem ('Turbo Boost: ', this._get_turbo ());
+                    this.turbo_switch = new TurboSwitchMenuItem ('Turbo Boost', this._get_turbo ());
                     this.turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                         this._changed ();
                         if (this.installed) this._set_turbo (item.state);
@@ -535,7 +535,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             } else if (this.boost_present) {
-                this.boost_switch = new TurboSwitchMenuItem ('Turbo Boost: ', this._get_boost ());
+                this.boost_switch = new TurboSwitchMenuItem ('Turbo Boost', this._get_boost ());
                 this.boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
