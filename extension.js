@@ -485,7 +485,7 @@ const FrequencyIndicator = new Lang.Class({
             if (userspace != null) this.menu.addMenuItem (userspace);
             if (this.pstate_present) {
                 if (this.boost_present) {
-                    this.turbo_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_turbo ());
+                    this.turbo_switch = new TurboSwitchMenuItem ('Turbo Boost: ', this._get_turbo ());
                     this.turbo_switch.connect ('toggled', Lang.bind (this, function (item) {
                         this._changed ();
                         if (this.installed) this._set_turbo (item.state);
@@ -535,7 +535,7 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             } else if (this.boost_present) {
-                this.boost_switch = new PopupMenu.PopupSwitchMenuItem('Turbo Boost: ', this._get_boost ());
+                this.boost_switch = new TurboSwitchMenuItem ('Turbo Boost: ', this._get_boost ());
                 this.boost_switch.connect ('toggled', Lang.bind (this, function (item) {
                     this._changed ();
                     if (this.installed) {
@@ -1353,6 +1353,21 @@ const FrequencyIndicator = new Lang.Class({
         event = 0; install_event = 0; core_event = 0; freq_event = 0; monitor_event = 0;
         saveID = 0; monitorID = 0; powerID = 0; eprofilesID = 0;
         GLib.spawn_command_line_async ("killall cpufreq-service");
+    }
+});
+
+const TurboSwitchMenuItem = new Lang.Class ({
+    Name: 'TurboSwitchMenuItem',
+    Extends: PopupMenu.PopupSwitchMenuItem,
+
+    _init: function (text, active, params) {
+        this.parent (text, active, params);
+    },
+
+    activate: function (event) {
+        if (this._switch.actor.mapped) {
+            this.toggle();
+        }
     }
 });
 
