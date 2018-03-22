@@ -16,6 +16,7 @@ description: List of extension dependencies, methods of installations and other 
 1. [Finishing the installation](#finishing-the-installation)
 1. [Upgrading the extension](#upgrading-the-extension)
 1. [Uninstalling](#uninstalling)
+1. [Troubleshooting](#troubleshooting)
 
 # Dependencies
 * Gnome Shell 3.14+
@@ -145,3 +146,7 @@ If you want reset the extension's values to defaults just run it and restart gno
 ```
 dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
 ```
+
+# Troubleshooting
+## Missing symbols
+If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu or/and Droid font packages to fix it.

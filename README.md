@@ -176,3 +176,8 @@ or
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 ```
 Follow [the instructions](https://wiki.archlinux.org/index.php/CPU_frequency_scaling) for Arch kernel module loading and add the acpi-cpufreq module.
+
+## Troubleshooting
+### Missing symbols
+If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu or/and Droid font packages to fix it.
+
