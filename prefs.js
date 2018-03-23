@@ -2,7 +2,7 @@
  * CPUFreq Manager - a lightweight CPU frequency scaling monitor
  * and powerful CPU management tool
  *
- * Author (C) 2016-2017 konkor <kapa76@gmail.com>
+ * Author (C) 2016-2018 konkor <kapa76@gmail.com>
  *
  * This file is part of CPUFreq Manager.
  *
