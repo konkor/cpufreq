@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 const St = imports.gi.St;
 const Main = imports.ui.main;
 const Lang = imports.lang;
@@ -106,6 +106,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _init: function () {
         this.parent (0.0, "CPU Frequency Indicator", false);
+        let saves = true;
 
         this._settings = Convenience.getSettings();
 
@@ -190,7 +191,12 @@ const FrequencyIndicator = new Lang.Class({
         if (!default_profile) default_profile = this._get_profile ('Default');
         this.get_power_profiles ();
         monitor_timeout =  this._settings.get_int (MONITOR_KEY);
+        if (save && !first_boot) {
+            saves = save;
+            save = false;
+        }
         this._build_ui ();
+        if (saves != save) save = saves;
         //print ("First boot:", first_boot);
         if (this.installed && save && first_boot) this._load_settings ();
         first_boot = false;
