@@ -1,6 +1,6 @@
 {
   "description": "Gnome CPU Frequency Monitor and Governor Manager.\n\nThis is a lightweight CPU frequency scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.\n\nFeatures:\n⚫ Compatible with many hardware architectures;\n⚫ CPU Frequency monitoring;\n⚫ CPU Governor management;\n⚫ CPU Frequency speed limits;\n⚫ CPU Boost supporting;\n⚫ CPU Power on/off supporting;\n⚫ Saving/Restoring settings...\n\nFor more information and how-to see README.md",
-  "name": "cpufreq",
+  "name": "CPU Freq",
   "settings-schema": "org.gnome.shell.extensions.cpufreq",
   "shell-version": [
     "3.14",
