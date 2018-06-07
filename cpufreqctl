@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 VERSION='16'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
