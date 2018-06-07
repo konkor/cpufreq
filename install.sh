@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Install the extension from GitHub"
 echo "Usage: install.sh [BRANCH_NAME]"
