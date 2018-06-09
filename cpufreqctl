@@ -224,7 +224,7 @@ then
 	echo 'installing cpufreqctl...'
 	cp $0 /usr/bin/
 	echo 'installing policy...'
-	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy `whereis polkit-1`/actions/
+	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy `whereis polkit-1 | sed 's/polkit-1: //'`/actions/
 	exit
 fi
 if [ $1 = "version" ]
