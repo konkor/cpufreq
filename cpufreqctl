@@ -327,6 +327,7 @@ then
 fi
 if [ $1 = "irqbalance" ]
 then
+	requires_root
 	M=$(ps -A |grep irqbalance)
 	echo "$M"
 	exit
