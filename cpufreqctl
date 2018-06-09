@@ -1,22 +1,23 @@
 #!/bin/sh
 
+# Because of weird bug in polkit, env is not passed normally.
+# So, when we need to execute our program with pkexec, we pass
+# PATH=... as our first argument.
 if [[ $1 = PATH* ]]
 then
-	export $1 # Because of weird bug in polkit, $PATH is not passed normally
+	export $1 
 	shift 1
 fi
 
 args="$@"
 
-# Execute if action requires root priviledges
+# Execute the same action with root priviledges.
 requires_root() {
-		# If we are not root, run this script with same args, but as root
-        if [[ ! `whoami` = 'root' ]]
+        if [[ ! `whoami` = 'root' ]]		# If we are not root,
         then
-                pkexec $0 PATH=$PATH $args
-                exit # Required action has been done, unpriviledged copy is not needed
-        fi
-		# If we are root, continue to do the action
+                pkexec $0 PATH=$PATH $args	# run this script with same args, but as root.
+                exit						# Required action has been done, unpriviledged copy is not needed.
+        fi									# If we are root, continue to do the action.
 }
 
 
@@ -220,10 +221,10 @@ fi
 if [ $1 = "install" ]
 then
 	requires_root
-    echo 'installing cpufreqctl...'
-    cp $0 /usr/bin/
-    echo 'installing policy...'
-	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
+	echo 'installing cpufreqctl...'
+	cp $0 /usr/bin/
+	echo 'installing policy...'
+	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy `whereis polkit-1`/actions/
 	exit
 fi
 if [ $1 = "version" ]

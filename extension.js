@@ -197,7 +197,7 @@ const FrequencyIndicator = new Lang.Class({
         this._build_ui ();
         if (saves != save) save = saves;
         //print ("First boot:", first_boot);
-        if (this.installed && save && first_boot) this._load_settings ();
+        if (save && first_boot) this._load_settings ();
         first_boot = false;
         //print (profs);
 
