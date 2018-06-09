@@ -1,4 +1,24 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+if [[ $1 = PATH* ]]
+then
+	export $1 # Because of weird bug in polkit, $PATH is not passed normally
+	shift 1
+fi
+
+args="$@"
+
+# Execute if action requires root priviledges
+requires_root() {
+		# If we are not root, run this script with same args, but as root
+        if [[ ! `whoami` = 'root' ]]
+        then
+                pkexec $0 PATH=$PATH $args
+                exit # Required action has been done, unpriviledged copy is not needed
+        fi
+		# If we are root, continue to do the action
+}
+
 
 VERSION='17'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
@@ -36,6 +56,7 @@ then
 		echo $ag
 		exit
 	fi
+	requires_root
 	while [ $i -ne $cpucount ]
 	do
 		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
@@ -101,6 +122,7 @@ then
 		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
 		exit
 	fi
+	requires_root
 	i=0
 	while [ $i -ne $cpucount ]
 	do
@@ -118,6 +140,7 @@ then
 		cat /sys/devices/system/cpu/intel_pstate/no_turbo
 		exit
 	fi
+	requires_root
 	echo "Setting TURBO to " $2
 	echo $2 > /sys/devices/system/cpu/intel_pstate/no_turbo
 	exit
@@ -129,6 +152,7 @@ then
 		cat /sys/devices/system/cpu/intel_pstate/min_perf_pct
 		exit
 	fi
+	requires_root
 	echo "Setting MIN to " $2
 	echo $2 > /sys/devices/system/cpu/intel_pstate/min_perf_pct
 	exit
@@ -140,6 +164,7 @@ then
 		cat /sys/devices/system/cpu/intel_pstate/max_perf_pct
 		exit
 	fi
+	requires_root
 	echo "Setting MAX to " $2
 	echo $2 > /sys/devices/system/cpu/intel_pstate/max_perf_pct
 	exit
@@ -151,6 +176,7 @@ then
 		cat /sys/devices/system/cpu/cpufreq/boost
 		exit
 	fi
+	requires_root
 	echo "Setting BOOST to " $2
 	echo $2 > /sys/devices/system/cpu/cpufreq/boost
 	exit
@@ -162,6 +188,7 @@ then
 		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 		exit
 	fi
+	requires_root
 	i=0
 	while [ $i -ne $cpucount ]
 	do
@@ -179,6 +206,7 @@ then
 		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 		exit
 	fi
+	requires_root
 	i=0
 	while [ $i -ne $cpucount ]
 	do
@@ -191,6 +219,7 @@ then
 fi
 if [ $1 = "install" ]
 then
+	requires_root
     echo 'installing cpufreqctl...'
     cp $0 /usr/bin/
     echo 'installing policy...'
@@ -209,6 +238,7 @@ then
 		echo "cpufreqctl on CORE"
 		exit
 	fi
+	requires_root
 	FLNM="$FLROOT/cpu"$2"/online"
 	echo "Power on CPU Core"$2
 	echo "1" > $FLNM
@@ -221,6 +251,7 @@ then
 		echo "cpufreqctl off CORE"
 		exit
 	fi
+	requires_root
 	FLNM="$FLROOT/cpu"$2"/online"
 	echo "Power off CPU Core"$2
 	echo "0" > $FLNM
@@ -238,6 +269,7 @@ then
 	    cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_governor
 	    exit
 	fi
+	requires_root
     FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_governor"
 	echo "Setting $FLNM to "$3
 	echo $3 > $FLNM
@@ -255,6 +287,7 @@ then
 		cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_min_freq
 		exit
 	fi
+	requires_root
 	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_min_freq"
 	echo "Setting $FLNM to "$3
 	echo $3 > $FLNM
@@ -272,6 +305,7 @@ then
 		cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_max_freq
 		exit
 	fi
+	requires_root
 	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_max_freq"
 	echo "Setting $FLNM to "$3
 	echo $3 > $FLNM
