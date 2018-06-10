@@ -328,7 +328,9 @@ then
 fi
 if [ $1 = "irqbalance" ]
 then
-	requires_root
+	# There is a bug in GLib that doesn't allow pkexec to be run synchronosly
+	# So we can't be root here
+	#requires_root
 	M=$(ps -A |grep irqbalance)
 	echo "$M"
 	exit

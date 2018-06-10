@@ -446,7 +446,7 @@ const FrequencyIndicator = new Lang.Class({
                             userspace.menu.addMenuItem (u_item);
                             u_item.connect ('activate', Lang.bind (this, function () {
                                 this._changed ();
-                                    GLib.spawn_command_line_sync (this.cpufreqctl_path + ' gov userspace');
+                                    GLib.spawn_command_line_async (this.cpufreqctl_path + ' gov userspace');
                                     let cmd = this.cpufreqctl_path + ' set ' + f;
                                     global.log (cmd);
                                     Util.trySpawnCommandLine (cmd);
@@ -469,7 +469,7 @@ const FrequencyIndicator = new Lang.Class({
                             this._changed ();
                             let cmd = this.cpufreqctl_path + ' gov ' + governorItem.label.text;
                             global.log (cmd);
-                            GLib.spawn_command_line_sync (cmd);
+                            GLib.spawn_command_line_async (cmd);
                             if (save) this._settings.set_string(GOVERNOR_KEY, governorItem.label.text);
                             if (this.pstate_present) {
                                 slider_lock = true;
@@ -821,11 +821,11 @@ const FrequencyIndicator = new Lang.Class({
     _load_stage: function (prf) {
         if (this.stage == 1) {
             if (this.pstate_present) {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " min 0");
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " max 100");
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " min 0");
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " max 100");
             } else {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " minf " + this._get_freq (0));
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " maxf " + this._get_freq (100));
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " minf " + this._get_freq (0));
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " maxf " + this._get_freq (100));
             }
         } else if (this.stage == 2) {
             this.g = "";
@@ -849,7 +849,7 @@ const FrequencyIndicator = new Lang.Class({
             }
         } else if (this.stage == 4) {
             if (this.pstate_present) {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " min " + prf.minf);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " min " + prf.minf);
             } else {
                 for (let key = 0; key < prf.cpu; key++) {
                     if (prf.core[key]) {
@@ -859,7 +859,7 @@ const FrequencyIndicator = new Lang.Class({
             }
         } else if (this.stage == 5) {
             if (this.pstate_present) {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " max " + prf.maxf);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " max " + prf.maxf);
             } else {
                 for (let key = 0; key < prf.cpu; key++) {
                     if (prf.core[key]) {
@@ -1053,9 +1053,9 @@ const FrequencyIndicator = new Lang.Class({
         if (this.util_present) {
             this.util_present = false;
             if (state) {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " on " + core);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " on " + core);
             } else {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " off " + core);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " off " + core);
             }
             this.util_present = true;
             return state;
@@ -1096,7 +1096,7 @@ const FrequencyIndicator = new Lang.Class({
     _set_governor: function (core, state) {
         if (this.util_present) {
             try {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " coreg " + core + " " + state);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " coreg " + core + " " + state);
             } catch (e) {
                 global.log ("Set governor", e.message);
                 return false;
@@ -1121,7 +1121,7 @@ const FrequencyIndicator = new Lang.Class({
     _set_coremin: function (core, state) {
         if (this.util_present) {
             try {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremin " + core + " " + state);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " coremin " + core + " " + state);
             } catch (e) {
                 global.log ("Set coremin", e.message);
                 return false;
@@ -1146,7 +1146,7 @@ const FrequencyIndicator = new Lang.Class({
     _set_coremax: function (core, state) {
         if (this.util_present) {
             try {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremax " + core + " " + state);
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " coremax " + core + " " + state);
             } catch (e) {
                 global.log ("Set coremax", e.message);
                 return false;
@@ -1175,9 +1175,9 @@ const FrequencyIndicator = new Lang.Class({
     _set_turbo: function (state) {
         if (this.util_present) {
             if (state) {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo 0");
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " turbo 0");
             } else {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo 1");
+                GLib.spawn_command_line_async (this.cpufreqctl_path + " turbo 1");
             }
             if (save) this._settings.set_boolean(TURBO_BOOST_KEY, state);
             return state;
@@ -1326,9 +1326,9 @@ const FrequencyIndicator = new Lang.Class({
     _set_boost: function (state) {
         if (this.util_present) {
             if (state) {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + ' boost 1');
+                GLib.spawn_command_line_async (this.cpufreqctl_path + ' boost 1');
             } else {
-                GLib.spawn_command_line_sync (this.cpufreqctl_path + ' boost 0');
+                GLib.spawn_command_line_async (this.cpufreqctl_path + ' boost 0');
             }
             if (save) this._settings.set_boolean(TURBO_BOOST_KEY, state);
             return state;
