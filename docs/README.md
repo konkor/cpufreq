@@ -12,6 +12,33 @@ _See [Jekyll Framework](https://jekyllrb.com/) site for more information..._
 4. Start Jekyll as you would normally (`bundle exec jekyll serve`)
 5. Navigate to `http://localhost:4000/cpufreq/` to access the preview. The compiled static project will be able in the _/docs/_site_ folder.
 
+## Jekyll in a Docker Container
+
+First, you have to install Docker and Docker Compose to run jekyll in a container. It's pretty convinient you can not worry about local ruby, jekyll versions.
+```sh
+docker-compose up
+
+# Or use docker commands directly:
+docker run --rm --volume="$PWD:/srv/jekyll" -p 4000:4000 -it jekyll/jekyll:latest jekyll serve
+docker run --rm --volume="$PWD:/srv/jekyll" -it jekyll/jekyll:latest jekyll build
+```
+**docker-compose.yml:**
+```yml
+version: "3"
+services:
+  site:
+    environment:
+      - JEKYLL_ENV=development
+    command: jekyll serve --incremental
+    image: jekyll/jekyll:latest
+    volumes:
+      - $PWD:/srv/jekyll
+      - $PWD/vendor/bundle:/usr/local/bundle
+    ports:
+      - 4000:4000
+```
+
+
 ## Structure of the docs project
 
 ``` yaml

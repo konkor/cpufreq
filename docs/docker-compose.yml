@@ -1,0 +1,12 @@
+version: "3"
+services:
+  site:
+    environment:
+      - JEKYLL_ENV=development
+    command: jekyll serve --incremental
+    image: jekyll/jekyll:latest
+    volumes:
+      - $PWD:/srv/jekyll
+      - $PWD/vendor/bundle:/usr/local/bundle
+    ports:
+      - 4000:4000
