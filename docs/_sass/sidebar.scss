@@ -8,7 +8,7 @@
   width: $sidebar-width;
   overflow-y: auto;
   min-height: 100%;
-  background-color: #333;
+  background-color: #f4f4f4;
   @media(max-width: 768px) {
     position: static;
     width: 100%;
@@ -27,9 +27,9 @@
   .logo {
     display: block;
     height: 75px;
-    background: #222222 url(./assets/images/logo.png) no-repeat center;
+    background: url(./assets/images/logo.png) no-repeat center;
     /*background-size: 110px 32px;*/
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 4px 0 rgba(204, 204, 204, 0.4);
     &:hover {
       -webkit-filter: brightness(1.2);
       filter: brightness(1.2);
@@ -50,14 +50,14 @@
         display: block;
         padding: 12px 20px;
         font-size: 17px;
-        color: #ebdac1;
+        color: #555;
         &.active {
           color: $dark-orange;
         }
       }
       &:hover {
         & > a {
-          color: #ffa114;
+          color: #517dbc;
         }
       }
     }
