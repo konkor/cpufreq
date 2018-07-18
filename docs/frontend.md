@@ -28,6 +28,8 @@ The default frequency monitoring interval can be changed in the [Preferences win
 
 _IMPORTANT: frequency monitoring doesn't require a lot of system resources but you shouldn't go for very low values. **It's milliseconds (1000 times per second).** Otherwise, your system could be busy with the monitoring only or even have bugs. I recommend you to open the system monitor and check the `cpufreq-service` process when you are changing the settings to see the service loading usage. You can check the system journal (`sudo journalctl -f`) for messages reporting failures._
 
+[Top](#)
+
 ## 2. Info Panel
 
 ### System Status
@@ -58,6 +60,8 @@ _See more about_ [IRQBALANCE DETECTED]({{ "/faq/#irqbalance-detected" | relative
 4. **Governors** You can see governors information if you set up a **mixed mode** where different CPU core are assigned to different active governors.
 _See more about_ [mixed mode]({{ "/faq/#what-is-a-mixed-mode" | relative_url }})
 
+[Top](#)
+
 ## 3. CPU Governors Section
 <img alt="governors" src="{{ "/assets/images/governors.png" | relative_url }}" align="left" style="margin:0 48px">
 
@@ -67,6 +71,8 @@ The section's header (submenu) shows the active governor. Also, it can show [Mix
 
 _See more about_ [CPU governors]({{ "/faq/#what-is-a-cpu-governor" | relative_url }})
 
+[Top](#)
+
 ## 4. Userspace Governor Section
 <img alt="userspace" src="{{ "/assets/images/userspace.png" | relative_url }}" align="right" height="240" style="margin:0 48px">
 _Userspace Governor is only available with the kernel acpi-cpufreq driver._
@@ -75,13 +81,19 @@ Userspace Governor allows you to set one of the available CPU Frequencies when c
 
 _See more about_ [CPU governors]({{ "/faq/#what-is-cpu-governors" | relative_url }})
 
+[Top](#)
+
 ## 5. Minimal Frequency Slider
 Each processor core (thread) can have a minimal allowed frequency value and core frequencies can't go lower.
 It can be used to increase the overall system reactivity as processor cores can't go too low and instead are ready to work on higher frequencies right away.
 
+[Top](#)
+
 ## 6. Maximum Frequency Slider
 Each processor core (thread) can have maximum allowed frequency value and core frequencies can't go higher.
 It can be used to reduce the system power consumption when processor cores can't go too high.
+
+[Top](#)
 
 ## 7. CPU Core Threads Slider
 <p class="description">First, you have to disable/remove IRQBALANCE package for the system stability!</p>
@@ -90,12 +102,16 @@ _This feature is only available for multi-core processors._
 
 Allows you to turn off or on processor cores through the Linux kernel. It can be used to reduce the power consumption or for testing purposes like application scaling analyses.
 
+[Top](#)
+
 ## 8. CPU Turbo Mode Switcher
 _This feature is only available for the supported processor models._
 
 Allows you to turn off or on the processor boost feature through the Linux kernel. The processor boost feature allows CPU to go higher than standard frequencies for a limited time only. It dramatically increases processor power consumption and heating.
 
 <p class="description">It's usually a good idea to turn it off for laptops. <i>Usually, laptop cooling system is weak and can easily get hot.</i> If you want to increase the system responsiveness on a laptop you can just increase the minimal frequency slider.</p>
+
+[Top](#)
 
 ## 9. User Profiles Section
 <img alt="profiles" src="{{ "/assets/images/profiles.png" | relative_url }}" align="right" style="margin:0 32px">
@@ -108,6 +124,8 @@ You can delete any user profile just by clicking on its close button **X**.
 
 Also, you can replace any profile with current setting and rename it by clicking on edit button. So just to change some settings, you have to load it, make some changes in the settings and click profile edit button to save current changes to it. You can rename the profile in the editing mode so.
 
+[Top](#)
+
 ## 10. Preferences Section
 <img alt="preferences" src="{{ "/assets/images/preferences.png" | relative_url }}" align="left" style="margin:0 32px">
 
@@ -116,6 +134,8 @@ Here are general settings for the extension:
 * **Preferences...** opens the preferences window with extra options.
 * **Reload** restarting the extension without reloading Gnome Shell.
 
+[Top](#)
+
 ## Preferences Window
 ![]({{ "/assets/images/prefs.png" | relative_url }})
 
@@ -123,3 +143,5 @@ From here you can:
 * Set **Remember settings** option.
 * Set **Frequency Updating interval** option. It describes how often the application monitor will be checking for the current core frequencies. Default value is 500 **milliseconds** (it means 2 times per second). _Don't go to very low values! It could make extra system loading. So human eye cannot even notice this changes._
 * Assign user profiles on charging and discharging battery events.
+
+[Top](#)

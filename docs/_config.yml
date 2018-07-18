@@ -12,6 +12,7 @@ collections:
 plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
+  - jekyll-feed
 
 sass:
   sass_dir: _sass
@@ -28,6 +29,7 @@ defaults:
 
 baseurl: "/cpufreq"
 github_username:  konkor
+rss: rss
 
 exclude:
 - ".gitignore"

@@ -20,6 +20,28 @@
       &:not(:last-child) {
         margin-right: 15px;
       }
+      a {
+        display: block;
+        padding: 8px;
+        font-size: 17px;
+        font-weight: bold;
+        color: #247;
+        &.active {
+          color: $dark-orange;
+        }
+      }
+      &:hover {
+        & > a {
+          color: #47a;
+        }
+      }
+    }
+    .sponsor a {
+      padding: 8px 12px;
+      &:hover {
+        color: #fff;
+        background-color: $dark-orange;
+      }
     }
   }
   @media(max-width: 768px) {
@@ -31,6 +53,37 @@
     h1 {
       font-size: 20px;
     }
+    ul li {
+      margin-left: auto;
+      float: none;
+      display: inline-block;
+      &:first-child {
+        width: 100%;
+      }
+      &:last-child {
+        display: none;
+      }
+      a {
+        padding: 10px 0;
+      }
+    }
   }
   @include box-shadow(0 2px 4px 0 rgba(204, 204, 204, 0.4));
+  &.banner {
+    color:#fff;
+    background: radial-gradient(circle,#1280e1 0%,#003f69 100%);
+    a {
+      display: block;
+      padding: 8px;
+      font-size: 17px;
+      color: #fff;
+      &.active {
+        color: $dark-orange;
+      }
+      &:hover {
+        color: #ddd;
+      }
+    }
+  }
+
 }

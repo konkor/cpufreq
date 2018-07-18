@@ -8,3 +8,5 @@ description: The different ways to contribute to the project.
 * Test it on your favorite Linux distribution.
 * Contribute with an idea, graphical content, translation or code [an issue](https://github.com/konkor/cpufreq/issues).
 * Enhance our documentation or knowledge base.
+* Share your knowledge, experience and review to help others and the project.
+* Support financially the project, [make a donation]({{ "/donations" | relative_url }})

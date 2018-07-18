@@ -43,6 +43,8 @@ or for `gtk` branch to example
 ```
 2. [Restart Gnome Shell](#restarting-gnome-shell) to reload extensions.
 
+[Top](#)
+
 # Source Archive
 
 <p class="description">Manual installation from the GitHub branch's  source archive.</p>
@@ -57,6 +59,8 @@ chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 5. Enable the cpufreq extension. _See_ [Managing Extensions](#managing-extensions).
 
 _PS: I recommend you to install it through the [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/) repository and just update files from the GitHub [archive](https://github.com/konkor/cpufreq/archive/master.zip). This makes you avoid a few steps of the manual method._
+
+[Top](#)
 
 # Gnome Tweak Tool
 <p class="description">installation of the source archive from GitHub through Gnome Tweak Tool.</p>
@@ -79,11 +83,15 @@ gnome-tweak-tool # Turn on the extension.
 cpufreq extension => ⚠ Install...
 ```
 
+[Top](#)
+
 # Restarting Gnome Shell
 <p class="description">Different ways to restart or re-log current Gnome Shell session</p>
  * user's **Log-out / Log-in** (_X11/Wayland_)
  * <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command (_X11 only_)
  * or just **reboot** PC (_X11/Wayland_)
+
+ [Top](#)
 
 # Managing Extensions
 <p class="description">Here are some ways to manipulate the extension state (enabling, disabling, installing, updating, removing settings...).</p>
@@ -95,6 +103,8 @@ You can manage your extensions in many ways:
 * `Gnome Software Center`.
 * `Manual method` by removing any extension folder you will remove the extension. After this operation you have to [restart current Gnome session](#restarting-gnome-shell).
 
+[Top](#)
+
 # Finishing the installation
 <p class="description">After installing/updating the extension on the system, you have to finalize the procedure in order to allow it to manage the system's power settings</p>
 
@@ -104,6 +114,8 @@ A couple ways to do so:
 ```
 sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
 ```
+
+[Top](#)
 
 # Upgrading the extension
 <p class="description">Here are some ways to upgrade the extension</p>
@@ -126,6 +138,8 @@ wget https://github.com/konkor/cpufreq/archive/master.zip
 ```
 **After Upgrading you may have to finish the [installation](#finishing-the-installation) as the extension could also update its API.**
 
+[Top](#)
+
 # Uninstalling
 <p class="description">Sometimes we need to remove some extension. The cause could be for example complete reinstallation or bugs. It can be useful if you have saved broken settings values or to clean up previous installations.</p>
 
@@ -147,6 +161,10 @@ If you want reset the extension's values to defaults just run it and restart gno
 dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
 ```
 
+[Top](#)
+
 # Troubleshooting
 ## Missing symbols
 If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu or/and Droid font packages to fix it.
+
+[Top](#)

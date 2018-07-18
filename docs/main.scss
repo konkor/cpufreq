@@ -5,6 +5,7 @@
 @import 'mixins';
 @import 'sidebar';
 @import 'header';
+@import 'footer';
 @import 'content';
 @import 'posts';
 
@@ -85,4 +86,10 @@ code {
     font-size: 14px;
     line-height: 1.75;
   }
+}
+
+.feed {
+  float:right;
+  display:inline-block;
+  width: 18px;
 }

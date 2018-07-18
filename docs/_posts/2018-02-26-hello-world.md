@@ -3,8 +3,10 @@ layout: post
 title:  "Welcome To CPUFREQ Place!"
 date:   2018-02-26 21:02:00 +0200
 categories: cpufreq news
-description: I know I'm late but better later than never. Many Linux users are geeks but times change and more and more non-technician people are coming to our beloved desktop. They start to ask questions about many aspects of Linux OS and how to find the right solution. I will post news, collect and share our knowledge base and more.<br><br>It was my first Gnome Extension and Gnome JavaScript experience! My not too old laptop had fried and this driven me to take control under my system and find some solution for monitoring and managing system parameters. Unfortunately, there was no supported version's extension for my modern Gnome desktop 3.14:). I decided to adopt an old extension it moved me to learn a lot about Gnome creation Gnome extensions and GJS. But first working prototype I got in less than 24 hours! So guys let it doesn't stop you! Sadly, I couldn't find the blog that helped me understand step by step how to convert standard extension template to something useful.
+description: I know I'm late but better later than never. Many Linux users are geeks but times change and more and more non-technician people are coming to our beloved desktop. They start to ask questions about many aspects of Linux OS and how to find the right solution. I will post news, collect and share our knowledge base and more.
 image: "/assets/images/posts/welcome.png"
+comments: true
+author: "konkor"
 ---
 
 # Welcome To CPUFREQ Place!

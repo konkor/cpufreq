@@ -34,3 +34,5 @@ The main task of the Gnome CPUFREQ is to provide convenient methods to control y
 * to make GTK version of the extension as a standalone application. It makes possible to use this functionality on any Linux desktop environment including next Gnome Shell 4 version.
 * to enhance control on acpi-cpufreq governor profiles like scaling factors, latencies to make possible creating the custom modified governors/profiles.
 * to improve functionality and the documentation.
+
+[Top](#)

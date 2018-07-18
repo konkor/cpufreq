@@ -1,8 +1,9 @@
 @import 'variables';
 
 .content {
-  padding: 40px;
+  padding: 40px 40px 40px 64px;
   line-height: 1.8;
+  max-width: 960px;
   @media(max-width: 768px) {
     padding: 15px;
   }
