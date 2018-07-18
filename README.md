@@ -8,10 +8,12 @@
 
 <h2 align="center">Supporting CPUFREQ Power Manager</h2>
 
-CPUFREQ Power Manager is an GPLv3-licensed open source project. It's an independent project with its ongoing development made possible entirely thanks to the support by these awesome [backers](https://github.com/konkor/cpufreq/blob/master/BACKERS.md). You will also support other my interesting community projects. If you'd like to help the project and want to join to it, please consider:
+CPUFREQ Power Manager is an GPLv3-licensed open source project focused on desktop users. It's an independent project with its ongoing development made possible entirely thanks to the support by these awesome [backers](https://github.com/konkor/cpufreq/blob/master/BACKERS.md). You will also support my other interesting community projects. If you'd like to help the project and want to join to it, please consider:
 
 - [Become a backer or sponsor on Patreon](https://www.patreon.com/konkor).
 - [One-time donation via PayPal or Patron.](#donations)
+
+Please, consider to support the project and make it better!
 
 <h3 align="center">Special Sponsors</h3>
 <!--special start-->

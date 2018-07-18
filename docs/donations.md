@@ -5,9 +5,11 @@ description: The ways to support the project.
 ---
 <h2 align="center">Supporting Gnome CPUFREQ Power Manager</h2>
 
-CPUFREQ Power Manager is an GPLv3-licensed open source project. It's an independent project with its ongoing development made possible entirely thanks to the support by these awesome [backers](https://github.com/konkor/cpufreq/blob/master/BACKERS.md). You will also support other my interesting community projects. If you'd like to help the project and want to join to it, please consider:
+CPUFREQ Power Manager is an GPLv3-licensed open source project focused on desktop users. It's an independent project with its ongoing development made possible entirely thanks to the support by these awesome [backers](https://github.com/konkor/cpufreq/blob/master/BACKERS.md). You will also support my other interesting community projects. If you'd like to help the project and want to join to it, please consider:
 * [Become a backer or sponsor on Patreon](https://www.patreon.com/konkor)
 * [One-time donation via PayPal or Patron](#donations)
+
+Please, consider to support the project and make it better!
 
 <h3 align="center">Special Sponsors</h3>
 <!--special start-->
@@ -31,6 +33,6 @@ CPUFREQ Power Manager is an GPLv3-licensed open source project. It's an independ
 - One-time donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JGFPHFHXMER6L) or [Patron](https://www.patreon.com/konkor) where you can choose a custom pledge
 
 <h3 align="center"><a href="{{ "/sponsors" | relative_url }}" align="center">Our Sponsors!</a></h3>
-- 
+-
 
 **Thank You for your supporting!**
