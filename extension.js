@@ -30,7 +30,6 @@ const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
-const ByteArray = imports.byteArray;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const TURBO_BOOST_KEY = 'turbo-boost';
@@ -174,7 +173,7 @@ const FrequencyIndicator = new Lang.Class({
 
         freqInfo = null;
         cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl driver");
-        if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+        if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
         if (freqInfo && GLib.file_test ("/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver", GLib.FileTest.EXISTS)) {
             this.util_present = true;
             if (freqInfo == 'intel_pstate') {
@@ -303,9 +302,9 @@ const FrequencyIndicator = new Lang.Class({
         if (this.installed) {
             let localctl = null, globalctl = null;
             cpufreq_output = GLib.spawn_command_line_sync ("/usr/bin/cpufreqctl version");
-            if (cpufreq_output[0]) globalctl = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) globalctl = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             cpufreq_output = GLib.spawn_command_line_sync (EXTENSIONDIR + "/cpufreqctl version");
-            if (cpufreq_output[0]) localctl = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) localctl = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (localctl != globalctl) {
                 this.updated = false;
             }
@@ -985,9 +984,9 @@ const FrequencyIndicator = new Lang.Class({
         this.governoractual = "";
         if (this.util_present) {
             let cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
-            if (cpufreq_output1[0]) this.governorslist = ByteArray.toString(cpufreq_output1[1]).split("\n")[0].split(" ");
+            if (cpufreq_output1[0]) this.governorslist = Convenience.byteArrayToString(cpufreq_output1[1]).split("\n")[0].split(" ");
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " gov");
-            if (cpufreq_output[0]) this.governoractual = ByteArray.toString(cpufreq_output[1]).split("\n")[0].toString();
+            if (cpufreq_output[0]) this.governoractual = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0].toString();
             this.governorslist.forEach ((governor)=> {
                 let governortemp;
                 if (this.governoractual.indexOf (governor) > -1)
@@ -1030,7 +1029,7 @@ const FrequencyIndicator = new Lang.Class({
         let frequenceslist = new Array();
         if (this.util_present) {
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " freq");
-            if (cpufreq_output[0]) frequenceslist = ByteArray.toString(cpufreq_output[1]).split("\n")[0].split(" ");
+            if (cpufreq_output[0]) frequenceslist = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0].split(" ");
             frequenceslist.forEach ((freq)=> {
                 if (freq.length > 0) {
                     if (parseInt (freq) > 0) frequences.unshift (freq);
@@ -1067,7 +1066,7 @@ const FrequencyIndicator = new Lang.Class({
         freqInfo = null;
         if (this.util_present) {
             cpufreq_output = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/cpu" + core + "/online");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 if (freqInfo == '1') {
                     return true;
@@ -1112,7 +1111,7 @@ const FrequencyIndicator = new Lang.Class({
         freqInfo = null;
         if (this.util_present) {
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coreg " + core);
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 let g = freqInfo;
                 return g;
@@ -1137,7 +1136,7 @@ const FrequencyIndicator = new Lang.Class({
         freqInfo = null;
         if (this.util_present) {
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremin " + core);
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 let g = parseInt (freqInfo);
                 return g;
@@ -1162,7 +1161,7 @@ const FrequencyIndicator = new Lang.Class({
         freqInfo = null;
         if (this.util_present) {
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " coremax " + core);
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 let g = parseInt (freqInfo);
                 return g;
@@ -1190,7 +1189,7 @@ const FrequencyIndicator = new Lang.Class({
                 return this._set_turbo (this._settings.get_boolean(TURBO_BOOST_KEY));
             }
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " turbo");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 if (freqInfo == '0') {
                     return true;
@@ -1220,7 +1219,7 @@ const FrequencyIndicator = new Lang.Class({
                 return this._set_min_pstate (this._settings.get_int(MIN_FREQ_PSTATE_KEY));
             }
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " min");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
             }
@@ -1245,7 +1244,7 @@ const FrequencyIndicator = new Lang.Class({
                 return this._set_max_pstate (this._settings.get_int(MAX_FREQ_PSTATE_KEY));
             }
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " max");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
             }
@@ -1289,7 +1288,7 @@ const FrequencyIndicator = new Lang.Class({
                 return this._set_min (parseInt (this._settings.get_string (MIN_FREQ_KEY)));
             }
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " minf");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
             }
@@ -1315,7 +1314,7 @@ const FrequencyIndicator = new Lang.Class({
                 return this._set_max (parseInt (this._settings.get_string (MAX_FREQ_KEY)));
             }
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " maxf");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 return parseInt (freqInfo);
             }
@@ -1341,7 +1340,7 @@ const FrequencyIndicator = new Lang.Class({
                 return this._set_boost (this._settings.get_boolean(TURBO_BOOST_KEY));
             }
             cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " boost");
-            if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) {
                 if (freqInfo == '1') {
                     return true;
@@ -1578,7 +1577,7 @@ const InfoItem = new Lang.Class({
         if (this.cpufreqctl_path) {
         cpufreq_output = GLib.spawn_command_line_sync ("pkexec " + this.cpufreqctl_path + " irqbalance");
         if (cpufreq_output[0]) {
-            freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             if (freqInfo) this.balance = "IRQBALANCE DETECTED";
         }
         }
@@ -1592,7 +1591,7 @@ const InfoItem = new Lang.Class({
             try {
                 [line, ] = dis.read_line (null);
                 while (line != null) {
-                    s = ByteArray.toString(line);
+                    s = Convenience.byteArrayToString(line);
                     if (s.indexOf ("model name") > -1) {
                         model = s;
                         i++;
@@ -1629,7 +1628,7 @@ const InfoItem = new Lang.Class({
             try {
                 [line, ] = dis.read_line (null);
                 while (line != null) {
-                    s = ByteArray.toString(line);
+                    s = Convenience.byteArrayToString(line);
                     if (s.indexOf ("PRETTY_NAME=") > -1) {
                         model = s;
                         i++;
@@ -1654,9 +1653,9 @@ const InfoItem = new Lang.Class({
             }
         }
         cpufreq_output = GLib.spawn_command_line_sync ("uname -r");
-        if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0].split(".");
+        if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0].split(".");
         if (freqInfo[0]) {
-            if (distro.length > 22) distro += "\nKernel " + ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+            if (distro.length > 22) distro += "\nKernel " + Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
             else {distro += " kernel " + freqInfo[0];
             if (freqInfo[1]) distro += "." + freqInfo[1];}
         }
@@ -1666,7 +1665,7 @@ const InfoItem = new Lang.Class({
     get loadavg () {
         let s = "Loading ", i = 0 , j, cc = GLib.get_num_processors ();
         cpufreq_output = GLib.spawn_command_line_sync ("cat /proc/loadavg");
-        if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0].split(" ");
+        if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0].split(" ");
         if (freqInfo[0]) {
             j = i = Math.round (parseFloat (freqInfo[0]) * 100);
             while (i > 100) {
@@ -1715,7 +1714,7 @@ const InfoItem = new Lang.Class({
     get_throttle: function () {
         let s = "", i = 0;
         cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " throttle");
-        if (cpufreq_output[0]) freqInfo = ByteArray.toString(cpufreq_output[1]).split("\n")[0];
+        if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).split("\n")[0];
         if (freqInfo) {
             i = parseInt (freqInfo);
             if (!i) return;

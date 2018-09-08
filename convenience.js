@@ -70,11 +70,19 @@ function getCurrentFile () {
     return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
 }
 
+function byteArrayToString (byte_array) {
+    if (byte_array instanceof ByteArray.ByteArray) {
+        return byte_array.toString();
+    } else if (byte_array instanceof Uint8Array) {
+        return ByteArray.toString(byte_array);
+    }
+}
+
 function get_cpu_number () {
     let c = 0;
     let cpulist = null;
     let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
-    if (ret[0]) cpulist = ByteArray.toString(ret[1]).split("\n", 1)[0].split("-");
+    if (ret[0]) cpulist = byteArrayToString(ret[1]).split("\n", 1)[0].split("-");
     cpulist.forEach ((f)=> {
         if (parseInt (f) > 0) c = parseInt (f);
     });
