@@ -175,7 +175,7 @@ var CpufreqService = new Lang.Class ({
         try {
             let [line,] = stream.read_line_finish (res);
             if (line) {
-                var n = parseInt (line);
+                var n = parseInt (Convenience.byteArrayToString(line));
                 if (Number.isInteger (n)) {
                     freqs.unshift (n);
                     freqs.splice (freqs.length-1, 1);
