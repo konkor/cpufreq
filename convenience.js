@@ -23,6 +23,7 @@
 const Gettext = imports.gettext;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
+const ByteArray = imports.byteArray;
 
 function initTranslations (domain) {
     domain = domain || 'gnome-shell-extensions-cpufreq';
@@ -73,7 +74,7 @@ function get_cpu_number () {
     let c = 0;
     let cpulist = null;
     let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
-    if (ret[0]) cpulist = ret[1].toString().split("\n", 1)[0].split("-");
+    if (ret[0]) cpulist = ByteArray.toString(ret[1]).split("\n", 1)[0].split("-");
     cpulist.forEach ((f)=> {
         if (parseInt (f) > 0) c = parseInt (f);
     });
