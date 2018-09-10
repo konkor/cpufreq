@@ -1,0 +1,40 @@
+title: CPUFREQ
+description: A cpufreq extension description.
+
+collections:
+  frontend:
+    permalink: /frontend/:path/
+    output: true
+  howto:
+    permalink: /howto/:path/
+    output: true
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-feed
+
+sass:
+  sass_dir: _sass
+  style: compressed
+
+markdown: kramdown
+
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      layout: "page"
+
+baseurl: "/cpufreq"
+github_username:  konkor
+rss: rss
+
+exclude:
+- ".gitignore"
+- CNAME
+- icomoon-selection.json
+- README.md
+- art/
+- vendor/bundle/

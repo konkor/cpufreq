@@ -9,7 +9,9 @@
     "3.20",
     "3.22",
     "3.24",
-    "3.26"
+    "3.26",
+    "3.28",
+    "3.30"
   ],
   "url": "https://github.com/konkor/cpufreq",
   "uuid": "cpufreq@konkor"

@@ -1,11 +1,39 @@
-# cpufreq
-Gnome Shell CPU Frequency Monitor and Governor Manager.
+<p align="center">
+  <a href="https://github.com/konkor/cpufreq"><img src="https://img.shields.io/github/license/konkor/cpufreq.svg" alt="GPLv3 License"></a>
+  <a href="https://github.com/konkor/cpufreq"><img src="https://img.shields.io/github/stars/konkor/cpufreq.svg?style=social&label=Star&style=flat-square" alt="Stars"></a>
+</p>
+
+# [![CPUFREQ](/docs/assets/images/logo.png?raw=true)](https://konkor.github.io/cpufreq/)
+### _Gnome CPU Monitor and Power Manager_.
+
+<h2 align="center">Supporting CPUFREQ Power Manager</h2>
+
+CPUFREQ Power Manager is an GPLv3-licensed open source project focused on desktop users. It's an independent project with its ongoing development made possible entirely thanks to the support by these awesome [backers](https://github.com/konkor/cpufreq/blob/master/BACKERS.md). You will also support my other interesting community projects. If you'd like to help the project and want to join to it, please consider:
+
+- [Become a backer or sponsor on Patreon](https://www.patreon.com/konkor).
+- [One-time donation via PayPal or Patreon.](#donations)
+
+Please, consider to support the project and make it better!
+
+<h3 align="center">Special Sponsors</h3>
+<!--special start-->
+
+<p align="center">
+  <big>
+    Top 5 Supporters could be here with your name or logo and reference.
+    <br><br>
+    <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
+  </big>
+</p>
+
+<!--special end-->
+# [Project website](https://konkor.github.io/cpufreq/)
+## Introduction
+Gnome is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.
 
 https://extensions.gnome.org/extension/1082/cpufreq/
 
 ![](/data/screenshots.png?raw=true)
-
-This is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.
 
 ## Features
 * Compatible with many hardware architectures (x86, x64, arm ...);
@@ -18,6 +46,12 @@ This is a lightweight CPU scaling monitor and powerful CPU management tool. The 
 * User Profiles;
 * More.
 
+## Planned Features
+* Dedicated GTK3+ application to cover all DE.
+* Enhance functionality.
+* Integrate CI and project management.
+* Improve supporting and documentation.
+
 ## A Few Reasons Why You Should Not Want To Use Single Core For _Powersaving mode_:
 * Modern OS/kernel works better on multi-core architectures.
 * You need at least 1 core for a foreground application and 1 for the background system services.
@@ -25,153 +59,26 @@ This is a lightweight CPU scaling monitor and powerful CPU management tool. The 
 * Many CPUs have enabled Hyper-Threading (HT) technology. So there is no big sense to run 0.5 physical CPU core.
 * ...
 
-[Phoronix Benchmarks](http://www.phoronix.com/scan.php?page=article&item=linux-47-schedutil&num=1)
+## Installation
 
-Optional you can install cpufrequtils or cpupower package:
+- [See more about compilation and installation...](/INSTALL.md)
+- [The project's documentation pages](http://konkor.github.io/cpufreq/install/)
 
-* Debian/Ubuntu
-```
-sudo apt-get install cpufrequtils
-```
-or for modern kernels:
-```
-sudo apt-get install linux-cpupower
-```
-* Arch Linux
-```
-sudo pacman -S cpupower
-```
-* Fedora
-```
-yum install kernel-tools
-```
+## Donations
+ I like completely open-source projects. It's why I picked GPLv3 license for my open projects. I think only such license could protect Desktop Users from Business Users. Maybe I'm a dreamer and want to believe in the pure projects but the reality is most projects and FOS organizations are sponsored by big business and founded by them.
+ But real life is a hard thing and very complicated by many circumstances. I'm not young and all we have it's our life (time) and where we'll be tomorrow. Life is hard. I'd like it to work on my projects productively which want a lot of time and affords. Now I want get your support to have ability to support and develop projects.
 
-## Install
-### Dependencies
-* Gnome Shell 3.14+;
-* supported cpufreq modules.
+- [Become a backer or sponsor on Patreon](https://www.patreon.com/konkor).
+- One-time donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JGFPHFHXMER6L) or Patreon where you can choose a custom pledge.
 
-### Official repository [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
-You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
+## Contribution
 
-### Install from GitHub branch (default `master`)
-1. Run [install script](https://github.com/konkor/cpufreq/raw/master/install.sh)
-```
-./install.sh
-```
-or for `info` branch to example
-```
-./install.sh info
-```
+ Sure I will always consider your contribution of time for reports, requests, translations as a big deal.
 
-2. Restart Gnome to reload extensions by:
- * user's **Log-out / Log-in** (_X11/Wayland_)
- * <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command (_X11 only_)
- * or just **reboot** PC (_X11/Wayland_)
+Thank you to all the people who already contributed to the project!
 
-### From source zip archive (manual method)
-1. Download zip archive from GitHub page _[cpufreq-master.zip](https://github.com/konkor/cpufreq/archive/master.zip)_.
-2. Extract _cpufreq-master.zip_ archive and copy all to the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
-3. Optionally, check/fix the executing bit:
- * _chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl_
-4. Restart Gnome to reload extensions by:
- * user's **Log-out/Log-in** (_X11/Wayland_)
- * <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command (_X11 only_)
- * or just **reboot** PC (_X11/Wayland_)
-5. Enable the cpufreq extension by:
- * `gnome-shell-extension-prefs`
- * web browser page [Installed Extensions](https://extensions.gnome.org/local/)
- * `gnome-tweak-tool`
+See https://github.com/konkor/cpufreq/graphs/contributors
 
-_PS: I'd recommend you the installing through the [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/) repository and just update files from the GitHub [archive](https://github.com/konkor/cpufreq/archive/master.zip). That's how you could avoid a few steps of the manual method._
+## License
 
-### From source zip archive (_gnome-tweak-tool_ method)
-Download zip archive from GitHub page. Run _gnome-tweak-tool_ go to extensions tab,
-click _Install Shell Extension_ from a drive and select _cpufreq-master.zip_.
-Detailed steps below:
-```
-wget https://github.com/konkor/cpufreq/archive/master.zip
-gnome-tweak-tool # Select 'Install Shell Extension' button on the Extensions Tab.
-chmod +x ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
-```
-Now close _gnome-tweak-tool_ and restart _gnome-shell_ Log Out or just enter 'r' command in 'Alt-F2' prompt.
-```
-gnome-tweak-tool # Turn on the extension.
-cpufreq extension => ⚠ Install...
-```
-
-### From git source
-```
-git clone https://github.com/konkor/cpufreq
-cd cpufreq
-
-mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
-cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
-chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
-```
-
-The following command requires super user/Administrator/Root access. Using the same Terminal window, run the following command will allow you to change the governors from the _Cpufreq_ applet.
-1. `sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install`
-1. You will be prompt to enter your password
-1. _Cpufreq_ applet is now installed and its menu is now displayed in GNOME top toolbar
-1. Done. You have successfully installed _Cpufreq_.
-
-Optionally, if you need to install _Cpufreq_ for an additional GNOME user(s), but that user(s) do not have super user/Administrator/Root access, here are the steps that will allow that user to change the governors from the _Cpufreq_ applet
-1. Login that additional GNOME user(s)
-1. Run all the same command lines as [that section above](https://github.com/konkor/cpufreq/blob/master/README.md#from-git-source)
-1. Open GNOME _Tweak Tools_ (gnome-tweak-tool). Click on _Extensions_ vertical tab.
-1. Click on the toggle button next to _Cpufreq_ row to turn it ON
-1. Restart GNOME by pressing "Alt+F2' keys. When prompt type in "r" without the quotes. Press "Enter" key. Wait a few seconds for GNOME to refresh.
-1. _Cpufreq_ applet is now installed and its menu is now displayed in GNOME top toolbar
-1. Done. You have successfully installed _Cpufreq_.
-
-### Updating the existing extension from git source
-1. wget https://github.com/konkor/cpufreq/archive/master.zip
-1. Extract _cpufreq-master.zip_.
-1. Copy/Replace all files in the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
-1. Restart GNOME by pressing "Alt+F2' keys. When prompt type in "r" without the quotes. Press "Enter" key.
-
-### You should fix executing bit after installation through the `gnome-tweak-tool` or `git clone` to able to run the extension.
-```
-chmod +x  ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
-```
-If you want change governors or/and frequencies You have to install it.
-```
-sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install
-```
-
-### Complete uninstall and removing of stored settings.
-It can be useful if you have saved broken settings values or to clean up previous installation.
-You can check this values in the **dconf-editor** at `/org/gnome/shell/extensions/cpufreq/`
-```
-dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
-sudo rm /usr/share/polkit-1/actions/konkor.cpufreq.policy
-sudo rm /usr/bin/cpufreqctl
-```
-If you want reset the extension's values to defaults just run it and restart gnome-shell.
-```
-dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
-```
-
-### Source and packages
-* [GitHub](https://github.com/konkor/cpufreq)
-* [Gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
-
-### How-to disable  Intel pstate driver
-(default for Intel Sandy Bridge and Ivy Bridge CPUs on kernel 3.9 and upper)
-To change back to the ACPI driver, reboot and add to the kernel line `intel_pstate=disable`
-Then execute modprobe acpi-cpufreq and you should have the ondemand governor available.
-
-You can make the changes permanent by adding to _/etc/default/grub_
-```
-GRUB_CMDLINE_LINUX_DEFAULT="intel_pstate=disable"
-```
-Then update grub.cfg
-```
-sudo update-grub
-```
-or
-```
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-```
-Follow [the instructions](https://wiki.archlinux.org/index.php/CPU_frequency_scaling) for Arch kernel module loading and add the acpi-cpufreq module.
+[GPLv3](https://www.gnu.org/licenses/gpl.html)
