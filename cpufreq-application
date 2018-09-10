@@ -52,3 +52,6 @@ function get_appdir () {
     throw "Installation not found...";
     return s;
 }
+
+let app = new Application.CPUFreqApplication (ARGV);
+app.run (ARGV);

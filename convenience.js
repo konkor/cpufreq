@@ -29,7 +29,7 @@ var Format = imports.format;
 String.prototype.format = Format.format;
 
 function initTranslations (domain) {
-    domain = domain || 'gnome-shell-extensions-cpufreq';
+    domain = domain || 'org-konkor-cpufreq';
 
     let localeDir = Gio.File.new_for_path (getCurrentFile()[1] + '/locale');
     if (localeDir.query_exists (null))
@@ -39,25 +39,24 @@ function initTranslations (domain) {
 }
 
 function getSettings (schema) {
-    schema = schema || 'org.gnome.shell.extensions.cpufreq';
+  schema = schema || 'org.gnome.shell.extensions.cpufreq';
+  const GioSSS = Gio.SettingsSchemaSource;
 
-    const GioSSS = Gio.SettingsSchemaSource;
+  let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
+  let schemaSource;
+  if (schemaDir.query_exists(null))
+    schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
+                                            GioSSS.get_default(),
+                                            false);
+  else
+    schemaSource = GioSSS.get_default();
 
-    let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
-    let schemaSource;
-    if (schemaDir.query_exists(null))
-        schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
-                                                 GioSSS.get_default(),
-                                                 false);
-    else
-        schemaSource = GioSSS.get_default();
+  let schemaObj = schemaSource.lookup(schema, true);
+  if (!schemaObj)
+    throw new Error('Schema ' + schema + ' could not be found for the extension. ' +
+                    'Please check your installation.');
 
-    let schemaObj = schemaSource.lookup(schema, true);
-    if (!schemaObj)
-        throw new Error('Schema ' + schema + ' could not be found for extension '
-                        + 'cpufreq@konkor. Please check your installation.');
-
-    return new Gio.Settings({ settings_schema: schemaObj });
+  return new Gio.Settings({ settings_schema: schemaObj });
 }
 
 function getCurrentFile () {
@@ -79,15 +78,34 @@ function byteArrayToString (byte_array) {
     } else if (byte_array instanceof Uint8Array) {
         return ByteArray.toString(byte_array);
     }
+    return "";
 }
 
-function get_cpu_number () {
-    let c = 0;
-    let cpulist = null;
-    let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
-    if (ret[0]) cpulist = byteArrayToString(ret[1]).split("\n", 1)[0].split("-");
-    cpulist.forEach ((f)=> {
-        if (parseInt (f) > 0) c = parseInt (f);
-    });
-    return c + 1;
+//DOMAIN ERROR:0:RED, INFO:1:BLUE, DEBUG:2:GREEN
+const domain_color = ["00;31","00;34","00;32"];
+const domain_name = ["EE","II","DD"];
+
+function info (source, msg) {
+    print_msg (1, source, msg);
+}
+
+function debug (source, msg) {
+    print_msg (2, source, msg);
+}
+
+function error (source, msg) {
+    print_msg (0, source, msg);
+}
+
+function print_msg (domain, source, output) {
+    let ds = new Date().toString ();
+    let i = ds.indexOf (" GMT");
+    if (i > 0) ds = ds.substring (0, i);
+
+    if (domain == 2) print ("\x1b[%sm[%s](%s) [cpufreq][%s]\x1b[0m %s".format (
+        domain_color[domain],ds,domain_name[domain],source,output));
+    else {
+        log ("(%s) [cpufreq][%s] %s".format (domain_name[domain], source, output));
+        if (logger) logger.put ("[%s](%s) %s".format (ds, domain_name[domain], output));
+    }
 }
