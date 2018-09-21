@@ -6,8 +6,9 @@ img {
 
 .post-list {
   margin-left: 0;
-  list-style: none;
-  text-decoration: none;}
+  list-style: none;}
+  .post-list > * {
+    text-decoration: none;}
   .post-list > ul {
     margin-left: 8px;}
   .post-list > li {
