@@ -88,11 +88,10 @@ code {
   }
 }
 
-.feed {
+.feed * {
   float:right;
   display:inline-block;
   width: 18px;
-  &:* {
-    text-decoration: none;
-  }
+  text-decoration: none;
+  border: 0px;
 }
