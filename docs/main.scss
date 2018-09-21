@@ -92,4 +92,7 @@ code {
   float:right;
   display:inline-block;
   width: 18px;
+  &:* {
+    text-decoration: none;
+  }
 }
