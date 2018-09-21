@@ -76,6 +76,7 @@ function byteArrayToString (byte_array) {
     } else if (byte_array instanceof Uint8Array) {
         return ByteArray.toString(byte_array);
     }
+    return "";
 }
 
 function get_cpu_number () {

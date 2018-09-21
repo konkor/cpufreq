@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='17'
+VERSION='16'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
