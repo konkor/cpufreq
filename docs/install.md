@@ -185,6 +185,6 @@ sudo journalctl |grep cpufreq
 sudo journalctl |grep gnome-session
 ```
 
-* Report to https://github.com/konkor/cpufreq/issues with included system information like distributions, CPU, acpi-cpufreq/intel_pstate mode, system journal errors and description of the issue.
+* Report to [issues](https://github.com/konkor/cpufreq/issues) with included system information like distributions, CPU, acpi-cpufreq/intel_pstate mode, system journal errors and description of the issue.
 
 [Top](#)
