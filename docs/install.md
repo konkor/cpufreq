@@ -167,4 +167,24 @@ dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
 ## Missing symbols
 If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu or/and Droid font packages to fix it.
 
+## Debugging
+If you have issues with application you should check the system journal messages.
+* Run in the terminal to see `real-time` system messages monitoring and restart Gnome Shell (_X11 only_): <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command.
+
+```sh
+sudo journalctl -f
+```
+
+* Alternatively, you can just grep all messages and check for errors and other warnings.
+
+```sh
+# For cpufreq messages
+sudo journalctl |grep cpufreq
+
+# For all gnome-session messages
+sudo journalctl |grep gnome-session
+```
+
+* Report to https://github.com/konkor/cpufreq/issues with included system information like distributions, CPU, acpi-cpufreq/intel_pstate mode, system journal errors and description of the issue.
+
 [Top](#)
