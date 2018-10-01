@@ -1,4 +1,4 @@
-#!/usr/bin/env gjs
+#!/usr/bin/gjs
 /*
  * CPUFreq Manager - a lightweight CPU frequency scaling monitor
  * and powerful CPU management tool
