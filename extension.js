@@ -720,6 +720,8 @@ const FrequencyIndicator = new Lang.Class({
                     }
                 }));
             }
+            this.menu.addMenuItem (new SupportMenuItem ());
+
         } else {
             let errorItem = new PopupMenu.PopupMenuItem ("\u26a0 Please install cpufrequtils or cpupower");
             this.menu.addMenuItem (errorItem);
@@ -1396,6 +1398,22 @@ const TurboSwitchMenuItem = new Lang.Class ({
         if (this._switch.actor.mapped) {
             this.toggle();
         }
+    }
+});
+
+const SupportMenuItem = new Lang.Class ({
+    Name: 'SupportMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function () {
+        this.parent ("Sposored by Térence Clastres", {style_class: 'sponsors-info-item'});
+        this.label.x_expand = true;
+    },
+
+    activate: function (event) {
+      this.emit ('activate', event);
+      let app = Gio.AppInfo.get_default_for_uri_scheme ("https");
+      app.launch_uris (["http://konkor.github.io/cpufreq/donations/"], null);
     }
 });
 
