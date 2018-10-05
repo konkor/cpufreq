@@ -1,4 +1,33 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+# Because of weird bug in polkit, env is not passed normally.
+# So, when we need to execute our program with pkexec, we pass
+# PATH=... as our first argument. Then, we pass it
+if [ $1 = PATH* ]
+then
+    export $1 
+    shift 1
+fi
+
+args="$@"
+
+# All in all, you're just another
+# Hack in the wall.
+if [ `ps h -p $$ -o args='' | cut -f1 -d' '` = sh ] # If current interpreter is sh (not bash)
+then
+    bash $0 $args # use bash as interpreter
+    exit
+fi
+
+# Execute the same action with root priviledges.
+requires_root() {
+        if [ ! `whoami` = 'root' ]          # If we are not root,
+        then
+                pkexec $0 PATH=$PATH $args  # run this script with same args, but as root.
+                exit                        # Required action has been done, unpriviledged copy is not needed.
+        fi                                  # If we are root, continue to do the action.
+}
+
 
 VERSION='16'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
@@ -7,293 +36,310 @@ FLROOT=/sys/devices/system/cpu
 if [ $# -lt 1 ]
 then
     echo "Package version: "$VERSION
-	echo "USAGE: cpufreqctl [OPTION] [VALUE]"
-	echo "OPTIONS [gov|list|driver|info|freq|set|turbo|min|max|boost|minf|maxf]"
-	echo "Current driver"
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
-	echo "Available governors"
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-	echo "Current cpu0 governor"
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-	exit
+    echo "USAGE: cpufreqctl [OPTION] [VALUE]"
+    echo "OPTIONS [gov|list|driver|info|freq|set|turbo|min|max|boost|minf|maxf]"
+    echo "Current driver"
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
+    echo "Available governors"
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    echo "Current cpu0 governor"
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+    exit
 fi
 if [ $1 = "gov" ]
 then
     i=0
     ag=''
-	if [ $# = 1 ]
-	then
-	    while [ $i -ne $cpucount ]
-	    do
-	        if [ $i = 0 ]
-	        then
-	            ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
-		    else
-		        ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
-		    fi
-		    i=`expr $i + 1`
-	    done
-		echo $ag
-		exit
-	fi
-	while [ $i -ne $cpucount ]
-	do
-		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
-		echo "Setting $FLNM to " $2
-		echo $2 > $FLNM
-		i=`expr $i + 1`
-	done
-	exit
+    if [ $# = 1 ]
+    then
+        while [ $i -ne $cpucount ]
+        do
+            if [ $i = 0 ]
+            then
+                ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+            else
+                ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
+            fi
+            i=`expr $i + 1`
+        done
+        echo $ag
+        exit
+    fi
+    requires_root
+    while [ $i -ne $cpucount ]
+    do
+        FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
+        echo "Setting $FLNM to " $2
+        echo $2 > $FLNM
+        i=`expr $i + 1`
+    done
+    exit
 fi
 if [ $1 = "list" ]
 then
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-	exit
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    exit
 fi
 if [ $1 = "driver" ]
 then
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
-	exit
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
+    exit
 fi
 if [ $1 = "info" ]
 then
-	i=0
-	V=0
-	M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
-	while [ $i -ne $cpucount ]
-	do
-	    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
-	    if [[ $V > $M ]]
-	    then
-	        M=$V
-	    fi
-		i=`expr $i + 1`
-	done
-	echo "$M"
-	exit
+    i=0
+    V=0
+    M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+    while [ $i -ne $cpucount ]
+    do
+        V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+        if [[ $V > $M ]]
+        then
+            M=$V
+        fi
+        i=`expr $i + 1`
+    done
+    echo "$M"
+    exit
 fi
 if [ $1 = "info_avg" ]
 then
-	i=1
-	V=0
-	M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
-	while [ $i -ne $cpucount ]
-	do
-	    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
-	    M=`expr $M + $V`
-	    i=`expr $i + 1`
-	done
-	echo `expr $M / $cpucount`
-	exit
+    i=1
+    V=0
+    M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+    while [ $i -ne $cpucount ]
+    do
+        V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+        M=`expr $M + $V`
+        i=`expr $i + 1`
+    done
+    echo `expr $M / $cpucount`
+    exit
 fi
 if [ $1 = "freq" ]
 then
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
-	exit
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+    exit
 fi
 if [ $1 = "set" ]
 then
-	if [ $# = 1 ]
-	then
-		echo "available frequencies"
-		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
-		echo "current cpu frequency"
-		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
-		exit
-	fi
-	i=0
-	while [ $i -ne $cpucount ]
-	do
-		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_setspeed"
-		echo "Setting $FLNM to " $2
-		echo $2 > $FLNM
-		i=`expr $i + 1`
-	done
-	exit
+    if [ $# = 1 ]
+    then
+        echo "available frequencies"
+        cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+        echo "current cpu frequency"
+        cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+        exit
+    fi
+    requires_root
+    i=0
+    while [ $i -ne $cpucount ]
+    do
+        FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_setspeed"
+        echo "Setting $FLNM to " $2
+        echo $2 > $FLNM
+        i=`expr $i + 1`
+    done
+    exit
 fi
 if [ $1 = "turbo" ]
 then
-	if [ $# = 1 ]
-	then
-		cat /sys/devices/system/cpu/intel_pstate/no_turbo
-		exit
-	fi
-	echo "Setting TURBO to " $2
-	echo $2 > /sys/devices/system/cpu/intel_pstate/no_turbo
-	exit
+    if [ $# = 1 ]
+    then
+        cat /sys/devices/system/cpu/intel_pstate/no_turbo
+        exit
+    fi
+    requires_root
+    echo "Setting TURBO to " $2
+    echo $2 > /sys/devices/system/cpu/intel_pstate/no_turbo
+    exit
 fi
 if [ $1 = "min" ]
 then
-	if [ $# = 1 ]
-	then
-		cat /sys/devices/system/cpu/intel_pstate/min_perf_pct
-		exit
-	fi
-	echo "Setting MIN to " $2
-	echo $2 > /sys/devices/system/cpu/intel_pstate/min_perf_pct
-	exit
+    if [ $# = 1 ]
+    then
+        cat /sys/devices/system/cpu/intel_pstate/min_perf_pct
+        exit
+    fi
+    requires_root
+    echo "Setting MIN to " $2
+    echo $2 > /sys/devices/system/cpu/intel_pstate/min_perf_pct
+    exit
 fi
 if [ $1 = "max" ]
 then
-	if [ $# = 1 ]
-	then
-		cat /sys/devices/system/cpu/intel_pstate/max_perf_pct
-		exit
-	fi
-	echo "Setting MAX to " $2
-	echo $2 > /sys/devices/system/cpu/intel_pstate/max_perf_pct
-	exit
+    if [ $# = 1 ]
+    then
+        cat /sys/devices/system/cpu/intel_pstate/max_perf_pct
+        exit
+    fi
+    requires_root
+    echo "Setting MAX to " $2
+    echo $2 > /sys/devices/system/cpu/intel_pstate/max_perf_pct
+    exit
 fi
 if [ $1 = "boost" ]
 then
-	if [ $# = 1 ]
-	then
-		cat /sys/devices/system/cpu/cpufreq/boost
-		exit
-	fi
-	echo "Setting BOOST to " $2
-	echo $2 > /sys/devices/system/cpu/cpufreq/boost
-	exit
+    if [ $# = 1 ]
+    then
+        cat /sys/devices/system/cpu/cpufreq/boost
+        exit
+    fi
+    requires_root
+    echo "Setting BOOST to " $2
+    echo $2 > /sys/devices/system/cpu/cpufreq/boost
+    exit
 fi
 if [ $1 = "minf" ]
 then
-	if [ $# = 1 ]
-	then
-		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-		exit
-	fi
-	i=0
-	while [ $i -ne $cpucount ]
-	do
-		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_min_freq"
-		echo "Setting $FLNM to " $2
-		echo $2 > $FLNM
-		i=`expr $i + 1`
-	done
-	exit
+    if [ $# = 1 ]
+    then
+        cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+        exit
+    fi
+    requires_root
+    i=0
+    while [ $i -ne $cpucount ]
+    do
+        FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_min_freq"
+        echo "Setting $FLNM to " $2
+        echo $2 > $FLNM
+        i=`expr $i + 1`
+    done
+    exit
 fi
 if [ $1 = "maxf" ]
 then
-	if [ $# = 1 ]
-	then
-		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-		exit
-	fi
-	i=0
-	while [ $i -ne $cpucount ]
-	do
-		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_max_freq"
-		echo "Setting $FLNM to " $2
-		echo $2 > $FLNM
-		i=`expr $i + 1`
-	done
-	exit
+    if [ $# = 1 ]
+    then
+        cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+        exit
+    fi
+    requires_root
+    i=0
+    while [ $i -ne $cpucount ]
+    do
+        FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_max_freq"
+        echo "Setting $FLNM to " $2
+        echo $2 > $FLNM
+        i=`expr $i + 1`
+    done
+    exit
 fi
 if [ $1 = "install" ]
 then
+    requires_root
     echo 'installing cpufreqctl...'
     cp $0 /usr/bin/
     echo 'installing policy...'
-	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
-	exit
+    cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /etc/polkit-1/actions/
+    exit
 fi
 if [ $1 = "version" ]
 then
     echo $VERSION
-	exit
+    exit
 fi
 if [ $1 = "on" ]
 then
-	if [ $# = 1 ]
-	then
-		echo "cpufreqctl on CORE"
-		exit
-	fi
-	FLNM="$FLROOT/cpu"$2"/online"
-	echo "Power on CPU Core"$2
-	echo "1" > $FLNM
-	exit
+    if [ $# = 1 ]
+    then
+        echo "cpufreqctl on CORE"
+        exit
+    fi
+    requires_root
+    FLNM="$FLROOT/cpu"$2"/online"
+    echo "Power on CPU Core"$2
+    echo "1" > $FLNM
+    exit
 fi
 if [ $1 = "off" ]
 then
-	if [ $# = 1 ]
-	then
-		echo "cpufreqctl off CORE"
-		exit
-	fi
-	FLNM="$FLROOT/cpu"$2"/online"
-	echo "Power off CPU Core"$2
-	echo "0" > $FLNM
-	exit
+    if [ $# = 1 ]
+    then
+        echo "cpufreqctl off CORE"
+        exit
+    fi
+    requires_root
+    FLNM="$FLROOT/cpu"$2"/online"
+    echo "Power off CPU Core"$2
+    echo "0" > $FLNM
+    exit
 fi
 if [ $1 = "coreg" ]
 then
     if [ $# = 1 ]
-	then
-		echo "cpufreqctl coreg CORE [GOVERNOR]"
-		exit
-	fi
-	if [ $# = 2 ]
-	then
-	    cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_governor
-	    exit
-	fi
+    then
+        echo "cpufreqctl coreg CORE [GOVERNOR]"
+        exit
+    fi
+    if [ $# = 2 ]
+    then
+        cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_governor
+        exit
+    fi
+    requires_root
     FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_governor"
-	echo "Setting $FLNM to "$3
-	echo $3 > $FLNM
-	exit
+    echo "Setting $FLNM to "$3
+    echo $3 > $FLNM
+    exit
 fi
 if [ $1 = "coremin" ]
 then
     if [ $# = 1 ]
-	then
-		echo "cpufreqctl coremin CORE [MIN_FREQUENCY]"
-		exit
-	fi
-	if [ $# = 2 ]
-	then
-		cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_min_freq
-		exit
-	fi
-	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_min_freq"
-	echo "Setting $FLNM to "$3
-	echo $3 > $FLNM
-	exit
+    then
+        echo "cpufreqctl coremin CORE [MIN_FREQUENCY]"
+        exit
+    fi
+    if [ $# = 2 ]
+    then
+        cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_min_freq
+        exit
+    fi
+    requires_root
+    FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_min_freq"
+    echo "Setting $FLNM to "$3
+    echo $3 > $FLNM
+    exit
 fi
 if [ $1 = "coremax" ]
 then
     if [ $# = 1 ]
-	then
-		echo "cpufreqctl coremax CORE [MAX_FREQUENCY]"
-		exit
-	fi
-	if [ $# = 2 ]
-	then
-		cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_max_freq
-		exit
-	fi
-	FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_max_freq"
-	echo "Setting $FLNM to "$3
-	echo $3 > $FLNM
-	exit
+    then
+        echo "cpufreqctl coremax CORE [MAX_FREQUENCY]"
+        exit
+    fi
+    if [ $# = 2 ]
+    then
+        cat /sys/devices/system/cpu/cpu$2/cpufreq/scaling_max_freq
+        exit
+    fi
+    requires_root
+    FLNM="$FLROOT/cpu"$2"/cpufreq/scaling_max_freq"
+    echo "Setting $FLNM to "$3
+    echo $3 > $FLNM
+    exit
 fi
 if [ $1 = "throttle" ]
 then
-	i=1
-	V=0
-	M=$(cat "/sys/devices/system/cpu/cpu0/thermal_throttle/core_throttle_count")
-	while [ $i -ne $cpucount ]
-	do
-	    V=$(cat "/sys/devices/system/cpu/cpu"$i"/thermal_throttle/core_throttle_count")
-	    M=`expr $M + $V`
-	    i=`expr $i + 1`
-	done
-	echo "$M"
-	exit
+    i=1
+    V=0
+    M=$(cat "/sys/devices/system/cpu/cpu0/thermal_throttle/core_throttle_count")
+    while [ $i -ne $cpucount ]
+    do
+        V=$(cat "/sys/devices/system/cpu/cpu"$i"/thermal_throttle/core_throttle_count")
+        M=`expr $M + $V`
+        i=`expr $i + 1`
+    done
+    echo "$M"
+    exit
 fi
 if [ $1 = "irqbalance" ]
 then
-	M=$(ps -A |grep irqbalance)
-	echo "$M"
-	exit
+    # There is a bug in GLib that doesn't allow pkexec to be run synchronosly
+    # So we can't be root here
+    #requires_root
+    M=$(ps -A |grep irqbalance)
+    echo "$M"
+    exit
 fi
