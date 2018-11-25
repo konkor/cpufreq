@@ -127,9 +127,15 @@ var PagePowerCPUFreq = new Lang.Class({
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
         this.border_width = 6;
 
-        this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING], "Battery discharging");
+        this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING], "Battery discharging",
+          "You can set less then 100% (ex.90%) to do not apply Powersaving profile immidiatly " +
+          "when a disconecting is temporary or you just have issues with a power connector."
+        );
         this.add (this.unplug);
-        this.plug = new PowerProfile (eprofiles[EventType.CHARGING], "Battery charging");
+        this.plug = new PowerProfile (eprofiles[EventType.CHARGING], "Battery charging",
+          "You can set more then 0% (ex.30%) to do not apply Daily profile immidiatly " +
+          "when a conecting is temporary or you just want the battery to get some level before it."
+        );
         this.add (this.plug);
         this.unplug.combo.connect ('changed', Lang.bind (this, (o)=>{
             if (o.active == 0) eprofiles[EventType.DISCHARGING].guid = "";
@@ -160,8 +166,9 @@ var PowerProfile = new Lang.Class({
     Name: 'PowerProfile',
     Extends: Gtk.Box,
 
-    _init: function (profile, text) {
+    _init: function (profile, text, tooltip) {
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
+        this.tooltip_text = tooltip;
         this.border_width = 6;
         let id = 0, i = 1;
 

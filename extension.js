@@ -195,6 +195,7 @@ const FrequencyIndicator = new Lang.Class({
             saves = save;
             save = false;
         }
+        if (!monitor_timeout) this.statusLabel.set_text ("\u269b");
         this._build_ui ();
         if (saves != save) save = saves;
         //print ("First boot:", first_boot);
