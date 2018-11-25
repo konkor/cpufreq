@@ -167,15 +167,36 @@ dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
 ## Missing symbols
 If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu or/and Droid font packages to fix it.
 
+## Gathering information for reports
+
+Provide more information about your hardware and system like:
+
+ * Intel or AMD CPU
+ * intel_pstate or acpi_cpufreq CPU driver
+ * Kernel version
+ * IRQ Balance enabled or disabled
+ * Are you using CPU powering off/on in your profiles
+ * Include system journal log's messages or just related parts. See more about logs below.
+
+Report to [issues](https://github.com/konkor/cpufreq/issues) with included system information like distributions, CPU, acpi-cpufreq/intel_pstate mode, system journal errors and description of the issue.
+
 ## Debugging
-If you have issues with application you should check the system journal messages.
-* Run in the terminal to see `real-time` system messages monitoring and restart Gnome Shell (_X11 only_): <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command.
+
+1. First thing to do is check your clean desktop environment to do so you should disable all Gnome shell extensions including this one. Some distributions including pre-installed many extensions and they could conflict with new updates or each other. If all looking fine you can go to the next step.
+
+2. Enable only this extension to test it and easy check system messages.
+You can check the system journal messages in a terminal.
+
+3. Run the command `sudo journalctl -f` in a terminal to see `real-time` system messages monitoring and restart Gnome Shell (_X11 only_): <kbd>Alt</kbd>+<kbd>F2</kbd> and enter <kbd>r</kbd> command.
 
 ```sh
 sudo journalctl -f
 ```
+ * Do not close the monitor in a terminal. Open the extension menu and try to change
+ profiles and/or other settings. You could see maybe some warnings, errors or
+ when it locks. Copy/paste related messages to text file and include it in your report.
 
-* Alternatively, you can just grep all messages and check for errors and other warnings.
+ * Alternatively, you can just _grep_ all messages and check for errors and other warnings.
 
 ```sh
 # For cpufreq messages
@@ -185,6 +206,5 @@ sudo journalctl |grep cpufreq
 sudo journalctl |grep gnome-session
 ```
 
-* Report to [issues](https://github.com/konkor/cpufreq/issues) with included system information like distributions, CPU, acpi-cpufreq/intel_pstate mode, system journal errors and description of the issue.
 
 [Top](#)
