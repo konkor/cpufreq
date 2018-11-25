@@ -800,7 +800,8 @@ const FrequencyIndicator = new Lang.Class({
     _load_profile: function (prf) {
         if (install_event > 0) return;
         print ('Loading profile...', JSON.stringify (prf));
-        this.statusLabel.set_text ("... \u3393");
+        if (monitor_timeout) this.statusLabel.set_text ("... \u3393");
+        else this.statusLabel.set_text ("\u269b");
         this.prf = prf;
         for (let key = 1; key < cpucount; key++) {
             this._set_core (key, true);

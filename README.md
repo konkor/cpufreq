@@ -20,9 +20,10 @@ Please, consider to support the project and make it better!
 
 <p align="center">
   <big>
+    Top supporters:<br><br>
     <a href="https://github.com/terencode">Térence Clastres</a>
     <br><br>
-    <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
+    <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference</i>
   </big>
 </p>
 
