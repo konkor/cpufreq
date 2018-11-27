@@ -29,6 +29,10 @@ const SAVE_SETTINGS_KEY = 'save-settings';
 const PROFILES_KEY = 'profiles';
 const EPROFILES_KEY = 'event-profiles';
 const MONITOR_KEY = 'monitor';
+const LABEL_KEY = 'label';
+const LABEL_SHOW_KEY = 'label-show';
+const UNITS_SHOW_KEY = 'units-show';
+const GOVS_SHOW_KEY = 'governors-show';
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
 const _ = Gettext.gettext;
@@ -45,6 +49,11 @@ DISCHARGING:  1
 let save = false;
 let profiles = [];
 let monitor_timeout = 500;
+let label_text = "\u269b";
+let label_show = false;
+let governor_show = false;
+let units_show = true;
+
 let eprofiles = [
     {percent:0, event:EventType.CHARGING, guid:""},
     {percent:100, event:EventType.DISCHARGING, guid:""}
@@ -62,6 +71,10 @@ var CPUFreqPreferences = new Lang.Class({
         settings = Convenience.getSettings ();
         save = settings.get_boolean (SAVE_SETTINGS_KEY);
         monitor_timeout = settings.get_int (MONITOR_KEY);
+        label_text = settings.get_string (LABEL_KEY);
+        label_show = settings.get_boolean (LABEL_SHOW_KEY);
+        governor_show = settings.get_boolean (GOVS_SHOW_KEY);
+        units_show = settings.get_boolean (UNITS_SHOW_KEY);
         s = settings.get_string (EPROFILES_KEY);
         if (s) eprofiles = JSON.parse (s);
         s =  settings.get_string (PROFILES_KEY);
@@ -114,6 +127,49 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_int (MONITOR_KEY, monitor_timeout);
         }));
         hbox.pack_end (this.timeout, false, false, 0);
+
+        this.cb_units = Gtk.CheckButton.new_with_label (_("Show Measurement Units"));
+        this.cb_units.tooltip_text = _("Show measurement units for frequencies");
+        this.cb_units.margin = 6;
+        this.add (this.cb_units);
+        this.cb_units.active = units_show;
+        this.cb_units.connect ('toggled', Lang.bind (this, (o)=>{
+            units_show = o.active;
+            settings.set_boolean (UNITS_SHOW_KEY, units_show);
+        }));
+
+        this.cb_governors = Gtk.CheckButton.new_with_label (_("Show Governors"));
+        this.cb_governors.tooltip_text = _("Always show governors on the panel");
+        this.cb_governors.margin = 6;
+        this.add (this.cb_governors);
+        this.cb_governors.active = governor_show;
+        this.cb_governors.connect ('toggled', Lang.bind (this, (o)=>{
+            governor_show = o.active;
+            settings.set_boolean (GOVS_SHOW_KEY, governor_show);
+        }));
+
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        this.pack_start (hbox, false, false, 0);
+        hbox.add (new Gtk.Label ({label: _("Custom label when monitoring disabled")}));
+        this.label = new Gtk.Entry ();
+        this.label.tooltip_text = _("Label or just a symbol to show when monitor disabled");
+        this.label.set_text (label_text);
+        this.label.connect ('changed', Lang.bind (this, (o)=>{
+            var s = o.text;
+            //if (!s) s = "\u269b";
+            settings.set_string (LABEL_KEY, s);
+        }));
+        hbox.pack_end (this.label, false, false, 0);
+
+        this.cb_label = Gtk.CheckButton.new_with_label (_("Show Custom Label"));
+        this.cb_label.tooltip_text = _("Always show the custom label");
+        this.cb_label.margin = 6;
+        this.add (this.cb_label);
+        this.cb_label.active = label_show;
+        this.cb_label.connect ('toggled', Lang.bind (this, (o)=>{
+            label_show = o.active;
+            settings.set_boolean (LABEL_SHOW_KEY, label_show);
+        }));
 
         this.show_all ();
     }
