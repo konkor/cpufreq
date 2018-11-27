@@ -9,6 +9,30 @@
       <description>Save settings for restore</description>
     </key>
 
+    <key type="b" name="units-show">
+      <default>true</default>
+      <summary>Show Units</summary>
+      <description>Show frequency units</description>
+    </key>
+
+    <key type="b" name="governors-show">
+      <default>false</default>
+      <summary>Show governor</summary>
+      <description>Show current governor on the panel</description>
+    </key>
+
+    <key type="s" name="label">
+      <default>'\u269b'</default>
+      <summary>Custom label</summary>
+      <description>Label or just a symbol to show when monitor disabled</description>
+    </key>
+
+    <key type="b" name="label-show">
+      <default>false</default>
+      <summary>Show Label</summary>
+      <description>Always show custom label</description>
+    </key>
+
     <key type="b" name="turbo-boost">
       <default>true</default>
       <summary>Processor boosting control</summary>
