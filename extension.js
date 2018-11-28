@@ -193,15 +193,16 @@ const FrequencyIndicator = new Lang.Class({
         this._check_extensions ();
 
         this.load_settings (null, null);
+        if (!monitor_timeout) this.statusLabel.set_text ("\u269b");
         if (save && !first_boot) {
             saves = save;
             save = false;
         }
-        if (!monitor_timeout) this.statusLabel.set_text ("\u269b");
         this._build_ui ();
+        save = saves;
 
-        if (saves != save) save = saves;
         if (this.installed && save && first_boot) this._load_settings ();
+        else this.save_switch.setToggleState (save);
         first_boot = false;
 
         this._add_event ();
