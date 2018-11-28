@@ -139,7 +139,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         }));
 
         this.cb_governors = Gtk.CheckButton.new_with_label (_("Show Governors"));
-        this.cb_governors.tooltip_text = _("Always show governors on the panel");
+        this.cb_governors.tooltip_text = _("Monitor and show governors on the panel too");
         this.cb_governors.margin = 6;
         this.add (this.cb_governors);
         this.cb_governors.active = governor_show;

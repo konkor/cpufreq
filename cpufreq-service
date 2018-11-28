@@ -101,12 +101,13 @@ var CpufreqService = new Lang.Class ({
     },
 
     on_settings: function (o, key) {
-      if (key == MONITOR_KEY)
+      if (key == MONITOR_KEY) {
         monitor_timeout =  o.get_int (MONITOR_KEY);
-      else if (key == UNITS_SHOW_KEY) {
+        this._add_event ();
+      } else if (key == UNITS_SHOW_KEY) {
         units_show = o.get_boolean (UNITS_SHOW_KEY);
-        this.max0 = 0;
       }
+      this.max0 = 0;
     },
 
      _add_event: function () {
@@ -119,7 +120,10 @@ var CpufreqService = new Lang.Class ({
                 this._update_freq ();
                 return true;
             }));
-        else this.quit ();
+        else {
+          this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [""]));
+          this.quit ();
+        }
     },
 
     _init_streams: function() {

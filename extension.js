@@ -125,17 +125,9 @@ const FrequencyIndicator = new Lang.Class({
         this.actor.connect('button-press-event', Lang.bind(this, function () {
             if (this._is_events () || !this.menu.isOpen) return;
             if (this.util_present) {
-                let gcount = 0, saves = save;
+                let saves = save;
                 this.governors = this._get_governors ();
-                if (this.governors.length > 0) {
-                    this.governors.forEach ( (governor)=>{
-                        if (governor[1] == true) {
-                            this.activeg.label.text = "\u26A1 " + governor[0];
-                            gcount++;
-                        }
-                    });
-                    if (gcount > 1) this.activeg.label.text = "\u26A1 mixed";
-                }
+                this.activeg.label.text = "\u26A1 " + this.governorlabel;
                 if (this.info) this.info.update (this.governoractual);
                 save = false;
                 if (this.pstate_present) {
@@ -193,7 +185,7 @@ const FrequencyIndicator = new Lang.Class({
         this._check_extensions ();
 
         this.load_settings (null, null);
-        if (!monitor_timeout) this.statusLabel.set_text ("\u269b");
+        if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
         if (save && !first_boot) {
             saves = save;
             save = false;
@@ -276,6 +268,14 @@ const FrequencyIndicator = new Lang.Class({
                 this.PID = id;
             }
         }
+    },
+
+    get_title: function (text) {
+      text = text || "";
+      if (!text || label_show) text += " " + label_text;
+      //TODO: short symbolic chars
+      if (governor_show && this.governorlabel) text += " " + this.governorlabel;
+      return text.trim ();
     },
 
     get_profile_id: function (guid) {
@@ -377,7 +377,7 @@ const FrequencyIndicator = new Lang.Class({
                     return;
                 }
                 event = this.proxy.connectSignal ('FrequencyChanged', Lang.bind(this, function (o, s, title) {
-                    if (title) this.statusLabel.set_text (title.toString());
+                    if (title) this.statusLabel.set_text (this.get_title (title.toString ()));
                 }));
             }));
         } else GLib.spawn_command_line_async ("killall cpufreq-service");
@@ -809,8 +809,8 @@ const FrequencyIndicator = new Lang.Class({
     _load_profile: function (prf) {
         if (install_event > 0) return;
         print ('Loading profile...', JSON.stringify (prf));
-        if (monitor_timeout) this.statusLabel.set_text ("... \u3393");
-        else this.statusLabel.set_text ("\u269b");
+        if (monitor_timeout) this.statusLabel.set_text (this.get_title ("... \u3393"));
+        else this.statusLabel.set_text (this.get_title ());
         this.prf = prf;
         for (let key = 1; key < cpucount; key++) {
             this._set_core (key, true);
@@ -993,7 +993,7 @@ const FrequencyIndicator = new Lang.Class({
 
     _get_governors: function () {
         let governors = new Array(), gn = [], gc = [], idx = 0;
-        this.governoractual = "";
+        this.governoractual = this.governorlabel = "";
         if (this.util_present) {
             let cpufreq_output1 = GLib.spawn_command_line_sync (this.cpufreqctl_path + " list");
             if (cpufreq_output1[0]) this.governorslist = Convenience.byteArrayToString(cpufreq_output1[1]).toString().split("\n")[0].split(" ");
@@ -1006,7 +1006,6 @@ const FrequencyIndicator = new Lang.Class({
                 else
                     governortemp = [governor, false];
                 if (governor.length > 0) {
-                    //governortemp[0] = governortemp[0][0].toUpperCase() + governortemp[0].slice(1);
                     governors.push (governortemp);
                 }
             });
@@ -1022,8 +1021,10 @@ const FrequencyIndicator = new Lang.Class({
                     gc.push (1);
                 }
             });
+            if (gn.length) this.governorlabel = gn[0];
             this.governoractual = "";
             if (gn.length > 1) {
+                this.governorlabel = "mixed";
                 for (let i = 0; i < gn.length; i++) {
                     if (i > 0 && (i % 2 == 0))
                         this.governoractual += "\n" + gc[i].toString() + " " + gn[i];
