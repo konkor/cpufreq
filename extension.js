@@ -380,7 +380,7 @@ const FrequencyIndicator = new Lang.Class({
                     if (title) this.statusLabel.set_text (title.toString());
                 }));
             }));
-        }
+        } else GLib.spawn_command_line_async ("killall cpufreq-service");
     },
 
     _build_ui: function () {
@@ -1794,5 +1794,4 @@ function disable () {
     freqMenu.remove_events ();
     freqMenu.destroy ();
     freqMenu = null;
-    GLib.spawn_command_line_async ("killall cpufreq-service");
 }

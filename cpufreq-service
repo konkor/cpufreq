@@ -32,10 +32,12 @@ imports.searchPath.unshift(APPDIR);
 const Convenience = imports.convenience;
 
 const MONITOR_KEY = 'monitor';
+const UNITS_SHOW_KEY = 'units-show';
 
 var DEBUGING = false;
 let settings = null;
 let monitor_timeout = 500;
+let units_show = true;
 
 let streams = [];
 let freqs = [];
@@ -68,6 +70,7 @@ var CpufreqService = new Lang.Class ({
         });
         GLib.set_application_name ("CPUFreq Service");
         monitor_timeout = settings.get_int (MONITOR_KEY);
+        units_show = settings.get_boolean (UNITS_SHOW_KEY);
     },
 
     vfunc_startup: function() {
@@ -94,10 +97,16 @@ var CpufreqService = new Lang.Class ({
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
-        settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
-            monitor_timeout = settings.get_int (MONITOR_KEY);
-            this._add_event ();
-        }));
+        settings.connect ("changed", Lang.bind (this, this.on_settings));
+    },
+
+    on_settings: function (o, key) {
+      if (key == MONITOR_KEY)
+        monitor_timeout =  o.get_int (MONITOR_KEY);
+      else if (key == UNITS_SHOW_KEY) {
+        units_show = o.get_boolean (UNITS_SHOW_KEY);
+        this.max0 = 0;
+      }
     },
 
      _add_event: function () {
@@ -136,7 +145,7 @@ var CpufreqService = new Lang.Class ({
     },
 
     _update_freq: function () {
-        let m = 0;
+        let m = 0, units;
         streams.forEach (stream => {
             this._read_line (stream);
         });
@@ -144,10 +153,13 @@ var CpufreqService = new Lang.Class ({
             if (i < freqs.length && freqs[i] > m) m = freqs[i];
         if (m > 0 && m != this.max0) {
             if (m >= 1000000) {
-                this.title = (m/1000000).toFixed(2).toString() + " \u3393";
+                this.title = (m / 1000000).toFixed(2).toString ();
+                units = " \u3393";
             } else {
-                this.title = (m/1000).toFixed(0).toString() + "  \u3392";
+                this.title = (m / 1000).toFixed(0).toString ();
+                units = " \u3392";
             }
+            if (units_show) this.title += units;
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
