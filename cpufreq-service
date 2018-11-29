@@ -32,15 +32,22 @@ imports.searchPath.unshift(APPDIR);
 const Convenience = imports.convenience;
 
 const MONITOR_KEY = 'monitor';
+const LABEL_KEY = 'label';
+const LABEL_SHOW_KEY = 'label-show';
 const UNITS_SHOW_KEY = 'units-show';
+const GOVS_SHOW_KEY = 'governors-show';
 
 var DEBUGING = false;
 let settings = null;
 let monitor_timeout = 500;
+let label_text = "";
+let label_show = false;
 let units_show = true;
+let governor_show = false;
 
 let streams = [];
 let freqs = [];
+let governors = [];
 let cpucount = 1;
 let gcc = 0;
 
@@ -71,6 +78,9 @@ var CpufreqService = new Lang.Class ({
         GLib.set_application_name ("CPUFreq Service");
         monitor_timeout = settings.get_int (MONITOR_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
+        label_show = settings.get_boolean (LABEL_SHOW_KEY);
+        governor_show = settings.get_boolean (GOVS_SHOW_KEY);
+        label_text = settings.get_string (LABEL_KEY);
     },
 
     vfunc_startup: function() {
@@ -89,11 +99,9 @@ var CpufreqService = new Lang.Class ({
         debug ("init");
         this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
         this.dbus.export (Gio.DBus.session, OBJECT_PATH);
-        cpucount = Convenience.get_cpu_number ();
         this.max0 = 0;
         this.title = "-- \u3393";
         this.old = this.title;
-        freqs = [GLib.get_num_processors ()];
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
@@ -106,7 +114,14 @@ var CpufreqService = new Lang.Class ({
         this._add_event ();
       } else if (key == UNITS_SHOW_KEY) {
         units_show = o.get_boolean (UNITS_SHOW_KEY);
+      } else if (key == LABEL_SHOW_KEY) {
+        label_show = o.get_boolean (LABEL_SHOW_KEY);
+      } else if (key == GOVS_SHOW_KEY) {
+        governor_show = o.get_boolean (GOVS_SHOW_KEY);
+      } else if (key == LABEL_KEY) {
+        label_text = o.get_string (LABEL_KEY);
       }
+
       this.max0 = 0;
     },
 
@@ -137,6 +152,9 @@ var CpufreqService = new Lang.Class ({
                 if (stream) stream.close (null);
             } catch (e) {}
         });
+        cpucount = Convenience.get_cpu_number ();
+        freqs = new Array (cpucount);
+        governors = new Array (cpucount);
         streams = [];
         for (let key = 0; key < cpucount; key++) {
             if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
@@ -149,11 +167,13 @@ var CpufreqService = new Lang.Class ({
     },
 
     _update_freq: function () {
-        let m = 0, units;
+        let m = 0, units, i = 0;
         streams.forEach (stream => {
             this._read_line (stream);
+            if (governor_show) this.get_governors (i);
+            i++;
         });
-        for (let i = 0; i < cpucount; i++)
+        for (i = 0; i < cpucount; i++)
             if (i < freqs.length && freqs[i] > m) m = freqs[i];
         if (m > 0 && m != this.max0) {
             if (m >= 1000000) {
@@ -164,6 +184,10 @@ var CpufreqService = new Lang.Class ({
                 units = " \u3392";
             }
             if (units_show) this.title += units;
+            if (label_show) this.title += " " + label_text;
+            //TODO: short symbolic chars
+            units = this.governor;
+            if (governor_show && units) this.title += " " + units;
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
@@ -174,6 +198,29 @@ var CpufreqService = new Lang.Class ({
             }
         }
         //debug (this.title);
+    },
+
+    get_governors: function (core) {
+        core = core || 0;
+        let path = '/sys/devices/system/cpu/cpu' + core + '/cpufreq/scaling_governor';
+        let file = Gio.file_new_for_path (path);
+
+        file.load_contents_async (null, (o, res) => {
+            let [success, contents] = o.load_contents_finish (res);
+            if (!success) return;
+            try {
+                contents = contents.toString ().split ("\n")[0].trim ();
+                governors.unshift (contents);
+                governors.splice (governors.length - 1, 1);
+            } catch (e) {}
+        });
+    },
+
+    get governor () {
+        let g = governors[0];
+        for (let i = 1; i < cpucount; i++)
+            if (i < governors.length && governors[i] != g) g = "mixed";
+        return g;
     },
 
     _read_line: function (dis) {
@@ -194,7 +241,7 @@ var CpufreqService = new Lang.Class ({
                 var n = parseInt (Convenience.byteArrayToString(line));
                 if (Number.isInteger (n)) {
                     freqs.unshift (n);
-                    freqs.splice (freqs.length-1, 1);
+                    freqs.splice (freqs.length - 1, 1);
                 }
             }
         } catch (e) {}

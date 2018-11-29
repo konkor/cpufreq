@@ -44,9 +44,6 @@ const PROFILE_KEY = 'profile';
 const MONITOR_KEY = 'monitor';
 const EPROFILES_KEY = 'event-profiles';
 const LABEL_KEY = 'label';
-const LABEL_SHOW_KEY = 'label-show';
-const UNITS_SHOW_KEY = 'units-show';
-const GOVS_SHOW_KEY = 'governors-show';
 const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionSystem = imports.ui.extensionSystem;
@@ -69,10 +66,7 @@ let cmd = null;
 let ccore = 0;
 let profiles = [];
 let default_profile = null;
-let label_text = "\u269b";
-let label_show = false;
-let governor_show = false;
-let units_show = true;
+let label_text = "";
 let minfreq = 0, maxfreq = 0; //new values
 let monitor_timeout = 500;
 let eprofiles = [
@@ -222,10 +216,8 @@ const FrequencyIndicator = new Lang.Class({
       if (s) eprofiles = JSON.parse (s);
       monitor_timeout =  o.get_int (MONITOR_KEY);
       label_text = o.get_string (LABEL_KEY);
-      label_show = o.get_boolean (LABEL_SHOW_KEY);
-      governor_show = o.get_boolean (GOVS_SHOW_KEY);
-      units_show = o.get_boolean (UNITS_SHOW_KEY);
 
+      if ((key == LABEL_KEY) && !monitor_event) this.statusLabel.set_text (this.get_title ());
       if (!default_profile) default_profile = this._get_profile ('Default');
       if (key == SAVE_SETTINGS_KEY) this.save_switch.setToggleState (save);
       if (key == MONITOR_KEY) {
@@ -271,10 +263,7 @@ const FrequencyIndicator = new Lang.Class({
     },
 
     get_title: function (text) {
-      text = text || "";
-      if (!text || label_show) text += " " + label_text;
-      //TODO: short symbolic chars
-      if (governor_show && this.governorlabel) text += " " + this.governorlabel;
+      text = text || label_text;
       return text.trim ();
     },
 
