@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='16'
+VERSION='17'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -195,6 +195,8 @@ then
     cp $0 /usr/bin/
     echo 'installing policy...'
 	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
+	mkdir -p /usr/share/fonts/truetype/cpufreq
+	$(dirname "$(readlink -f "$0")")/fonts/cpufreq.ttf /usr/share/fonts/truetype/cpufreq/cpufreq.ttf
 	exit
 fi
 if [ $1 = "version" ]
