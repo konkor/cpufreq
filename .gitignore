@@ -6,6 +6,9 @@
 things
 icons
 data
+fonts/source
+fonts/bf
+fonts/ff
 /docs/_site
 /docs/.sass-cache
 /docs/.jekyll-metadata

@@ -7,6 +7,10 @@
     padding-bottom: 0px;
 }
 
+.cpufreq-text {
+    font-family: cpufreq, roboto, cantarell;
+}
+
 .sponsors-info-item {
     font-style: oblique;
     text-align: center;

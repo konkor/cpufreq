@@ -112,7 +112,7 @@ const FrequencyIndicator = new Lang.Class({
 
         this._settings = Convenience.getSettings();
 
-        this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER});
+        this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER, style_class:'cpufreq-text'});
         let _box = new St.BoxLayout();
         _box.add_actor(this.statusLabel);
         this.actor.add_actor(_box);
