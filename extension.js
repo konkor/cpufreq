@@ -67,6 +67,7 @@ let ccore = 0;
 let profiles = [];
 let default_profile = null;
 let label_text = "";
+let title_text = "\u26A0";
 let minfreq = 0, maxfreq = 0; //new values
 let monitor_timeout = 500;
 let eprofiles = [
@@ -112,7 +113,7 @@ const FrequencyIndicator = new Lang.Class({
 
         this._settings = Convenience.getSettings();
 
-        this.statusLabel = new St.Label ({text: "\u26A0", y_expand: true, y_align: Clutter.ActorAlign.CENTER, style_class:'cpufreq-text'});
+        this.statusLabel = new St.Label ({text: title_text, y_expand: true, y_align: Clutter.ActorAlign.CENTER, style_class:'cpufreq-text'});
         let _box = new St.BoxLayout();
         _box.add_actor(this.statusLabel);
         this.actor.add_actor(_box);
@@ -187,7 +188,7 @@ const FrequencyIndicator = new Lang.Class({
         this._build_ui ();
         save = saves;
 
-        if (this.installed && save && first_boot) this._load_settings ();
+        if (this.installed && save && first_boot) this.load_saved_settings ();
         else this.save_switch.setToggleState (save);
         first_boot = false;
 
@@ -264,7 +265,8 @@ const FrequencyIndicator = new Lang.Class({
 
     get_title: function (text) {
       text = text || label_text;
-      return text.trim ();
+      title_text = text.trim ();
+      return title_text;
     },
 
     get_profile_id: function (guid) {
@@ -376,7 +378,7 @@ const FrequencyIndicator = new Lang.Class({
         this._build_popup ();
     },
 
-    _load_settings: function () {
+    load_saved_settings: function () {
         if (!this.util_present) return;
         if (this.PID >= profiles.length) this.PID = profiles.length - 1;
         if (this.PID > -1) {
