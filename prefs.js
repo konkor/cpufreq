@@ -81,6 +81,11 @@ var CPUFreqPreferences = new Lang.Class({
         if (s) profiles = JSON.parse (s);
 
         this.notebook = new Gtk.Notebook ({expand:true});
+        let cssp = get_css_provider ();
+        if (cssp) {
+          Gtk.StyleContext.add_provider_for_screen (
+            this.notebook.get_screen(), cssp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
 
         this.general = new PageGeneralCPUFreq ();
         this.notebook.add (this.general);
@@ -118,7 +123,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.add (new Gtk.Label ({label: _("<b>Frequency Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
         let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
         this.pack_start (hbox, false, false, 0);
-        hbox.add (new Gtk.Label ({label: _("Frequency Updating Interval (ms)")}));
+        hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));
         this.timeout = Gtk.SpinButton.new_with_range (0, 1000000, 50);
         this.timeout.tooltip_text = _("500ms - default, 0 - disable");
         this.timeout.value = monitor_timeout;
@@ -138,7 +143,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (UNITS_SHOW_KEY, units_show);
         }));
 
-        this.cb_governors = Gtk.CheckButton.new_with_label (_("Show Governors"));
+        this.cb_governors = Gtk.CheckButton.new_with_label (_("Monitor Governors"));
         this.cb_governors.tooltip_text = _("Monitor and show governors on the panel too");
         this.cb_governors.margin = 6;
         this.add (this.cb_governors);
@@ -152,6 +157,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Custom label when monitoring disabled")}));
         this.label = new Gtk.Entry ();
+        this.label.get_style_context().add_class ("cpufreq-text");
         this.label.tooltip_text = _("Label or just a symbol to show when monitor disabled");
         this.label.set_text (label_text);
         this.label.connect ('changed', Lang.bind (this, (o)=>{
@@ -264,6 +270,21 @@ var PowerProfile = new Lang.Class({
         this.info.set_markup ("<i>" + info + "%</i>");
     }
 });
+
+const css_theme = " \
+.cpufreq-text { font-family: cpufreq, roboto, cantarell} \
+";
+
+function get_css_provider () {
+    let cssp = new Gtk.CssProvider ();
+    try {
+        cssp.load_from_data (css_theme);
+    } catch (e) {
+        print (e);
+        cssp = null;
+    }
+    return cssp;
+}
 
 function getCurrentFile () {
     let stack = (new Error()).stack;

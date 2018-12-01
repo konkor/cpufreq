@@ -174,7 +174,7 @@ var CpufreqService = new Lang.Class ({
     },
 
     _update_freq: function () {
-        let m = 0, units, i = 0;
+        let m = 0, units, i = 0, g;
         streams.forEach (stream => {
             if (stream) {
               this._read_line (stream);
@@ -184,7 +184,8 @@ var CpufreqService = new Lang.Class ({
         });
         for (i = 0; i < cpu_online; i++)
             if (i < freqs.length && freqs[i] > m) m = freqs[i];
-        if (m > 0 && m != this.max0) {
+        if (governor_show) g = this.governor;
+        if ((m > 0 && m != this.max0) || g != this.gov0) {
             if (m >= 1000000) {
                 this.title = (m / 1000000).toFixed(2).toString ();
                 units = " \u3393";
@@ -194,9 +195,10 @@ var CpufreqService = new Lang.Class ({
             }
             if (units_show) this.title += units;
             if (label_show) this.title += " " + label_text;
-            //TODO: short symbolic chars
-            units = this.governor;
-            if (governor_show && units) this.title += " " + units;
+            if (governor_show && g) {
+              this.title += " " + g;
+              this.gov0 = g;
+            }
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
@@ -229,6 +231,15 @@ var CpufreqService = new Lang.Class ({
         let g = governors[0];
         for (let i = 1; i < cpu_online; i++)
             if (i < governors.length && governors[i] != g) g = "mixed";
+        if (g) g = g.trim().toLowerCase ();
+        if (g == "mixed") g = "\u25cd";
+        else if (g == "powersave") g = "\uf06c";
+        else if (g == "performance") g = "\uf197";
+        else if (g == "ondemand") g = "\u21f5";
+        else if (g == "conservative") g = "\ue976";
+        else if (g == "schedutil") g = "\ue953";
+        else if (g == "userspace") g = "\uf007";
+        else g = "\uf0e7";
         return g;
     },
 
