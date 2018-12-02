@@ -15,9 +15,15 @@
       <description>Show frequency units</description>
     </key>
 
+    <key type="b" name="frequency-show">
+      <default>true</default>
+      <summary>Monitor frequency</summary>
+      <description>Show current frequency on the panel</description>
+    </key>
+
     <key type="b" name="governors-show">
       <default>false</default>
-      <summary>Show governor</summary>
+      <summary>Monitor governor</summary>
       <description>Show current governor on the panel</description>
     </key>
 

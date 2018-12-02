@@ -34,6 +34,7 @@ const LABEL_KEY = 'label';
 const LABEL_SHOW_KEY = 'label-show';
 const UNITS_SHOW_KEY = 'units-show';
 const GOVS_SHOW_KEY = 'governors-show';
+const FREQ_SHOW_KEY = 'frequency-show';
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
 const _ = Gettext.gettext;
@@ -54,6 +55,7 @@ let profiles = [];
 let monitor_timeout = 500;
 let label_text = "\u269b";
 let label_show = false;
+let frequency_show = true;
 let governor_show = false;
 let units_show = true;
 
@@ -77,6 +79,7 @@ var CPUFreqPreferences = new Lang.Class({
         label_text = settings.get_string (LABEL_KEY);
         label_show = settings.get_boolean (LABEL_SHOW_KEY);
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
+        frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
         s = settings.get_string (EPROFILES_KEY);
         if (s) eprofiles = JSON.parse (s);
@@ -110,7 +113,7 @@ var PageGeneralCPUFreq = new Lang.Class({
 
     _init: function () {
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
-        let id = 0, i = 0;
+        let id = 0, i = 0, rb;
         this.border_width = 6;
 
         this.add (new Gtk.Label ({label: _("<b>System</b>"), use_markup:true, xalign:0, margin_top:8}));
@@ -136,6 +139,26 @@ var PageGeneralCPUFreq = new Lang.Class({
         }));
         hbox.pack_end (this.timeout, false, false, 0);
 
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        this.pack_start (hbox, false, false, 0);
+        hbox.pack_start (new Gtk.Label ({label: _("Monitor"), xalign:0.0}), false, false, 0);
+        rb = Gtk.RadioButton.new_with_label_from_widget (null, _("Frequency"));
+        rb.margin_left = 24;
+        rb.active = frequency_show;
+        rb.id = 0;
+        hbox.pack_start (rb, true, true, 8);
+        rb.connect ("toggled", Lang.bind (this, this.monitor_changed));
+        rb = Gtk.RadioButton.new_with_label_from_widget (rb, _("Governors"));
+        rb.active = governor_show;
+        rb.id = 1;
+        hbox.pack_start (rb, true, true, 8);
+        rb.connect ("toggled", Lang.bind (this, this.monitor_changed));
+        rb = Gtk.RadioButton.new_with_label_from_widget (rb, _("All"));
+        rb.active = governor_show && frequency_show;
+        rb.id = 2;
+        hbox.pack_start (rb, true, true, 8);
+        rb.connect ("toggled", Lang.bind (this, this.monitor_changed));
+
         this.cb_units = Gtk.CheckButton.new_with_label (_("Show Measurement Units"));
         this.cb_units.tooltip_text = _("Show measurement units for frequencies");
         this.cb_units.margin = 6;
@@ -144,16 +167,6 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.cb_units.connect ('toggled', Lang.bind (this, (o)=>{
             units_show = o.active;
             settings.set_boolean (UNITS_SHOW_KEY, units_show);
-        }));
-
-        this.cb_governors = Gtk.CheckButton.new_with_label (_("Monitor Governors"));
-        this.cb_governors.tooltip_text = _("Monitor and show governors on the panel too");
-        this.cb_governors.margin = 6;
-        this.add (this.cb_governors);
-        this.cb_governors.active = governor_show;
-        this.cb_governors.connect ('toggled', Lang.bind (this, (o)=>{
-            governor_show = o.active;
-            settings.set_boolean (GOVS_SHOW_KEY, governor_show);
         }));
 
         hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
@@ -191,6 +204,20 @@ var PageGeneralCPUFreq = new Lang.Class({
         }));
 
         this.show_all ();
+    },
+
+    monitor_changed: function (o) {
+      if (!o.active) return;
+      if (o.id == 2) {
+        settings.set_boolean (FREQ_SHOW_KEY, true);
+        settings.set_boolean (GOVS_SHOW_KEY, true);
+      } else if (o.id == 1) {
+        settings.set_boolean (FREQ_SHOW_KEY, false);
+        settings.set_boolean (GOVS_SHOW_KEY, true);
+      } else {
+        settings.set_boolean (FREQ_SHOW_KEY, true);
+        settings.set_boolean (GOVS_SHOW_KEY, false);
+      }
     }
 });
 
@@ -320,11 +347,11 @@ function error (msg) {
     log ("[cpufreq][prefs] (EE) " + msg);
 }
 
-function init() {
+function init () {
     Convenience.initTranslations ();
 }
 
-function buildPrefsWidget() {
+function buildPrefsWidget () {
     let widget = new CPUFreqPreferences ();
     return widget.notebook;
 }

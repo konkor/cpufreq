@@ -35,6 +35,7 @@ const MONITOR_KEY = 'monitor';
 const LABEL_KEY = 'label';
 const LABEL_SHOW_KEY = 'label-show';
 const UNITS_SHOW_KEY = 'units-show';
+const FREQ_SHOW_KEY = 'frequency-show';
 const GOVS_SHOW_KEY = 'governors-show';
 
 var DEBUGING = false;
@@ -43,6 +44,7 @@ let monitor_timeout = 500;
 let label_text = "";
 let label_show = false;
 let units_show = true;
+let frequency_show = true;
 let governor_show = false;
 
 let streams = [];
@@ -127,6 +129,8 @@ var CpufreqService = new Lang.Class ({
         governor_show = o.get_boolean (GOVS_SHOW_KEY);
       } else if (key == LABEL_KEY) {
         label_text = o.get_string (LABEL_KEY);
+      } else if (key == FREQ_SHOW_KEY) {
+        frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
       }
 
       this.max0 = 0;
@@ -177,7 +181,7 @@ var CpufreqService = new Lang.Class ({
         let m = 0, units, i = 0, g;
         streams.forEach (stream => {
             if (stream) {
-              this._read_line (stream);
+              if (frequency_show) this._read_line (stream);
               if (governor_show) this.get_governors (i);
             }
             i++;
@@ -186,13 +190,15 @@ var CpufreqService = new Lang.Class ({
             if (i < freqs.length && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
         if ((m > 0 && m != this.max0) || g != this.gov0) {
-            if (m >= 1000000) {
+            if (frequency_show)
+              if (m >= 1000000) {
                 this.title = (m / 1000000).toFixed(2).toString ();
                 units = " \u3393";
-            } else {
+              } else {
                 this.title = (m / 1000).toFixed(0).toString ();
                 units = " \u3392";
-            }
+              }
+            else this.title = "";
             if (units_show) this.title += units;
             if (label_show) this.title += " " + label_text;
             if (governor_show && g) {
