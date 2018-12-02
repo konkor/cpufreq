@@ -202,13 +202,12 @@ var CpufreqService = new Lang.Class ({
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
-            gcc++;
-            if (gcc == 10) {
-                gcc = 0;
-                System.gc ();
-            }
         }
-        //debug (this.title);
+        gcc++;
+        if (gcc*monitor_timeout > 1000) {
+            gcc = 0;
+            System.gc ();
+        }
     },
 
     get_governors: function (core) {
