@@ -235,7 +235,7 @@ var CpufreqService = new Lang.Class ({
         if (g == "mixed") g = "\u25cd";
         else if (g == "powersave") g = "\uf06c";
         else if (g == "performance") g = "\uf197";
-        else if (g == "ondemand") g = "\u21f5";
+        else if (g == "ondemand") g = "\u26a1";
         else if (g == "conservative") g = "\ue976";
         else if (g == "schedutil") g = "\ue953";
         else if (g == "userspace") g = "\uf007";
