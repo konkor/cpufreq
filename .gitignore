@@ -4,8 +4,7 @@
 *.orig
 *.diff
 things
-icons
-data
+data/themes
 fonts/source
 fonts/bf
 fonts/ff
@@ -13,4 +12,3 @@ fonts/ff
 /docs/.sass-cache
 /docs/.jekyll-metadata
 /docs/Gemfile.lock
-
