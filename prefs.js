@@ -21,6 +21,7 @@
  */
 
 const Lang = imports.lang;
+const GObject = imports.gi.GObject;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
@@ -45,6 +46,8 @@ var EventType = {
 CHARGING:     0,
 DISCHARGING:  1
 };
+
+const suggestions = ["☃","⚡","㎒","㎓","","","","","","","","CPU"];
 
 let save = false;
 let profiles = [];
@@ -156,7 +159,17 @@ var PageGeneralCPUFreq = new Lang.Class({
         hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Custom label when monitoring disabled")}));
+        this.store = new Gtk.ListStore ();
+        this.store.set_column_types ([GObject.TYPE_STRING]);
+        this.completion = new Gtk.EntryCompletion ();
+        this.completion.minimum_key_length = 0;
+        this.completion.set_model (this.store);
+        this.completion.set_text_column (0);
+        suggestions.forEach ( l => {
+            this.store.set (this.store.append (), [0], [l]);
+        });
         this.label = new Gtk.Entry ();
+        this.label.set_completion (this.completion);
         this.label.get_style_context().add_class ("cpufreq-text");
         this.label.tooltip_text = _("Label or just a symbol to show when monitor disabled");
         this.label.set_text (label_text);
