@@ -187,7 +187,7 @@ var CpufreqService = new Lang.Class ({
             i++;
         });
         for (i = 0; i < cpu_online; i++)
-            if (i < freqs.length && freqs[i] > m) m = freqs[i];
+            if (freqs[i] && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
         if ((m > 0 && m != this.max0) || g != this.gov0) {
             if (frequency_show)
@@ -235,12 +235,12 @@ var CpufreqService = new Lang.Class ({
     get governor () {
         let g = governors[0];
         for (let i = 1; i < cpu_online; i++)
-            if (i < governors.length && governors[i] != g) g = "mixed";
+            if (governors[i] && governors[i] != g) g = "mixed";
         if (g) g = g.trim().toLowerCase ();
         if (g == "mixed") g = "\u25cd";
         else if (g == "powersave") g = "\uf06c";
         else if (g == "performance") g = "\uf197";
-        else if (g == "ondemand") g = "\u26a1";
+        else if (g == "ondemand") g = "\uf0e7";
         else if (g == "conservative") g = "\ue976";
         else if (g == "schedutil") g = "\ue953";
         else if (g == "userspace") g = "\uf007";
