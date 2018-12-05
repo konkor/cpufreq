@@ -225,7 +225,7 @@ var CpufreqService = new Lang.Class ({
             let [success, contents] = o.load_contents_finish (res);
             if (!success) return;
             try {
-                contents = contents.toString ().split ("\n")[0].trim ();
+                contents = Convenience.byteArrayToString (contents).toString ().split ("\n")[0].trim ();
                 governors.unshift (contents);
                 governors.splice (governors.length - 1, 1);
             } catch (e) {}
