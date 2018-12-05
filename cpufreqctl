@@ -198,6 +198,7 @@ then
 	echo 'installing fonts...'
 	mkdir -p /usr/share/fonts/truetype/cpufreq
 	cp $(dirname "$(readlink -f "$0")")/fonts/cpufreq.ttf /usr/share/fonts/truetype/cpufreq/
+	fc-cache -f
 	exit
 fi
 if [ $1 = "version" ]
