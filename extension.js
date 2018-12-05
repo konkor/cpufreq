@@ -189,7 +189,7 @@ const FrequencyIndicator = new Lang.Class({
     save = saves;
 
     if (this.installed && save && first_boot) this.load_saved_settings ();
-    else this.save_switch.setToggleState (save);
+    else if (this.save_switch) this.save_switch.setToggleState (save);
     first_boot = false;
 
     this._add_event ();
