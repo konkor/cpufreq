@@ -122,7 +122,7 @@ const FrequencyIndicator = new Lang.Class({
       if (this.util_present) {
         let saves = save;
         this.governors = this._get_governors ();
-        this.activeg.label.text = "\u26A1 " + this.governorlabel;
+        this.activeg.label.text = "\u2714 " + this.governorlabel;
         if (this.info) this.info.update (this.governoractual);
         save = false;
         if (this.pstate_present) {
@@ -207,7 +207,7 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   load_settings: function (o, key) {
-    print (o, key);
+    //print (o, key);
     o = o || this._settings;
     save = o.get_boolean (SAVE_SETTINGS_KEY);
     this.PID =  o.get_int (PROFILE_KEY);
@@ -1565,7 +1565,7 @@ const InfoItem = new Lang.Class({
 
   _init: function (params) {
     this.parent ({ reactive: false, can_focus: false });
-    this._icon = new St.Label ({text: "☺", style: 'color: #33d552; font-weight: bold; font-size: 56pt;'});//new St.Icon ({ style_class: 'logo-icon' });
+    this._icon = new St.Label ({text: "☺", style_class: 'cpufreq-text', style: 'color: #33d552; font-weight: bold; font-size: 7em;'});//new St.Icon ({ style_class: 'logo-icon' });
     this._icon.y_expand = true;
     this._icon.y_align = Clutter.ActorAlign.CENTER;
     this.actor.add_child (this._icon);
@@ -1585,7 +1585,7 @@ const InfoItem = new Lang.Class({
     this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
     this._cores.align = St.Align.START;
     this.vbox.add_child (this._cores);
-    this._warn = new St.Label ({text: "☺ 😐 ☹ WARN MESSAGE", style: 'color: orange; font-weight: bold;'});
+    this._warn = new St.Label ({text: "☺  ☹ WARN MESSAGE", style: 'color: orange; font-weight: bold;'});
     this._warn.align = St.Align.START;
     this.vbox.add_child (this._warn);
     this._warn.visible = false;
@@ -1713,17 +1713,17 @@ const InfoItem = new Lang.Class({
   set_warns: function () {
     if (this.warn_lvl > 1) {
       this._icon.text = "☹";
-      this._icon.set_style ('color: red; font-weight: bold; font-size: 56pt;');
+      this._icon.set_style ('color: red; font-size: 7em;');
       this._warn.visible = true;
       this._warn.set_style ('color: red; font-weight: bold;');
     } else if (this.warn_lvl > 0) {
-      this._icon.text = "😐";
-      this._icon.set_style ('color: orange; font-weight: bold; font-size: 56pt;');
+      this._icon.text = "";
+      this._icon.set_style ('color: orange; font-size: 7em;');
       this._warn.visible = true;
       this._warn.set_style ('color: orange; font-weight: bold;');
     } else {
       this._icon.text = "☺";
-      this._icon.set_style ('color: #33d552; font-weight: bold; font-size: 56pt;');
+      this._icon.set_style ('color: #33d552; font-size: 5em;');
       this._warn.visible = false;
     }
     this._warn.text = this.warnmsg;
@@ -1731,6 +1731,7 @@ const InfoItem = new Lang.Class({
 
   get_throttle: function () {
     let s = "", i = 0;
+    if (!this.cpufreqctl_path) return;
     cpufreq_output = GLib.spawn_command_line_sync (this.cpufreqctl_path + " throttle");
     if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).toString().split("\n")[0];
     if (freqInfo) {
