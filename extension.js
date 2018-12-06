@@ -336,6 +336,7 @@ const FrequencyIndicator = new Lang.Class({
     }
     install_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
       this._check_install ();
+      GLib.mkdir_with_parents (GLib.get_user_data_dir() + "/fonts", 484);
       if (this.installed && this.updated) {
         try {
           this.remove_events ();
