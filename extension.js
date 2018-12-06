@@ -208,26 +208,43 @@ const FrequencyIndicator = new Lang.Class({
 
   load_settings: function (o, key) {
     //print (o, key);
+    let s;
     o = o || this._settings;
-    save = o.get_boolean (SAVE_SETTINGS_KEY);
-    this.PID =  o.get_int (PROFILE_KEY);
-    let s =  o.get_string (PROFILES_KEY);
-    if (s.length > 0) profiles = JSON.parse (s);
-    s = o.get_string (EPROFILES_KEY);
-    if (s) eprofiles = JSON.parse (s);
-    monitor_timeout =  o.get_int (MONITOR_KEY);
-    label_text = o.get_string (LABEL_KEY);
 
-    if ((key == LABEL_KEY) && !monitor_event) this.statusLabel.set_text (this.get_title ());
-    if (!default_profile) default_profile = this._get_profile ('Default');
-    if (key == SAVE_SETTINGS_KEY) this.save_switch.setToggleState (save);
+    if (!key) {
+      this.PID =  o.get_int (PROFILE_KEY);
+      s =  o.get_string (PROFILES_KEY);
+      if (s.length > 0) profiles = JSON.parse (s);
+      monitor_timeout =  o.get_int (MONITOR_KEY);
+      save = o.get_boolean (SAVE_SETTINGS_KEY);
+      label_text = o.get_string (LABEL_KEY);
+      s = o.get_string (EPROFILES_KEY);
+      if (s) eprofiles = JSON.parse (s);
+    }
+
     if (key == MONITOR_KEY) {
-    if (monitor_event) {
-      GLib.source_remove (monitor_event);
-      monitor_event = 0;
+      monitor_timeout =  o.get_int (MONITOR_KEY);
+      if (monitor_event) {
+        GLib.source_remove (monitor_event);
+        monitor_event = 0;
+      }
+      monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
     }
-    monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
+    if (key == SAVE_SETTINGS_KEY) {
+      save = o.get_boolean (SAVE_SETTINGS_KEY);
+      this.save_switch.setToggleState (save);
     }
+    if (key == LABEL_KEY) {
+      label_text = o.get_string (LABEL_KEY);
+      this.save_switch.setToggleState (save);
+    }
+    if (key == EPROFILES_KEY) {
+      s = o.get_string (EPROFILES_KEY);
+      if (s) eprofiles = JSON.parse (s);
+    }
+
+    if (!default_profile) default_profile = this._get_profile ('Default');
+    if ((key == LABEL_KEY) && !monitor_timeout) this.statusLabel.set_text (this.get_title ());
   },
 
   _on_menu_state_changed: function (source, state) {
@@ -371,7 +388,10 @@ const FrequencyIndicator = new Lang.Class({
           if (title) this.statusLabel.set_text (this.get_title (title.toString ()));
         }));
       }));
-    } else GLib.spawn_command_line_async ("killall cpufreq-service");
+    }
+    monitor_event = 0;
+    // cpufreq-service should stop auto on disabled monitors
+    //else GLib.spawn_command_line_async ("killall cpufreq-service");
   },
 
   _build_ui: function () {
@@ -800,7 +820,7 @@ const FrequencyIndicator = new Lang.Class({
   _load_profile: function (prf) {
     if (install_event > 0) return;
     print ('Loading profile...', JSON.stringify (prf));
-    if (monitor_timeout) this.statusLabel.set_text (this.get_title ("... \u3393"));
+    if (monitor_timeout) this.statusLabel.set_text ("... \u3393");
     else this.statusLabel.set_text (this.get_title ());
     this.prf = prf;
     for (let key = 1; key < cpucount; key++) {

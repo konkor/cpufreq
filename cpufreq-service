@@ -82,6 +82,7 @@ var CpufreqService = new Lang.Class ({
         monitor_timeout = settings.get_int (MONITOR_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
         label_show = settings.get_boolean (LABEL_SHOW_KEY);
+        frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
         label_text = settings.get_string (LABEL_KEY);
     },
@@ -110,9 +111,10 @@ var CpufreqService = new Lang.Class ({
         this._update_freq ();
         this._add_event ();
         settings.connect ("changed", Lang.bind (this, this.on_settings));
-        GLib.timeout_add (200, 4000, () => {
+        GLib.timeout_add (200, 8000, () => {
           let cores = GLib.get_num_processors ();
           if (cores != cpu_online) this._init_streams ();
+          if (!frequency_show) this.gov0 = "";
           return true;
         });
     },
@@ -199,7 +201,7 @@ var CpufreqService = new Lang.Class ({
                 units = " \u3392";
               }
             else this.title = "";
-            if (units_show) this.title += units;
+            if (units_show && frequency_show) this.title += units;
             if (label_show) this.title += " " + label_text;
             if (governor_show && g) {
               this.title += " " + g;
@@ -273,10 +275,10 @@ var CpufreqService = new Lang.Class ({
     },
 
     remove_events: function () {
+        if (this.dbus) this.dbus.unexport ();
         if (event != 0) GLib.Source.remove (event);
         if (init_event != 0) GLib.Source.remove (init_event);
         event = 0; init_event = 0;
-        if (this.dbus) this.dbus.unexport ();
     }
 });
 
