@@ -1586,7 +1586,7 @@ const InfoItem = new Lang.Class({
 
   _init: function (params) {
     this.parent ({ reactive: false, can_focus: false });
-    this._icon = new St.Label ({text: "☺", style_class: 'cpufreq-text', style: 'color: #33d552; font-weight: bold; font-size: 7em;'});//new St.Icon ({ style_class: 'logo-icon' });
+    this._icon = new St.Label ({text: "☺", style_class: 'cpufreq-text', style: 'color: #33d552; font-size: 5em;'});//new St.Icon ({ style_class: 'logo-icon' });
     this._icon.y_expand = true;
     this._icon.y_align = Clutter.ActorAlign.CENTER;
     this.actor.add_child (this._icon);
@@ -1600,7 +1600,7 @@ const InfoItem = new Lang.Class({
     this._linux = new St.Label ({text: this.linux_kernel});
     this._linux.align = St.Align.START;
     this.vbox.add_child (this._linux);
-    this._load = new St.Label ({text: "◕ 170%"});
+    this._load = new St.Label ({text: "◕ 170%", style_class: "cpufreq-text"});
     this._load.align = St.Align.START;
     this.vbox.add_child (this._load);
     this._cores = new St.Label ({text: "2 performance, 4 ondemand"});
@@ -1708,14 +1708,14 @@ const InfoItem = new Lang.Class({
     if (freqInfo[0]) {
       j = i = Math.round (parseFloat (freqInfo[0]) * 100);
       while (i > 100) {
-        s += "◉";
+        s += "\u25cf";
         i -= 100;
       }
-      if (i < 25) s += "◌ ";
+      if (i < 25) s += "\u25cb ";
       else if (i < 50) s += "◔ ";
       else if (i < 75) s += "◑ ";
       else if (i < 100) s += "◕ ";
-      else s += "◉ ";
+      else s += "\u25cf ";
       s += j.toString () + "%";
     }
     if (j > cc * 100) {
@@ -1734,12 +1734,12 @@ const InfoItem = new Lang.Class({
   set_warns: function () {
     if (this.warn_lvl > 1) {
       this._icon.text = "☹";
-      this._icon.set_style ('color: red; font-size: 7em;');
+      this._icon.set_style ('color: red; font-size: 5em;');
       this._warn.visible = true;
       this._warn.set_style ('color: red; font-weight: bold;');
     } else if (this.warn_lvl > 0) {
       this._icon.text = "";
-      this._icon.set_style ('color: orange; font-size: 7em;');
+      this._icon.set_style ('color: orange; font-size: 5em;');
       this._warn.visible = true;
       this._warn.set_style ('color: orange; font-weight: bold;');
     } else {
