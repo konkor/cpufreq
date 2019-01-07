@@ -27,6 +27,12 @@
       <description>Show current governor on the panel</description>
     </key>
 
+    <key type="b" name="load-show">
+      <default>false</default>
+      <summary>Monitor load</summary>
+      <description>Show current computer load</description>
+    </key>
+
     <key type="s" name="label">
       <default>'\u269b'</default>
       <summary>Custom label</summary>
