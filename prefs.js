@@ -33,6 +33,7 @@ const MONITOR_KEY = 'monitor';
 const LABEL_KEY = 'label';
 const LABEL_SHOW_KEY = 'label-show';
 const UNITS_SHOW_KEY = 'units-show';
+const LOAD_SHOW_KEY = 'load-show';
 const GOVS_SHOW_KEY = 'governors-show';
 const FREQ_SHOW_KEY = 'frequency-show';
 
@@ -57,6 +58,7 @@ let label_text = "\u269b";
 let label_show = false;
 let frequency_show = true;
 let governor_show = false;
+let load_show = false;
 let units_show = true;
 
 let eprofiles = [
@@ -78,6 +80,7 @@ var CPUFreqPreferences = new Lang.Class({
         monitor_timeout = settings.get_int (MONITOR_KEY);
         label_text = settings.get_string (LABEL_KEY);
         label_show = settings.get_boolean (LABEL_SHOW_KEY);
+        load_show = settings.get_boolean (LOAD_SHOW_KEY);
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
         frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
@@ -126,7 +129,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             save = this.cb_startup.active;
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
         }));
-        this.add (new Gtk.Label ({label: _("<b>Frequency Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
+        this.add (new Gtk.Label ({label: _("<b>Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
         let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));
@@ -139,25 +142,37 @@ var PageGeneralCPUFreq = new Lang.Class({
         }));
         hbox.pack_end (this.timeout, false, false, 0);
 
-        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6, margin_left:32});
         this.pack_start (hbox, false, false, 0);
-        hbox.pack_start (new Gtk.Label ({label: _("Monitor"), xalign:0.0}), false, false, 0);
-        rb = Gtk.RadioButton.new_with_label_from_widget (null, _("Frequency"));
-        rb.margin_left = 24;
-        rb.active = frequency_show;
-        rb.id = 0;
-        hbox.pack_start (rb, true, true, 8);
-        rb.connect ("toggled", Lang.bind (this, this.monitor_changed));
-        rb = Gtk.RadioButton.new_with_label_from_widget (rb, _("Governors"));
-        rb.active = governor_show;
-        rb.id = 1;
-        hbox.pack_start (rb, true, true, 8);
-        rb.connect ("toggled", Lang.bind (this, this.monitor_changed));
-        rb = Gtk.RadioButton.new_with_label_from_widget (rb, _("All"));
-        rb.active = governor_show && frequency_show;
-        rb.id = 2;
-        hbox.pack_start (rb, true, true, 8);
-        rb.connect ("toggled", Lang.bind (this, this.monitor_changed));
+        hbox.pack_start (new Gtk.Label ({label: _("Show"), xalign:0.0}), false, false, 0);
+
+        cb_units = Gtk.CheckButton.new_with_label (_("Frequency"));
+        cb_units.tooltip_text = _("Show frequency monitor");
+        cb_units.margin_left = 32;
+        cb_units.active = frequency_show;
+        hbox.pack_start (cb_units, true, true, 8);
+        cb_units.connect ('toggled', Lang.bind (this, (o)=>{
+            frequency_show = o.active;
+            settings.set_boolean (FREQ_SHOW_KEY, frequency_show);
+        }));
+
+        cb_units = Gtk.CheckButton.new_with_label (_("Governors"));
+        cb_units.tooltip_text = _("Show governors monitor");
+        cb_units.active = governor_show;
+        hbox.pack_start (cb_units, true, true, 8);
+        cb_units.connect ('toggled', Lang.bind (this, (o)=>{
+            governor_show = o.active;
+            settings.set_boolean (GOVS_SHOW_KEY, governor_show);
+        }));
+
+        cb_units = Gtk.CheckButton.new_with_label (_("Load"));
+        cb_units.tooltip_text = _("Show load monitor");
+        cb_units.active = load_show;
+        hbox.pack_start (cb_units, true, true, 8);
+        cb_units.connect ('toggled', Lang.bind (this, (o)=>{
+            load_show = o.active;
+            settings.set_boolean (LOAD_SHOW_KEY, load_show);
+        }));
 
         this.cb_units = Gtk.CheckButton.new_with_label (_("Show Measurement Units"));
         this.cb_units.tooltip_text = _("Show measurement units for frequencies");
@@ -167,6 +182,16 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.cb_units.connect ('toggled', Lang.bind (this, (o)=>{
             units_show = o.active;
             settings.set_boolean (UNITS_SHOW_KEY, units_show);
+        }));
+
+        this.cb_label = Gtk.CheckButton.new_with_label (_("Show Custom Label"));
+        this.cb_label.tooltip_text = _("Always show the custom label");
+        this.cb_label.margin = 6;
+        this.add (this.cb_label);
+        this.cb_label.active = label_show;
+        this.cb_label.connect ('toggled', Lang.bind (this, (o)=>{
+            label_show = o.active;
+            settings.set_boolean (LABEL_SHOW_KEY, label_show);
         }));
 
         hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
@@ -181,6 +206,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         suggestions.forEach ( l => {
             this.store.set (this.store.append (), [0], [l]);
         });
+
         this.label = new Gtk.Entry ();
         this.label.set_completion (this.completion);
         this.label.get_style_context().add_class ("cpufreq-text");
@@ -191,34 +217,11 @@ var PageGeneralCPUFreq = new Lang.Class({
             //if (!s) s = "\u269b";
             settings.set_string (LABEL_KEY, s);
         }));
-        hbox.pack_end (this.label, false, false, 0);
 
-        this.cb_label = Gtk.CheckButton.new_with_label (_("Show Custom Label"));
-        this.cb_label.tooltip_text = _("Always show the custom label");
-        this.cb_label.margin = 6;
-        this.add (this.cb_label);
-        this.cb_label.active = label_show;
-        this.cb_label.connect ('toggled', Lang.bind (this, (o)=>{
-            label_show = o.active;
-            settings.set_boolean (LABEL_SHOW_KEY, label_show);
-        }));
+        hbox.pack_end (this.label, false, false, 0);
 
         this.show_all ();
     },
-
-    monitor_changed: function (o) {
-      if (!o.active) return;
-      if (o.id == 2) {
-        settings.set_boolean (FREQ_SHOW_KEY, true);
-        settings.set_boolean (GOVS_SHOW_KEY, true);
-      } else if (o.id == 1) {
-        settings.set_boolean (FREQ_SHOW_KEY, false);
-        settings.set_boolean (GOVS_SHOW_KEY, true);
-      } else {
-        settings.set_boolean (FREQ_SHOW_KEY, true);
-        settings.set_boolean (GOVS_SHOW_KEY, false);
-      }
-    }
 });
 
 var PagePowerCPUFreq = new Lang.Class({
