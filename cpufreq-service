@@ -52,6 +52,7 @@ let load_show = false;
 let streams = [];
 let freqs = [];
 let governors = [];
+let loading = 0;
 let cpu_present = 1;
 let cpu_online = 1;
 let gcc = 0;
@@ -193,6 +194,7 @@ var CpufreqService = new Lang.Class ({
             }
             i++;
         });
+        if (load_show) this.get_loading ();
         for (i = 0; i < cpu_online; i++)
             if (freqs[i] && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
@@ -257,16 +259,24 @@ var CpufreqService = new Lang.Class ({
         return g;
     },
 
+    get_loading: function () {
+        let file = Gio.file_new_for_path ('/proc/loadavg');
+
+        file.load_contents_async (null, (o, res) => {
+            let [success, contents] = o.load_contents_finish (res);
+            if (!success) return;
+            try {
+                contents = Convenience.byteArrayToString (contents).toString ().split ("\n")[0].split (" ")[0].trim ();
+                loading = Math.round (parseFloat (freqInfo[0]) * 100);
+            } catch (e) {}
+        });
+    },
+
     get loadavg () {
-        let l, cc = GLib.get_num_processors ();
-        cpufreq_output = GLib.spawn_command_line_sync ("cat /proc/loadavg");
-        if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).toString().split("\n")[0].split(" ");
-        if (freqInfo[0]) {
-          j = i = Math.round (parseFloat (freqInfo[0]) * 100);
-        }
-        if (j > cc * 100) {
+        let l;
+        if (loading > cpu_online * 100) {
           l = "☹";
-        } else if (j > cc * 75) {
+        } else if (loading > cpu_online * 75) {
           l = "";
         } else {
           l = "☺";
@@ -345,4 +355,3 @@ try {
 } catch (e) {
     print (e.message);
 }
-

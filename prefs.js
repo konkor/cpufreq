@@ -147,7 +147,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         hbox.pack_start (new Gtk.Label ({label: _("Show"), xalign:0.0}), false, false, 0);
 
         cb_units = Gtk.CheckButton.new_with_label (_("Frequency"));
-        cb_units.tooltip_text = _("Show frequency monitor");
+        cb_units.tooltip_text = _("Monitor frequency");
         cb_units.margin_left = 32;
         cb_units.active = frequency_show;
         hbox.pack_start (cb_units, true, true, 8);
@@ -157,7 +157,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         }));
 
         cb_units = Gtk.CheckButton.new_with_label (_("Governors"));
-        cb_units.tooltip_text = _("Show governors monitor");
+        cb_units.tooltip_text = _("Monitor governors");
         cb_units.active = governor_show;
         hbox.pack_start (cb_units, true, true, 8);
         cb_units.connect ('toggled', Lang.bind (this, (o)=>{
@@ -165,8 +165,8 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (GOVS_SHOW_KEY, governor_show);
         }));
 
-        cb_units = Gtk.CheckButton.new_with_label (_("Load"));
-        cb_units.tooltip_text = _("Show load monitor");
+        cb_units = Gtk.CheckButton.new_with_label (_("Loading"));
+        cb_units.tooltip_text = _("Monitor system loading");
         cb_units.active = load_show;
         hbox.pack_start (cb_units, true, true, 8);
         cb_units.connect ('toggled', Lang.bind (this, (o)=>{
