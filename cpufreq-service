@@ -37,6 +37,7 @@ const LABEL_SHOW_KEY = 'label-show';
 const UNITS_SHOW_KEY = 'units-show';
 const FREQ_SHOW_KEY = 'frequency-show';
 const GOVS_SHOW_KEY = 'governors-show';
+const LOAD_SHOW_KEY = 'load-show';
 
 var DEBUGING = false;
 let settings = null;
@@ -46,6 +47,7 @@ let label_show = false;
 let units_show = true;
 let frequency_show = true;
 let governor_show = false;
+let load_show = false;
 
 let streams = [];
 let freqs = [];
@@ -84,6 +86,7 @@ var CpufreqService = new Lang.Class ({
         label_show = settings.get_boolean (LABEL_SHOW_KEY);
         frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
+        load_show = settings.get_boolean (LOAD_SHOW_KEY);
         label_text = settings.get_string (LABEL_KEY);
     },
 
@@ -127,6 +130,8 @@ var CpufreqService = new Lang.Class ({
         units_show = o.get_boolean (UNITS_SHOW_KEY);
       } else if (key == LABEL_SHOW_KEY) {
         label_show = o.get_boolean (LABEL_SHOW_KEY);
+      } else if (key == LOAD_SHOW_KEY) {
+        load_show = o.get_boolean (LOAD_SHOW_KEY);
       } else if (key == GOVS_SHOW_KEY) {
         governor_show = o.get_boolean (GOVS_SHOW_KEY);
       } else if (key == LABEL_KEY) {
@@ -180,7 +185,7 @@ var CpufreqService = new Lang.Class ({
     },
 
     _update_freq: function () {
-        let m = 0, units, i = 0, g;
+        let m = 0, units, i = 0, g, l;
         streams.forEach (stream => {
             if (stream) {
               if (frequency_show) this._read_line (stream);
@@ -191,6 +196,7 @@ var CpufreqService = new Lang.Class ({
         for (i = 0; i < cpu_online; i++)
             if (freqs[i] && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
+        if (load_show) l = this.loadavg;
         if ((m > 0 && m != this.max0) || g != this.gov0) {
             if (frequency_show)
               if (m >= 1000000) {
@@ -202,11 +208,12 @@ var CpufreqService = new Lang.Class ({
               }
             else this.title = "";
             if (units_show && frequency_show) this.title += units;
-            if (label_show) this.title += " " + label_text;
             if (governor_show && g) {
               this.title += " " + g;
               this.gov0 = g;
             }
+            if (load_show) this.title += " " + l;
+            if (label_show) this.title += " " + label_text;
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
@@ -248,6 +255,23 @@ var CpufreqService = new Lang.Class ({
         else if (g == "userspace") g = "\uf007";
         else g = "\uf0e7";
         return g;
+    },
+
+    get loadavg () {
+        let l, cc = GLib.get_num_processors ();
+        cpufreq_output = GLib.spawn_command_line_sync ("cat /proc/loadavg");
+        if (cpufreq_output[0]) freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).toString().split("\n")[0].split(" ");
+        if (freqInfo[0]) {
+          j = i = Math.round (parseFloat (freqInfo[0]) * 100);
+        }
+        if (j > cc * 100) {
+          l = "☹";
+        } else if (j > cc * 75) {
+          l = "";
+        } else {
+          l = "☺";
+        }
+        return l;
     },
 
     _read_line: function (dis) {
@@ -321,3 +345,4 @@ try {
 } catch (e) {
     print (e.message);
 }
+
