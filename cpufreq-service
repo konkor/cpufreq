@@ -59,6 +59,7 @@ let gcc = 0;
 
 let event = 0;
 let init_event = 0;
+let test = true;
 
 const OBJECT_PATH = '/org/konkor/cpufreq/service';
 const CpufreqServiceIface = '<node> \
@@ -199,6 +200,8 @@ var CpufreqService = new Lang.Class ({
             if (freqs[i] && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
         if (load_show) l = this.loadavg;
+        test = !test;
+        if (test) m = 800000;
         if ((m > 0 && m != this.max0) || g != this.gov0) {
             if (frequency_show)
               if (m >= 1000000) {
@@ -206,7 +209,7 @@ var CpufreqService = new Lang.Class ({
                 units = " \u3393";
               } else {
                 this.title = (m / 1000).toFixed(0).toString ();
-                units = " \u3392";
+                units = "  \u3392";
               }
             else this.title = "";
             if (units_show && frequency_show) this.title += units;
