@@ -146,7 +146,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.pack_start (hbox, false, false, 0);
         hbox.pack_start (new Gtk.Label ({label: _("Show"), xalign:0.0}), false, false, 0);
 
-        cb_units = Gtk.CheckButton.new_with_label (_("Frequency"));
+        let cb_units = Gtk.CheckButton.new_with_label (_("Frequency"));
         cb_units.tooltip_text = _("Monitor frequency");
         cb_units.margin_left = 32;
         cb_units.active = frequency_show;

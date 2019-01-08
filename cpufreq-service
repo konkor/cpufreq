@@ -267,7 +267,7 @@ var CpufreqService = new Lang.Class ({
             if (!success) return;
             try {
                 contents = Convenience.byteArrayToString (contents).toString ().split ("\n")[0].split (" ")[0].trim ();
-                loading = Math.round (parseFloat (freqInfo[0]) * 100);
+                loading = Math.round (parseFloat (contents) * 100);
             } catch (e) {}
         });
     },
