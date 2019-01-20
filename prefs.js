@@ -144,13 +144,13 @@ var PageGeneralCPUFreq = new Lang.Class({
 
         hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6, margin_left:32});
         this.pack_start (hbox, false, false, 0);
-        hbox.pack_start (new Gtk.Label ({label: _("Show"), xalign:0.0}), false, false, 0);
+        hbox.add (new Gtk.Label ({label: _("Show"), xalign:0.0}), false, false, 0);
 
         let cb_units = Gtk.CheckButton.new_with_label (_("Frequency"));
         cb_units.tooltip_text = _("Monitor frequency");
         cb_units.margin_left = 32;
         cb_units.active = frequency_show;
-        hbox.pack_start (cb_units, true, true, 8);
+        hbox.add(cb_units, true, true, 8);
         cb_units.connect ('toggled', Lang.bind (this, (o)=>{
             frequency_show = o.active;
             settings.set_boolean (FREQ_SHOW_KEY, frequency_show);
@@ -159,7 +159,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         cb_units = Gtk.CheckButton.new_with_label (_("Governors"));
         cb_units.tooltip_text = _("Monitor governors");
         cb_units.active = governor_show;
-        hbox.pack_start (cb_units, true, true, 8);
+        hbox.add (cb_units, true, true, 8);
         cb_units.connect ('toggled', Lang.bind (this, (o)=>{
             governor_show = o.active;
             settings.set_boolean (GOVS_SHOW_KEY, governor_show);
@@ -168,7 +168,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         cb_units = Gtk.CheckButton.new_with_label (_("Loading"));
         cb_units.tooltip_text = _("Monitor system loading");
         cb_units.active = load_show;
-        hbox.pack_start (cb_units, true, true, 8);
+        hbox.pack_end (cb_units, true, true, 8);
         cb_units.connect ('toggled', Lang.bind (this, (o)=>{
             load_show = o.active;
             settings.set_boolean (LOAD_SHOW_KEY, load_show);
