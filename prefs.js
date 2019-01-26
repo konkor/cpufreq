@@ -149,7 +149,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
         }));
         this.add (new Gtk.Label ({label: _("<b>Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
-        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));
         this.timeout = Gtk.SpinButton.new_with_range (0, 1000000, 50);
@@ -213,7 +213,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (LABEL_SHOW_KEY, label_show);
         }));
 
-        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Custom label when monitoring disabled")}));
         this.store = new Gtk.ListStore ();
