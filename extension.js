@@ -52,6 +52,7 @@ const EXTENSIONDIR = Me.dir.get_path ();
 const Convenience = Me.imports.convenience;
 
 let event = 0;
+let event_style = 0;
 let install_event = 0;
 let core_event = 0;
 let freq_event = 0;
@@ -98,6 +99,9 @@ const CpufreqServiceIface = '<node> \
 <property name="Frequency" type="t" access="read"/> \
 <signal name="FrequencyChanged"> \
   <arg name="title" type="s"/> \
+</signal> \
+<signal name="StyleChanged"> \
+  <arg name="style" type="s"/> \
 </signal> \
 </interface> \
 </node>';
@@ -371,9 +375,11 @@ const FrequencyIndicator = new Lang.Class({
    _add_event: function () {
     if (this.proxy) {
       if (event) this.proxy.disconnectSignal (event);
+      if (event_style) this.proxy.disconnectSignal (event_style);
       delete this.proxy;
       this.proxy = null;
       event = 0;
+      event_style = 0;
     }
     if (monitor_timeout > 0) {
       if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
@@ -387,6 +393,9 @@ const FrequencyIndicator = new Lang.Class({
         }
         event = this.proxy.connectSignal ('FrequencyChanged', Lang.bind(this, function (o, s, title) {
           if (title) this.statusLabel.set_text (this.get_title (title.toString ()));
+        }));
+        event_style = this.proxy.connectSignal ('StyleChanged', Lang.bind(this, function (o, s, style) {
+          if (style) this.statusLabel.style = style.toString ();
         }));
       }));
     }
