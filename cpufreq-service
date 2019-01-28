@@ -64,7 +64,7 @@ let color_show_custom_normal = '#ebebeb';
 let color_show_custom_busy = '#ebebeb';
 let color_show_custom_overload = '#ff0000';
 
-let style_state = 0;  // 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
+let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
 let streams = [];
 let freqs = [];
