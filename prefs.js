@@ -37,6 +37,12 @@ const LOAD_SHOW_KEY = 'load-show';
 const GOVS_SHOW_KEY = 'governors-show';
 const FREQ_SHOW_KEY = 'frequency-show';
 
+const COLOR_SHOW_KEY = 'color-show';
+const COLOR_SHOW_CUSTOM_KEY = 'color-show-custom';
+const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
+const COLOR_SHOW_CUSTOM_BUSY_KEY = 'color-show-custom-busy';
+const COLOR_SHOW_CUSTOM_OVERLOAD_KEY = 'color-show-custom-overload';
+
 const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
 const _ = Gettext.gettext;
 
@@ -61,6 +67,12 @@ let governor_show = false;
 let load_show = false;
 let units_show = true;
 
+let color_show = false;
+let color_show_custom = false;
+let color_show_custom_normal = '#ebebeb';
+let color_show_custom_busy = '#ebebeb';
+let color_show_custom_overload = '#ff0000';
+
 let eprofiles = [
     {percent:0, event:EventType.CHARGING, guid:""},
     {percent:100, event:EventType.DISCHARGING, guid:""}
@@ -84,6 +96,13 @@ var CPUFreqPreferences = new Lang.Class({
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
         frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
+
+        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+        color_show_custom_busy = settings.get_string (COLOR_SHOW_CUSTOM_BUSY_KEY);
+        color_show_custom_overload = settings.get_string (COLOR_SHOW_CUSTOM_OVERLOAD_KEY);
+
         s = settings.get_string (EPROFILES_KEY);
         if (s) eprofiles = JSON.parse (s);
         s =  settings.get_string (PROFILES_KEY);
@@ -130,7 +149,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
         }));
         this.add (new Gtk.Label ({label: _("<b>Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
-        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));
         this.timeout = Gtk.SpinButton.new_with_range (0, 1000000, 50);
@@ -194,7 +213,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (LABEL_SHOW_KEY, label_show);
         }));
 
-        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Custom label when monitoring disabled")}));
         this.store = new Gtk.ListStore ();
@@ -219,6 +238,97 @@ var PageGeneralCPUFreq = new Lang.Class({
         }));
 
         hbox.pack_end (this.label, false, false, 0);
+
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        this.pack_start (hbox, false, false, 0);
+        this.cb_color = Gtk.CheckButton.new_with_label (_("Use color"));
+        this.cb_color.tooltip_text = _("Color Monitor depending on computer load");
+        //this.cb_color.margin = 6;
+        this.cb_color.active = color_show;
+        hbox.pack_start (this.cb_color, true, true, 0);
+        this.cb_color.connect ('toggled', Lang.bind (this, (o)=>{
+            color_show = o.active;
+            settings.set_boolean (COLOR_SHOW_KEY, color_show);
+        }));
+        rb = Gtk.RadioButton.new_with_label_from_widget (null, _("Default colors"));
+        rb.active = !settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        rb.id = 0;
+        hbox.pack_start(rb, true, true, 8);
+        rb.connect ('toggled', Lang.bind (this, (o)=>{
+            color_show_custom = !o.active;
+            settings.set_boolean (COLOR_SHOW_CUSTOM_KEY, color_show_custom);
+        }));
+        rb = Gtk.RadioButton.new_with_label_from_widget (rb, _("Custom colors"));
+        rb.active = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        rb.id = 1;
+        hbox.pack_start (rb, true, true, 8);
+        rb.connect ('toggled', Lang.bind (this, (o)=>{
+            color_show_custom = o.active;
+            settings.set_boolean (COLOR_SHOW_CUSTOM_KEY, color_show_custom);
+        }));
+
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
+        this.pack_start (hbox, false, false, 0);
+        hbox.add (new Gtk.Label ({label: _("Custom color when normal")}));
+        this.label_warning_normal = new Gtk.Label ({label:""});
+        this.label_warning_normal.tooltip_text = _("String should be an RGB hex value");
+        this.entry_color_normal = new Gtk.Entry ();
+        this.entry_color_normal.tooltip_text = _("Hex value of custom color when compuer is under normal load");
+        this.entry_color_normal.set_text (color_show_custom_normal);
+        this.entry_color_normal.connect ('changed', Lang.bind (this, (o)=>{
+            if (/#?[0-9a-f]{6}/.test(o.text)) {
+                color_show_custom_normal = o.text;
+                if (color_show_custom_normal.indexOf("#") != 0) color_show_custom_normal = "#" + color_show_custom_normal;
+                settings.set_string (COLOR_SHOW_CUSTOM_NORMAL_KEY, color_show_custom_normal);
+                this.label_warning_normal.set_label ("");
+            } else {
+                this.label_warning_normal.set_label ("");
+            }
+        }));
+        hbox.pack_end (this.entry_color_normal, false, false, 0);
+        hbox.pack_end (this.label_warning_normal, false, false, 8);
+
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
+        this.pack_start (hbox, false, false, 0);
+        hbox.add (new Gtk.Label ({label: _("Custom color when busy")}));
+        this.label_warning_busy = new Gtk.Label ({label:""});
+        this.label_warning_busy.tooltip_text = _("String should be an RGB hex value");
+        this.entry_color_busy = new Gtk.Entry ();
+        this.entry_color_busy.tooltip_text = _("Hex value of custom color when compuer is busy");
+        this.entry_color_busy.set_text (color_show_custom_busy);
+        this.entry_color_busy.connect ('changed', Lang.bind (this, (o)=>{
+            if (/#?[0-9a-f]{6}/.test(o.text)) {
+                color_show_custom_busy = o.text;
+                if (color_show_custom_busy.indexOf("#") != 0) color_show_custom_busy = "#" + color_show_custom_busy;
+                settings.set_string (COLOR_SHOW_CUSTOM_BUSY_KEY, color_show_custom_busy);
+                this.label_warning_busy.set_label ("");
+            } else {
+                this.label_warning_busy.set_label ("");
+            }
+        }));
+        hbox.pack_end (this.entry_color_busy, false, false, 0);
+        hbox.pack_end (this.label_warning_busy, false, false, 8);
+
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
+        this.pack_start (hbox, false, false, 0);
+        hbox.add (new Gtk.Label ({label: _("Custom color when overloaded")}));
+        this.label_warning_overload = new Gtk.Label ({label:""});
+        this.label_warning_overload.tooltip_text = _("String should be an RGB hex value");
+        this.entry_color_overload = new Gtk.Entry ();
+        this.entry_color_overload.tooltip_text = _("Hex value of custom color when compuer is overloaded");
+        this.entry_color_overload.set_text (color_show_custom_overload);
+        this.entry_color_overload.connect ('changed', Lang.bind (this, (o)=>{
+            if (/#?[0-9a-f]{6}/.test(o.text)) {
+                color_show_custom_overload = o.text;
+                if (color_show_custom_overload.indexOf("#") != 0) color_show_custom_overload = "#" + color_show_custom_overload;
+                settings.set_string (COLOR_SHOW_CUSTOM_OVERLOAD_KEY, color_show_custom_overload);
+                this.label_warning_overload.set_label ("");
+            } else {
+                this.label_warning_overload.set_label ("");
+            }
+        }));
+        hbox.pack_end (this.entry_color_overload, false, false, 0);
+        hbox.pack_end (this.label_warning_overload, false, false, 8);
 
         this.show_all ();
     },
