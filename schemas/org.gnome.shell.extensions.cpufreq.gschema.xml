@@ -45,6 +45,36 @@
       <description>Always show custom label</description>
     </key>
 
+    <key type="s" name="color-show-custom-critical">
+      <default>'#ff0000'</default>
+      <summary>Overload load color</summary>
+      <description>Monitor color when computer is under overloaded load</description>
+    </key>
+
+    <key type="s" name="color-show-custom-warning">
+      <default>'#ebebeb'</default>
+      <summary>Busy load color</summary>
+      <description>Monitor color when computer is under busy load</description>
+    </key>
+
+    <key type="s" name="color-show-custom-normal">
+      <default>'#ebebeb'</default>
+      <summary>Normal load color</summary>
+      <description>Monitor color when computer is under normal load</description>
+    </key>
+
+    <key type="b" name="color-show-custom">
+      <default>false</default>
+      <summary>Display Monitor in custom colors</summary>
+      <description>Display Monitor in custom colors depending on computer load</description>
+    </key>
+
+    <key type="b" name="color-show">
+      <default>false</default>
+      <summary>Display Monitor in color</summary>
+      <description>Display Monitor in color depending on computer load</description>
+    </key>
+
     <key type="b" name="turbo-boost">
       <default>true</default>
       <summary>Processor boosting control</summary>

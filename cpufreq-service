@@ -39,6 +39,12 @@ const FREQ_SHOW_KEY = 'frequency-show';
 const GOVS_SHOW_KEY = 'governors-show';
 const LOAD_SHOW_KEY = 'load-show';
 
+const COLOR_SHOW_KEY = 'color-show';
+const COLOR_SHOW_CUSTOM_KEY = 'color-show-custom';
+const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
+const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
+const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
+
 var DEBUGING = false;
 let settings = null;
 let monitor_timeout = 500;
@@ -48,6 +54,17 @@ let units_show = true;
 let frequency_show = true;
 let governor_show = false;
 let load_show = false;
+
+let color_show = false;
+let color_show_custom = false;
+let color_show_default_normal = ''; //'#33d552';
+let color_show_default_warning = 'orange';
+let color_show_default_critical = 'red';
+let color_show_custom_normal = '#ebebeb';
+let color_show_custom_warning = '#ebebeb';
+let color_show_custom_critical = '#ff0000';
+
+let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
 let streams = [];
 let freqs = [];
@@ -66,6 +83,9 @@ const CpufreqServiceIface = '<node> \
 <property name="Frequency" type="t" access="read"/> \
 <signal name="FrequencyChanged"> \
   <arg name="title" type="s"/> \
+</signal> \
+<signal name="StyleChanged"> \
+  <arg name="style" type="s"/> \
 </signal> \
 </interface> \
 </node>';
@@ -89,6 +109,12 @@ var CpufreqService = new Lang.Class ({
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
         load_show = settings.get_boolean (LOAD_SHOW_KEY);
         label_text = settings.get_string (LABEL_KEY);
+
+        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
     },
 
     vfunc_startup: function() {
@@ -139,7 +165,19 @@ var CpufreqService = new Lang.Class ({
         label_text = o.get_string (LABEL_KEY);
       } else if (key == FREQ_SHOW_KEY) {
         frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
+      } else if (key == COLOR_SHOW_KEY) {
+        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_KEY) {
+        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_NORMAL_KEY) {
+        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_WARNING_KEY) {
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_CRITICAL_KEY) {
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
       }
+
+      style_state = -1;
 
       this.max0 = 0;
     },
@@ -186,7 +224,7 @@ var CpufreqService = new Lang.Class ({
     },
 
     _update_freq: function () {
-        let m = 0, units, i = 0, g, l;
+        let m = 0, units, i = 0, g, l, s = 0;
         streams.forEach (stream => {
             if (stream) {
               if (frequency_show) this._read_line (stream);
@@ -194,7 +232,7 @@ var CpufreqService = new Lang.Class ({
             }
             i++;
         });
-        if (load_show) this.get_loading ();
+        if (load_show || color_show) this.get_loading ();
         for (i = 0; i < cpu_online; i++)
             if (freqs[i] && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
@@ -219,6 +257,13 @@ var CpufreqService = new Lang.Class ({
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
+        }
+        if (color_show) {
+          s = this.stylestate;
+        }
+        if (s != style_state) {
+            this.dbus.emit_signal ("StyleChanged", new GLib.Variant("(s)", [this.get_stylestring (s)]));
+            style_state = s;
         }
         gcc++;
         if (gcc*monitor_timeout > 1000) {
@@ -282,6 +327,50 @@ var CpufreqService = new Lang.Class ({
           l = "☺";
         }
         return l;
+    },
+
+    get stylestate () {
+        let s;
+        if (color_show) {
+          if (loading > cpu_online * 100) {
+            s = 3;
+          } else if (loading > cpu_online * 75) {
+            s = 2;
+          } else {
+            s = 1;
+          }
+          if (color_show_custom) s += 3;  // match with stale_state definition
+        } else {
+          s = 0;
+        }
+        return s;
+    },
+
+    get_stylestring: function (state) {
+        let s;
+        switch (state) {
+          case 1:
+            s = "color:" + color_show_default_normal + ";";
+            break;
+          case 2:
+            s = "color:" + color_show_default_warning + ";";
+            break;
+          case 3:
+            s = "color:" + color_show_default_critical + ";";
+            break;
+          case 4:
+            s = "color:" + color_show_custom_normal + ";";
+            break;
+          case 5:
+            s = "color:" + color_show_custom_warning + ";";
+            break;
+          case 6:
+            s = "color:" + color_show_custom_critical + ";";
+            break;
+          default:
+            s = "";
+        }
+        return s;
     },
 
     _read_line: function (dis) {

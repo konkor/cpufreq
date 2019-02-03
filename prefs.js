@@ -25,6 +25,10 @@ const GObject = imports.gi.GObject;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
+const Gdk = imports.gi.Gdk;
+
+var Format = imports.format;
+String.prototype.format = Format.format;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const PROFILES_KEY = 'profiles';
@@ -36,6 +40,12 @@ const UNITS_SHOW_KEY = 'units-show';
 const LOAD_SHOW_KEY = 'load-show';
 const GOVS_SHOW_KEY = 'governors-show';
 const FREQ_SHOW_KEY = 'frequency-show';
+
+const COLOR_SHOW_KEY = 'color-show';
+const COLOR_SHOW_CUSTOM_KEY = 'color-show-custom';
+const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
+const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
+const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
 const _ = Gettext.gettext;
@@ -61,6 +71,12 @@ let governor_show = false;
 let load_show = false;
 let units_show = true;
 
+let color_show = false;
+let color_show_custom = false;
+let color_show_custom_normal = '#ebebeb';
+let color_show_custom_warning = '#ebebeb';
+let color_show_custom_critical = '#ff0000';
+
 let eprofiles = [
     {percent:0, event:EventType.CHARGING, guid:""},
     {percent:100, event:EventType.DISCHARGING, guid:""}
@@ -84,6 +100,13 @@ var CPUFreqPreferences = new Lang.Class({
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
         frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
+
+        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
+
         s = settings.get_string (EPROFILES_KEY);
         if (s) eprofiles = JSON.parse (s);
         s =  settings.get_string (PROFILES_KEY);
@@ -130,7 +153,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
         }));
         this.add (new Gtk.Label ({label: _("<b>Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
-        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));
         this.timeout = Gtk.SpinButton.new_with_range (0, 1000000, 50);
@@ -194,7 +217,7 @@ var PageGeneralCPUFreq = new Lang.Class({
             settings.set_boolean (LABEL_SHOW_KEY, label_show);
         }));
 
-        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Custom label when monitoring disabled")}));
         this.store = new Gtk.ListStore ();
@@ -220,8 +243,82 @@ var PageGeneralCPUFreq = new Lang.Class({
 
         hbox.pack_end (this.label, false, false, 0);
 
+        hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:6});
+        this.pack_start (hbox, false, false, 0);
+        this.cb_color = Gtk.CheckButton.new_with_label (_("Use color"));
+        this.cb_color.tooltip_text = _("Colorful Monitor's title depending on warning state");
+        //this.cb_color.margin = 6;
+        this.cb_color.active = color_show;
+        hbox.pack_start (this.cb_color, true, true, 0);
+        this.cb_color.connect ('toggled', Lang.bind (this, (o)=>{
+            color_show = o.active;
+            settings.set_boolean (COLOR_SHOW_KEY, color_show);
+            this.colorbox.sensitive = color_show && color_show_custom;
+        }));
+        rb = Gtk.RadioButton.new_with_label_from_widget (null, _("Default colors"));
+        rb.active = !settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        rb.id = 0;
+        hbox.pack_start(rb, true, true, 8);
+        rb.connect ('toggled', Lang.bind (this, (o)=>{
+            color_show_custom = !o.active;
+            settings.set_boolean (COLOR_SHOW_CUSTOM_KEY, color_show_custom);
+        }));
+        rb = Gtk.RadioButton.new_with_label_from_widget (rb, _("Custom colors"));
+        rb.active = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        rb.id = 1;
+        hbox.pack_start (rb, true, true, 8);
+        rb.connect ('toggled', Lang.bind (this, (o)=>{
+            color_show_custom = o.active;
+            settings.set_boolean (COLOR_SHOW_CUSTOM_KEY, color_show_custom);
+            this.colorbox.sensitive = color_show && color_show_custom;
+        }));
+
+        this.colorbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
+        this.pack_start (this.colorbox, false, false, 0);
+
+        this.colorbox.add (new Gtk.Label ({label: _("Normal")}));
+        let [ ,color] = Gdk.Color.parse (color_show_custom_normal);
+        this.color_normal = Gtk.ColorButton.new_with_color (color);
+        this.color_normal.connect ('color-set', Lang.bind (this, (o)=>{
+            settings.set_string (COLOR_SHOW_CUSTOM_NORMAL_KEY, this.color_string (o.rgba));
+        }));
+        this.colorbox.pack_start (this.color_normal, true, false, 0);
+
+        this.colorbox.add (new Gtk.Label ({label: _("Warning")}));
+        [ ,color] = Gdk.Color.parse (color_show_custom_warning);
+        this.color_warning = Gtk.ColorButton.new_with_color (color);
+        this.color_warning.connect ('color-set', Lang.bind (this, (o)=>{
+            settings.set_string (COLOR_SHOW_CUSTOM_WARNING_KEY, this.color_string (o.rgba));
+        }));
+        this.colorbox.pack_start (this.color_warning, true, false, 0);
+
+        this.colorbox.add (new Gtk.Label ({label: _("Critical")}));
+        [ ,color] = Gdk.Color.parse (color_show_custom_critical);
+        this.color_critical = Gtk.ColorButton.new_with_color (color);
+        this.color_critical.connect ('color-set', Lang.bind (this, (o)=>{
+            settings.set_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY, this.color_string (o.rgba));
+        }));
+        this.colorbox.pack_start (this.color_critical, true, false, 0);
+        this.colorbox.sensitive = color_show && color_show_custom;
+
         this.show_all ();
     },
+
+    color_string: function (rgba) {
+        let s = "#%02x%02x%02x".format (
+            this.scale_round (rgba.red),
+            this.scale_round (rgba.green),
+            this.scale_round (rgba.blue)
+        );
+        return s;
+    },
+
+    scale_round: function (val) {
+        val = Math.floor (val * 255 + 0.5);
+        val = Math.max (val, 0);
+        val = Math.min (val, 255);
+        return val;
+    }
 });
 
 var PagePowerCPUFreq = new Lang.Class({
