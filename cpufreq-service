@@ -42,8 +42,8 @@ const LOAD_SHOW_KEY = 'load-show';
 const COLOR_SHOW_KEY = 'color-show';
 const COLOR_SHOW_CUSTOM_KEY = 'color-show-custom';
 const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
-const COLOR_SHOW_CUSTOM_BUSY_KEY = 'color-show-custom-busy';
-const COLOR_SHOW_CUSTOM_OVERLOAD_KEY = 'color-show-custom-overload';
+const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
+const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
 
 var DEBUGING = false;
 let settings = null;
@@ -57,12 +57,12 @@ let load_show = false;
 
 let color_show = false;
 let color_show_custom = false;
-let color_show_default_normal = '#33d552';
-let color_show_default_busy = 'orange';
-let color_show_default_overload = 'red';
+let color_show_default_normal = ''; //'#33d552';
+let color_show_default_warning = 'orange';
+let color_show_default_critical = 'red';
 let color_show_custom_normal = '#ebebeb';
-let color_show_custom_busy = '#ebebeb';
-let color_show_custom_overload = '#ff0000';
+let color_show_custom_warning = '#ebebeb';
+let color_show_custom_critical = '#ff0000';
 
 let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
@@ -113,8 +113,8 @@ var CpufreqService = new Lang.Class ({
         color_show = settings.get_boolean (COLOR_SHOW_KEY);
         color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
         color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
-        color_show_custom_busy = settings.get_string (COLOR_SHOW_CUSTOM_BUSY_KEY);
-        color_show_custom_overload = settings.get_string (COLOR_SHOW_CUSTOM_OVERLOAD_KEY);
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
     },
 
     vfunc_startup: function() {
@@ -171,10 +171,10 @@ var CpufreqService = new Lang.Class ({
         color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
       } else if (key == COLOR_SHOW_CUSTOM_NORMAL_KEY) {
         color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
-      } else if (key == COLOR_SHOW_CUSTOM_BUSY_KEY) {
-        color_show_custom_busy = settings.get_string (COLOR_SHOW_CUSTOM_BUSY_KEY);
-      } else if (key == COLOR_SHOW_CUSTOM_OVERLOAD_KEY) {
-        color_show_custom_overload = settings.get_string (COLOR_SHOW_CUSTOM_OVERLOAD_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_WARNING_KEY) {
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_CRITICAL_KEY) {
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
       }
 
       style_state = -1;
@@ -353,19 +353,19 @@ var CpufreqService = new Lang.Class ({
             s = "color:" + color_show_default_normal + ";";
             break;
           case 2:
-            s = "color:" + color_show_default_busy + ";";
+            s = "color:" + color_show_default_warning + ";";
             break;
           case 3:
-            s = "color:" + color_show_default_overload + ";";
+            s = "color:" + color_show_default_critical + ";";
             break;
           case 4:
             s = "color:" + color_show_custom_normal + ";";
             break;
           case 5:
-            s = "color:" + color_show_custom_busy + ";";
+            s = "color:" + color_show_custom_warning + ";";
             break;
           case 6:
-            s = "color:" + color_show_custom_overload + ";";
+            s = "color:" + color_show_custom_critical + ";";
             break;
           default:
             s = "";

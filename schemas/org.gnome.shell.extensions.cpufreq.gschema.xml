@@ -45,13 +45,13 @@
       <description>Always show custom label</description>
     </key>
 
-    <key type="s" name="color-show-custom-overload">
+    <key type="s" name="color-show-custom-critical">
       <default>'#ff0000'</default>
       <summary>Overload load color</summary>
       <description>Monitor color when computer is under overloaded load</description>
     </key>
 
-    <key type="s" name="color-show-custom-busy">
+    <key type="s" name="color-show-custom-warning">
       <default>'#ebebeb'</default>
       <summary>Busy load color</summary>
       <description>Monitor color when computer is under busy load</description>
