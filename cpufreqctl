@@ -201,6 +201,16 @@ then
 	fc-cache -f
 	exit
 fi
+if [ $1 = "uninstall" ]
+then
+    echo 'uninstalling cpufreqctl helper...'
+    rm /usr/bin/cpufreqctl
+    echo 'uninstalling policy...'
+    rm /usr/share/polkit-1/actions/konkor.cpufreq.policy
+    echo 'uninstalling fonts...'
+    rm -rf /usr/share/fonts/truetype/cpufreq
+    exit
+fi
 if [ $1 = "version" ]
 then
     echo $VERSION

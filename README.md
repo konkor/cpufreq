@@ -21,8 +21,9 @@ Please, consider to support the project and make it better!
 <p align="center">
   <big>
     Top supporters:<br><br>
-    <a href="https://github.com/terencode">Térence Clastres</a>
-    <br><br>
+    <a href="https://github.com/terencode">Térence Clastres</a><br>
+    <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
+    <br>
     <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference</i>
   </big>
 </p>
