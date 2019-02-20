@@ -7,6 +7,19 @@
     padding-bottom: 0px;
 }
 
+.cpufreq-text {
+    font-family: cpufreq, roboto, cantarell;
+}
+
+.sponsors-info-item {
+    font-style: oblique;
+    text-align: center;
+    color: #215d9c;
+}
+.sponsors-info-item:hover {
+    color: #eeeeec;
+    background-color: #215d9c;
+}
 .cpufreq-separator-item {
     padding: 0em 2.25em 0em 0em;
     height: 11px;

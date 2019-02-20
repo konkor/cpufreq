@@ -35,6 +35,7 @@ mkdir -p "${EXTENSION_PATH}/${EXTENSION_UUID}";
 unzip -q /tmp/extension.zip -d ${EXTENSION_PATH}/${EXTENSION_UUID};
 cp -r ${EXTENSION_PATH}/${EXTENSION_UUID}/cpufreq-${BRANCH}/* ${EXTENSION_PATH}/${EXTENSION_UUID};
 rm -r ${EXTENSION_PATH}/${EXTENSION_UUID}/cpufreq-${BRANCH}
+rm -rf ${EXTENSION_PATH}/${EXTENSION_UUID}/docs
 
 # List enabled extensions 
 EXTENSION_LIST=$(gsettings get org.gnome.shell enabled-extensions | sed 's/^.\(.*\).$/\1/');

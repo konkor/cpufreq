@@ -39,24 +39,25 @@ function initTranslations (domain) {
 }
 
 function getSettings (schema) {
-  schema = schema || 'org.gnome.shell.extensions.cpufreq';
-  const GioSSS = Gio.SettingsSchemaSource;
+    schema = schema || 'org.gnome.shell.extensions.cpufreq';
 
-  let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
-  let schemaSource;
-  if (schemaDir.query_exists(null))
-    schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
-                                            GioSSS.get_default(),
-                                            false);
-  else
-    schemaSource = GioSSS.get_default();
+    const GioSSS = Gio.SettingsSchemaSource;
 
-  let schemaObj = schemaSource.lookup(schema, true);
-  if (!schemaObj)
-    throw new Error('Schema ' + schema + ' could not be found for the extension. ' +
-                    'Please check your installation.');
+    let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
+    let schemaSource;
+    if (schemaDir.query_exists(null))
+        schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
+                                                 GioSSS.get_default(),
+                                                 false);
+    else
+        schemaSource = GioSSS.get_default();
 
-  return new Gio.Settings({ settings_schema: schemaObj });
+    let schemaObj = schemaSource.lookup(schema, true);
+    if (!schemaObj)
+        throw new Error('Schema ' + schema + ' could not be found for extension '
+                        + 'cpufreq@konkor. Please check your installation.');
+
+    return new Gio.Settings({ settings_schema: schemaObj });
 }
 
 function getCurrentFile () {
@@ -72,13 +73,19 @@ function getCurrentFile () {
     return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
 }
 
-function byteArrayToString (byte_array) {
-    if (byte_array instanceof ByteArray.ByteArray) {
-        return byte_array.toString();
-    } else if (byte_array instanceof Uint8Array) {
-        return ByteArray.toString(byte_array);
-    }
-    return "";
+function byteArrayToString (array) {
+    return array instanceof Uint8Array ? ByteArray.toString (array):array;
+}
+
+function get_cpu_number () {
+    let c = 0;
+    let cpulist = null;
+    let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
+    if (ret[0]) cpulist = byteArrayToString(ret[1]).toString().split("\n", 1)[0].split("-");
+    cpulist.forEach ((f)=> {
+        if (parseInt (f) > 0) c = parseInt (f);
+    });
+    return c + 1;
 }
 
 //DOMAIN ERROR:0:RED, INFO:1:BLUE, DEBUG:2:GREEN

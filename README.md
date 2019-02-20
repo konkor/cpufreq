@@ -20,9 +20,11 @@ Please, consider to support the project and make it better!
 
 <p align="center">
   <big>
-    Top 5 Supporters could be here with your name or logo and reference.
-    <br><br>
-    <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
+    Top supporters:<br><br>
+    <a href="https://github.com/terencode">Térence Clastres (France)</a><br>
+    <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
+    <br>
+    <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference</i>
   </big>
 </p>
 

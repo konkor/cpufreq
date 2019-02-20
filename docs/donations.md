@@ -16,7 +16,9 @@ Please, consider to support the project and make it better!
 
 <p align="center">
   <big>
-    Top 5 supporters could be here with your name or logo and reference.
+    <a href="https://github.com/terencode">Térence Clastres</a>
+    <br>
+    <a href="{{ "/sponsors" | relative_url }}">Yoann Deferi (France)</a>
     <br><br>
     <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
   </big>

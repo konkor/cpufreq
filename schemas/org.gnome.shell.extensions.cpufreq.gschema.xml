@@ -9,6 +9,72 @@
       <description>Save settings for restore</description>
     </key>
 
+    <key type="b" name="units-show">
+      <default>true</default>
+      <summary>Show Units</summary>
+      <description>Show frequency units</description>
+    </key>
+
+    <key type="b" name="frequency-show">
+      <default>true</default>
+      <summary>Monitor frequency</summary>
+      <description>Show current frequency on the panel</description>
+    </key>
+
+    <key type="b" name="governors-show">
+      <default>false</default>
+      <summary>Monitor governor</summary>
+      <description>Show current governor on the panel</description>
+    </key>
+
+    <key type="b" name="load-show">
+      <default>false</default>
+      <summary>Monitor load</summary>
+      <description>Show current computer load</description>
+    </key>
+
+    <key type="s" name="label">
+      <default>'\u269b'</default>
+      <summary>Custom label</summary>
+      <description>Label or just a symbol to show when monitor disabled</description>
+    </key>
+
+    <key type="b" name="label-show">
+      <default>false</default>
+      <summary>Show Label</summary>
+      <description>Always show custom label</description>
+    </key>
+
+    <key type="s" name="color-show-custom-critical">
+      <default>'#ff0000'</default>
+      <summary>Overload load color</summary>
+      <description>Monitor color when computer is under overloaded load</description>
+    </key>
+
+    <key type="s" name="color-show-custom-warning">
+      <default>'#ebebeb'</default>
+      <summary>Busy load color</summary>
+      <description>Monitor color when computer is under busy load</description>
+    </key>
+
+    <key type="s" name="color-show-custom-normal">
+      <default>'#ebebeb'</default>
+      <summary>Normal load color</summary>
+      <description>Monitor color when computer is under normal load</description>
+    </key>
+
+    <key type="b" name="color-show-custom">
+      <default>false</default>
+      <summary>Display Monitor in custom colors</summary>
+      <description>Display Monitor in custom colors depending on computer load</description>
+    </key>
+
+    <key type="b" name="color-show">
+      <default>false</default>
+      <summary>Display Monitor in color</summary>
+      <description>Display Monitor in color depending on computer load</description>
+    </key>
+
     <key type="b" name="turbo-boost">
       <default>true</default>
       <summary>Processor boosting control</summary>

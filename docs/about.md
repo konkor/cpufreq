@@ -17,7 +17,7 @@ You can find more information about in [FAQ](/cpufreq/faq).
 ## Features
 <img alt="screenshot" src="{{ "/assets/images/screenshot.png" | relative_url }}" align="right" height="240" style="margin:0 32px">
 
-The main task of the Gnome CPUFREQ is to provide convenient methods to control your system power consumption, performance and monitoring of some critical aspects. You can check the [Welcome post](/cpufreq/news/2018-02-26-hello-world/) and find many interesting pieces of information so.
+The main task of the Gnome CPUFREQ is to provide convenient methods to control your system power consumption, performance and monitoring of some critical aspects. You can check the [Welcome post]({{ "/cpufreq/news/2018/02/26/hello-world.html" | relative_url }}) and find many interesting pieces of information so.
 
 **Core Features:**
 * Compatible with many hardware architectures;

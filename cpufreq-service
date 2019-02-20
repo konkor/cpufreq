@@ -1,4 +1,4 @@
-#!/usr/bin/env gjs
+#!/usr/bin/gjs
 /*
  * CPUFreq Manager - a lightweight CPU frequency scaling monitor
  * and powerful CPU management tool
@@ -32,14 +32,46 @@ imports.searchPath.unshift(APPDIR);
 const Convenience = imports.convenience;
 
 const MONITOR_KEY = 'monitor';
+const LABEL_KEY = 'label';
+const LABEL_SHOW_KEY = 'label-show';
+const UNITS_SHOW_KEY = 'units-show';
+const FREQ_SHOW_KEY = 'frequency-show';
+const GOVS_SHOW_KEY = 'governors-show';
+const LOAD_SHOW_KEY = 'load-show';
+
+const COLOR_SHOW_KEY = 'color-show';
+const COLOR_SHOW_CUSTOM_KEY = 'color-show-custom';
+const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
+const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
+const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
 
 var DEBUGING = false;
 let settings = null;
 let monitor_timeout = 500;
+let label_text = "";
+let label_show = false;
+let units_show = true;
+let frequency_show = true;
+let governor_show = false;
+let load_show = false;
+
+let color_show = false;
+let color_show_custom = false;
+let color_show_default_normal = ''; //'#33d552';
+let color_show_default_warning = 'orange';
+let color_show_default_critical = 'red';
+let color_show_custom_normal = '#ebebeb';
+let color_show_custom_warning = '#ebebeb';
+let color_show_custom_critical = '#ff0000';
+
+let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
 let streams = [];
 let freqs = [];
-let cpucount = 1;
+let governors = [];
+let loading = 0;
+let cpu_present = 1;
+let cpu_online = 1;
 let gcc = 0;
 
 let event = 0;
@@ -51,6 +83,9 @@ const CpufreqServiceIface = '<node> \
 <property name="Frequency" type="t" access="read"/> \
 <signal name="FrequencyChanged"> \
   <arg name="title" type="s"/> \
+</signal> \
+<signal name="StyleChanged"> \
+  <arg name="style" type="s"/> \
 </signal> \
 </interface> \
 </node>';
@@ -68,6 +103,18 @@ var CpufreqService = new Lang.Class ({
         });
         GLib.set_application_name ("CPUFreq Service");
         monitor_timeout = settings.get_int (MONITOR_KEY);
+        units_show = settings.get_boolean (UNITS_SHOW_KEY);
+        label_show = settings.get_boolean (LABEL_SHOW_KEY);
+        frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
+        governor_show = settings.get_boolean (GOVS_SHOW_KEY);
+        load_show = settings.get_boolean (LOAD_SHOW_KEY);
+        label_text = settings.get_string (LABEL_KEY);
+
+        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
     },
 
     vfunc_startup: function() {
@@ -86,18 +133,53 @@ var CpufreqService = new Lang.Class ({
         debug ("init");
         this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
         this.dbus.export (Gio.DBus.session, OBJECT_PATH);
-        cpucount = Convenience.get_cpu_number ();
+        cpu_present = Convenience.get_cpu_number ();
         this.max0 = 0;
         this.title = "-- \u3393";
         this.old = this.title;
-        freqs = [GLib.get_num_processors ()];
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
-        settings.connect ("changed::" + MONITOR_KEY, Lang.bind (this, function() {
-            monitor_timeout = settings.get_int (MONITOR_KEY);
-            this._add_event ();
-        }));
+        settings.connect ("changed", Lang.bind (this, this.on_settings));
+        GLib.timeout_add (200, 8000, () => {
+          let cores = GLib.get_num_processors ();
+          if (cores != cpu_online) this._init_streams ();
+          if (!frequency_show) this.gov0 = "";
+          return true;
+        });
+    },
+
+    on_settings: function (o, key) {
+      if (key == MONITOR_KEY) {
+        monitor_timeout =  o.get_int (MONITOR_KEY);
+        this._add_event ();
+      } else if (key == UNITS_SHOW_KEY) {
+        units_show = o.get_boolean (UNITS_SHOW_KEY);
+      } else if (key == LABEL_SHOW_KEY) {
+        label_show = o.get_boolean (LABEL_SHOW_KEY);
+      } else if (key == LOAD_SHOW_KEY) {
+        load_show = o.get_boolean (LOAD_SHOW_KEY);
+      } else if (key == GOVS_SHOW_KEY) {
+        governor_show = o.get_boolean (GOVS_SHOW_KEY);
+      } else if (key == LABEL_KEY) {
+        label_text = o.get_string (LABEL_KEY);
+      } else if (key == FREQ_SHOW_KEY) {
+        frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
+      } else if (key == COLOR_SHOW_KEY) {
+        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_KEY) {
+        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_NORMAL_KEY) {
+        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_WARNING_KEY) {
+        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+      } else if (key == COLOR_SHOW_CUSTOM_CRITICAL_KEY) {
+        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
+      }
+
+      style_state = -1;
+
+      this.max0 = 0;
     },
 
      _add_event: function () {
@@ -110,7 +192,10 @@ var CpufreqService = new Lang.Class ({
                 this._update_freq ();
                 return true;
             }));
-        else this.quit ();
+        else {
+          this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [""]));
+          this.quit ();
+        }
     },
 
     _init_streams: function() {
@@ -124,8 +209,11 @@ var CpufreqService = new Lang.Class ({
                 if (stream) stream.close (null);
             } catch (e) {}
         });
+        cpu_online = GLib.get_num_processors ();
+        freqs = new Array (cpu_online);
+        governors = new Array (cpu_online);
         streams = [];
-        for (let key = 0; key < cpucount; key++) {
+        for (let key = 0; key < cpu_present; key++) {
             if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
                 let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
                 streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
@@ -136,28 +224,153 @@ var CpufreqService = new Lang.Class ({
     },
 
     _update_freq: function () {
-        let m = 0;
+        let m = 0, units, i = 0, g, l, s = 0;
         streams.forEach (stream => {
-            this._read_line (stream);
-        });
-        for (let i = 0; i < cpucount; i++)
-            if (i < freqs.length && freqs[i] > m) m = freqs[i];
-        if (m > 0 && m != this.max0) {
-            if (m >= 1000000) {
-                this.title = (m/1000000).toFixed(2).toString() + " \u3393";
-            } else {
-                this.title = (m/1000).toFixed(0).toString() + "  \u3392";
+            if (stream) {
+              if (frequency_show) this._read_line (stream);
+              if (governor_show) this.get_governors (i);
             }
+            i++;
+        });
+        if (load_show || color_show) this.get_loading ();
+        for (i = 0; i < cpu_online; i++)
+            if (freqs[i] && freqs[i] > m) m = freqs[i];
+        if (governor_show) g = this.governor;
+        if (load_show) l = this.loadavg;
+        if ((m > 0 && m != this.max0) || g != this.gov0) {
+            if (frequency_show)
+              if (m >= 1000000) {
+                this.title = (m / 1000000).toFixed(2).toString ();
+                units = " \u3393";
+              } else {
+                this.title = (m / 1000).toFixed(0).toString ();
+                units = "  \u3392";
+              }
+            else this.title = "";
+            if (units_show && frequency_show) this.title += units;
+            if (governor_show && g) {
+              this.title += " " + g;
+              this.gov0 = g;
+            }
+            if (load_show) this.title += " " + l;
+            if (label_show) this.title += " " + label_text;
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
             this.old = this.title;
             this.max0 = m;
-            gcc++;
-            if (gcc == 10) {
-                gcc = 0;
-                System.gc ();
-            }
         }
-        //debug (this.title);
+        if (color_show) {
+          s = this.stylestate;
+        }
+        if (s != style_state) {
+            this.dbus.emit_signal ("StyleChanged", new GLib.Variant("(s)", [this.get_stylestring (s)]));
+            style_state = s;
+        }
+        gcc++;
+        if (gcc*monitor_timeout > 1000) {
+            gcc = 0;
+            System.gc ();
+        }
+    },
+
+    get_governors: function (core) {
+        core = core || 0;
+        let path = '/sys/devices/system/cpu/cpu' + core + '/cpufreq/scaling_governor';
+        let file = Gio.file_new_for_path (path);
+
+        file.load_contents_async (null, (o, res) => {
+            let [success, contents] = o.load_contents_finish (res);
+            if (!success) return;
+            try {
+                contents = Convenience.byteArrayToString (contents).toString ().split ("\n")[0].trim ();
+                governors.unshift (contents);
+                governors.splice (governors.length - 1, 1);
+            } catch (e) {}
+        });
+    },
+
+    get governor () {
+        let g = governors[0];
+        for (let i = 1; i < cpu_online; i++)
+            if (governors[i] && governors[i] != g) g = "mixed";
+        if (g) g = g.trim().toLowerCase ();
+        if (g == "mixed") g = "\u25cd";
+        else if (g == "powersave") g = "\uf06c";
+        else if (g == "performance") g = "\uf197";
+        else if (g == "ondemand") g = "\uf0e7";
+        else if (g == "conservative") g = "\ue976";
+        else if (g == "schedutil") g = "\ue953";
+        else if (g == "userspace") g = "\uf007";
+        else g = "\uf0e7";
+        return g;
+    },
+
+    get_loading: function () {
+        let file = Gio.file_new_for_path ('/proc/loadavg');
+
+        file.load_contents_async (null, (o, res) => {
+            let [success, contents] = o.load_contents_finish (res);
+            if (!success) return;
+            try {
+                contents = Convenience.byteArrayToString (contents).toString ().split ("\n")[0].split (" ")[0].trim ();
+                loading = Math.round (parseFloat (contents) * 100);
+            } catch (e) {}
+        });
+    },
+
+    get loadavg () {
+        let l;
+        if (loading > cpu_online * 100) {
+          l = "☹";
+        } else if (loading > cpu_online * 75) {
+          l = "";
+        } else {
+          l = "☺";
+        }
+        return l;
+    },
+
+    get stylestate () {
+        let s;
+        if (color_show) {
+          if (loading > cpu_online * 100) {
+            s = 3;
+          } else if (loading > cpu_online * 75) {
+            s = 2;
+          } else {
+            s = 1;
+          }
+          if (color_show_custom) s += 3;  // match with stale_state definition
+        } else {
+          s = 0;
+        }
+        return s;
+    },
+
+    get_stylestring: function (state) {
+        let s;
+        switch (state) {
+          case 1:
+            s = "color:" + color_show_default_normal + ";";
+            break;
+          case 2:
+            s = "color:" + color_show_default_warning + ";";
+            break;
+          case 3:
+            s = "color:" + color_show_default_critical + ";";
+            break;
+          case 4:
+            s = "color:" + color_show_custom_normal + ";";
+            break;
+          case 5:
+            s = "color:" + color_show_custom_warning + ";";
+            break;
+          case 6:
+            s = "color:" + color_show_custom_critical + ";";
+            break;
+          default:
+            s = "";
+        }
+        return s;
     },
 
     _read_line: function (dis) {
@@ -178,17 +391,17 @@ var CpufreqService = new Lang.Class ({
                 var n = parseInt (Convenience.byteArrayToString(line));
                 if (Number.isInteger (n)) {
                     freqs.unshift (n);
-                    freqs.splice (freqs.length-1, 1);
+                    freqs.splice (freqs.length - 1, 1);
                 }
             }
         } catch (e) {}
     },
 
     remove_events: function () {
+        if (this.dbus) this.dbus.unexport ();
         if (event != 0) GLib.Source.remove (event);
         if (init_event != 0) GLib.Source.remove (init_event);
         event = 0; init_event = 0;
-        if (this.dbus) this.dbus.unexport ();
     }
 });
 
