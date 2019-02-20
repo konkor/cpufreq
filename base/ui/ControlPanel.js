@@ -136,7 +136,7 @@ var ControlPanel = new Lang.Class({
       this.sliders_build ();
       if (this.activeg.label.indexOf ("powersave") > -1) {
         this.slider_max.sensitive = false;
-        debug (this.activeg.label);
+        //debug (this.activeg.label);
       } else if (this.activeg.label.indexOf ("performance") > -1) {
         this.slider_min.sensitive = false;
       }
