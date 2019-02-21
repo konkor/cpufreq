@@ -102,10 +102,10 @@ var CPUFreqApplication = new Lang.Class ({
         let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
         window.add (box);
         this.sidebar = new InfoPanel.InfoPanel ();
-        box.pack_start (this.sidebar, false, false, 24);
+        box.pack_start (this.sidebar, true, true, 24);
         box.pack_end (this.cpanel, true, true, 8);
         this.cpanel.set_size_request (320, 160);
-        this.sidebar.set_size_request (48, 160);
+        this.sidebar.set_size_request (360, 160);
 
         window.connect ("focus-out-event", ()=>{ this.quit();});
     },

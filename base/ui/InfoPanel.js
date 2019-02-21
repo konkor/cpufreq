@@ -29,20 +29,40 @@ const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 const Helper = imports.base.HelperCPUFreq;
 
+let cpucount = Convenience.get_cpu_number ();
+
 var InfoPanel = new Lang.Class({
   Name: "InfoPanel",
   Extends: Gtk.Box,
 
   _init: function () {
-    this.parent ({orientation:Gtk.Orientation.VERTICAL});
-    this.margin_bottom = 8;
+    this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:8});
+    this.border = 8;
     this.get_style_context ().add_class ("info-widget");
 
-    this._cpuname = new Gtk.Label ({label:this.cpu_name, use_markup:true, xalign:0, margin_top:0});
+    this._cpuname = new Gtk.Label ({label:this.cpu_name, use_markup:true, xalign:0, margin:8});
     this.add (this._cpuname);
 
-    this._linux = new Gtk.Label ({label:this.linux_kernel, use_markup:true, xalign:0, margin_top:0});
+    this._linux = new Gtk.Label ({label:this.linux_kernel, use_markup:true, xalign:0, margin:8});
     this.add (this._linux);
+
+    this.corebox = new  Gtk.FlowBox ({
+      homogeneous: true,
+      activate_on_single_click: false,
+      max_children_per_line: 4,
+      valign: Gtk.Align.START,
+      margin_top: 16,
+      selection_mode: Gtk.SelectionMode.NONE
+    });
+    if (cpucount < 4) this.corebox.max_children_per_line = cpucount;
+    this.pack_start (this.corebox, false, true, 0);
+
+    this.cores = [];
+    for (let i=0; i < cpucount; i++) {
+      let core = new CoreInfo (i);
+      this.corebox.add (core);
+      this.cores.push (core);
+    }
   },
 
   get cpu_name () {
@@ -119,5 +139,35 @@ var InfoPanel = new Lang.Class({
       distro += "\nKernel " + kernel_version;
     }
     return distro;
+  }
+});
+
+
+var CoreInfo = new Lang.Class({
+  Name: "CoreInfo",
+  Extends: Gtk.Box,
+
+  _init: function (num) {
+    this.core = num || 0;
+    this.parent ({orientation:Gtk.Orientation.VERTICAL});
+    //this.get_style_context ().add_class ("info-widget");
+
+    this.cpulabel = new Gtk.Label ({label:"cpu" + this.core, xalign:0.5, margin_top:0});
+    this.add (this.cpulabel);
+
+    this.freqlabel = new Gtk.Label ({label:"---", xalign:0.5, margin_top:0});
+    this.add (this.freqlabel);
+
+    this.update ();
+  },
+
+  update: function () {
+    this.get_frequency ();
+  },
+
+  get_frequency: function () {
+    Helper.get_frequency_async (this.core, Lang.bind (this, (label) => {
+      this.freqlabel.set_text (label);
+    }));
   }
 });
