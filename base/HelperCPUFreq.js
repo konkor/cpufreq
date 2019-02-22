@@ -31,7 +31,7 @@ const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 
 let governors = [];
-let governoractual = "";
+let governoractual = [];
 let util_present = false;
 let pstate_present = false;
 let cpufreqctl_path = null;
@@ -126,24 +126,30 @@ function set_turbo (state) {
 }
 
 function get_governors () {
-    let governorslist = [], gn = [], gc = [], idx = 0, res = "";
+    let governorslist = [], governorsactive = [], gc = [], idx = 0, res = "";
     governors = [];
-    governoractual = "";
+    governoractual = [];
     if (!util_present) return governors;
-    res = get_info_string (this.cpufreqctl_path + " list");
-    if (res) governorslist = res.split(" ");
+
     res = get_info_string (this.cpufreqctl_path + " gov");
-    if (res) governoractual = res.toString();
+    if (res) governorslist = res.toString().split(" ");
+    governorslist.forEach ((governor)=> {
+        if (governor.length == 0) return;
+        governoractual.push (governor);
+    });
+
+    res = get_info_string (this.cpufreqctl_path + " list");
+    if (res) governorslist = res.toString().split(" ");
     governorslist.forEach ((governor)=> {
         if (governor.length == 0) return;
         let governortemp;
-        if (this.governoractual.indexOf (governor) > -1)
+        if (governoractual.indexOf (governor) > -1)
             governortemp = [governor, true];
         else
             governortemp = [governor, false];
         governors.push (governortemp);
     });
-    governoractual.split(" ").forEach ((governor)=> {
+    /*governoractual.forEach ((governor)=> {
         idx = -1;
         for (let i = 0; i < gn.length; i++)
             if (gn.indexOf (governor) > -1)
@@ -164,8 +170,16 @@ function get_governors () {
                 governoractual += " " + gc[i].toString() + " " + gn[i];
         }
         governoractual = governoractual.trim();
-    }
+    }*/
     return governors;
+}
+
+function is_mixed_governors () {
+    let mixed = false;
+    for ( let i = 0; i < governoractual.length-2; i++) {
+      if (governoractual[i] != governoractual[i+1]) mixed = true;
+    }
+    return mixed;
 }
 
 function set_governor (governor) {

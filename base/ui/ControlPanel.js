@@ -66,8 +66,10 @@ var ControlPanel = new Lang.Class({
     this.activeg = new Submenu.Submenu ("Governors", "Active Governor", 0);
     //this.pack_start (this.activeg, true, true, 0);
     this.activeg.connect ("activate", Lang.bind (this, this.on_submenu));
+    var mixed = cpu.is_mixed_governors ();
+    if (mixed) this.activeg.set_label ("mixed");
     cpu.governors.forEach (g => {
-      if (g[1] == true) this.activeg.set_label (g[0]);
+      if ((g[1] == true) && !mixed) this.activeg.set_label (g[0]);
       if (g[0] == "userspace") {
         this.userspace = new Submenu.Submenu ("userspace", "Userspace Governor", 1);
         this.userspace.connect ("activate", Lang.bind (this, this.on_submenu));

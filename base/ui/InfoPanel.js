@@ -150,24 +150,44 @@ var CoreInfo = new Lang.Class({
   _init: function (num) {
     this.core = num || 0;
     this.parent ({orientation:Gtk.Orientation.VERTICAL});
-    //this.get_style_context ().add_class ("info-widget");
+    this.get_style_context ().add_class ("coreinfo");
 
-    this.cpulabel = new Gtk.Label ({label:"cpu" + this.core, xalign:0.5, margin_top:0});
+    this.cpulabel = new Gtk.Label ({label:"CPU" + this.core, xalign:0.5, margin_top:0});
     this.add (this.cpulabel);
 
-    this.freqlabel = new Gtk.Label ({label:"---", xalign:0.5, margin_top:0});
+    this.freqlabel = new Gtk.Label ({label:"---", xalign:0.5, margin_top:0, opacity:0.8});
     this.add (this.freqlabel);
+
+    this.govlabel = new Gtk.Label ({label:"\uf06c", xalign:0.5, margin_top:0, opacity:0.8});
+    this.add (this.govlabel);
 
     this.update ();
   },
 
   update: function () {
+    var cpu_online = GLib.get_num_processors ();
+
     this.get_frequency ();
+    this.get_governor ();
+    this.sensitive = this.core < cpu_online;
   },
 
   get_frequency: function () {
     Helper.get_frequency_async (this.core, Lang.bind (this, (label) => {
       this.freqlabel.set_text (label);
     }));
+  },
+
+  get_governor: function () {
+    var g = Helper.governoractual[this.core];
+    if (!g) return;
+    if (g == "powersave") g = "\uf06c";
+    else if (g == "performance") g = "\uf197";
+    else if (g == "ondemand") g = "\uf0e7";
+    else if (g == "conservative") g = "\ue976";
+    else if (g == "schedutil") g = "\ue953";
+    else if (g == "userspace") g = "\uf007";
+    else g = "\uf0e7";
+    this.govlabel.set_text (g);
   }
 });
