@@ -57,6 +57,9 @@
   font-family: cpufreq;
   font-weight: bold;
 }
+.amd {
+  background-color: #bb0a1b;
+}
 .coreinfo {
   font-weight:normal;
 }

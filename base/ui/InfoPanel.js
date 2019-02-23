@@ -30,6 +30,7 @@ const byteArrayToString = Convenience.byteArrayToString;
 const Helper = imports.base.HelperCPUFreq;
 
 let cpucount = Convenience.get_cpu_number ();
+let info_event = 0;
 
 var InfoPanel = new Lang.Class({
   Name: "InfoPanel",
@@ -44,6 +45,7 @@ var InfoPanel = new Lang.Class({
     this.add (this._cpuname);
 
     this._linux = new Gtk.Label ({label:this.linux_kernel, use_markup:true, xalign:0, margin:8});
+    if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
     this.corebox = new  Gtk.FlowBox ({
@@ -63,6 +65,11 @@ var InfoPanel = new Lang.Class({
       this.corebox.add (core);
       this.cores.push (core);
     }
+
+    info_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+      this.update ();
+      return true;
+    }));
   },
 
   get cpu_name () {
@@ -84,14 +91,15 @@ var InfoPanel = new Lang.Class({
         dis.close (null);
         if (model) {
           model = model.substring (model.indexOf (":") + 1).trim ();
-          if (model.lastIndexOf ("@") > -1)
-            model = model.substring (0, model.lastIndexOf ("@")).trim ();
+          //if (model.lastIndexOf ("@") > -1) model = model.substring (0, model.lastIndexOf ("@")).trim ();
+          if (model.toLowerCase().lastIndexOf ("amd") > -1) this.amd = true;
           model = model.replace ("(R)", "®");
           model = model.replace ("(TM)", "™");
           s = model; model = "";
           s.split (" ").forEach ((f)=>{
             if (f.length > 0) model += f + " ";
           });
+          //return "AMD Ryzen 7 1800X Eight-Core @ 3.60GHz";
           return model.trim ().toString ();
         }
       } catch (e) {
@@ -139,6 +147,12 @@ var InfoPanel = new Lang.Class({
       distro += "\nKernel " + kernel_version;
     }
     return distro;
+  },
+
+  update: function () {
+    this.cores.forEach (core => {
+      core.update ();
+    });
   }
 });
 
