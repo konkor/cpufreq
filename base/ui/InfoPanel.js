@@ -146,6 +146,12 @@ var InfoPanel = new Lang.Class({
     if (kernel_version) {
       distro += "\nKernel " + kernel_version;
     }
+    distro += "\nDriver ";
+    if (Helper.intel_pstate) distro += "Intel PState";
+    else distro += "ACPI";
+    distro += "\nTurbo Boost ";
+    if (!Helper.boost_present) distro += "not ";
+    distro += "supported";
     return distro;
   },
 
