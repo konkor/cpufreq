@@ -27,7 +27,7 @@ const GLib = imports.gi.GLib;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
-const Application = imports.base.application;
+const Application = imports.common.application;
 
 function getCurrentFile () {
     let stack = (new Error()).stack;

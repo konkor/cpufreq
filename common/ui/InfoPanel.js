@@ -27,7 +27,7 @@ const Lang = imports.lang;
 
 const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
-const Helper = imports.base.HelperCPUFreq;
+const Helper = imports.common.HelperCPUFreq;
 
 let cpucount = Convenience.get_cpu_number ();
 let info_event = 0;

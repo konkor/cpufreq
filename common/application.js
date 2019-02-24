@@ -28,10 +28,10 @@ const Lang = imports.lang;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
-const cpu = imports.base.HelperCPUFreq;
-const Settings = imports.base.Settings;
-const InfoPanel = imports.base.ui.InfoPanel;
-const ControlPanel = imports.base.ui.ControlPanel;
+const cpu = imports.common.HelperCPUFreq;
+const Settings = imports.common.Settings;
+const InfoPanel = imports.common.ui.InfoPanel;
+const ControlPanel = imports.common.ui.ControlPanel;
 
 const Convenience = imports.convenience;
 
