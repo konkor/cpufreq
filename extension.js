@@ -69,6 +69,7 @@ let profiles = [];
 let default_profile = null;
 let label_text = "";
 let title_text = "\u26A0";
+let title_style = "";
 let minfreq = 0, maxfreq = 0; //new values
 let monitor_timeout = 500;
 let eprofiles = [
@@ -118,6 +119,7 @@ const FrequencyIndicator = new Lang.Class({
     this._settings = Convenience.getSettings();
 
     this.statusLabel = new St.Label ({text: title_text, y_expand: true, y_align: Clutter.ActorAlign.CENTER, style_class:'cpufreq-text'});
+    this.statusLabel.style = title_style;
     let _box = new St.BoxLayout();
     _box.add_actor(this.statusLabel);
     this.actor.add_actor(_box);
@@ -395,7 +397,10 @@ const FrequencyIndicator = new Lang.Class({
           if (title) this.statusLabel.set_text (this.get_title (title.toString ()));
         }));
         event_style = this.proxy.connectSignal ('StyleChanged', Lang.bind(this, function (o, s, style) {
-          if (style) this.statusLabel.style = style.toString ();
+          if (style) {
+            title_style = style.toString ();
+            this.statusLabel.style = title_style;
+          }
         }));
       }));
     }
