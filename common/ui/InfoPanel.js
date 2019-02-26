@@ -48,6 +48,9 @@ var InfoPanel = new Lang.Class({
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
+    this._load = new Gtk.Label ({label:"System Loading \u25cb 0%", use_markup:true, xalign:0, margin:8});
+    this.add (this._load);
+
     this.corebox = new  Gtk.FlowBox ({
       homogeneous: true,
       activate_on_single_click: false,
@@ -65,6 +68,22 @@ var InfoPanel = new Lang.Class({
       this.corebox.add (core);
       this.cores.push (core);
     }
+
+    this._warn = new Gtk.Label ({label:"☺  ☹ WARN MESSAGE", xalign:0, margin:8});
+    this._warn.margin_top = 24;
+    this._warn.get_style_context ().add_class ("warn");
+    this.add (this._warn);
+    this.warn_lvl = 0;
+
+    /*this.balance = "";
+    this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
+    if (this.cpufreqctl_path) {
+      cpufreq_output = GLib.spawn_command_line_sync ("pkexec " + this.cpufreqctl_path + " irqbalance");
+      if (cpufreq_output[0]) {
+        freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).toString().split("\n")[0];
+        if (freqInfo) this.balance = "IRQBALANCE DETECTED";
+      }
+    }*/
 
     info_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
       this.update ();
@@ -155,10 +174,41 @@ var InfoPanel = new Lang.Class({
     return distro;
   },
 
+  get loadavg () {
+    let s = "System Loading ", i = 0 , j, cc = GLib.get_num_processors ();
+    let load = Helper.get_info_string ("cat /proc/loadavg");
+    if (load) {
+      load = load.split(" ")[0];
+      j = i = Math.round (parseFloat (load * 100));
+      while (i > 100) {
+        s += "\u25cf";
+        i -= 100;
+      }
+      if (i < 25) s += "\u25cb ";
+      else if (i < 50) s += "◔ ";
+      else if (i < 75) s += "◑ ";
+      else if (i < 100) s += "◕ ";
+      else s += "\u25cf ";
+      s += j.toString () + "%";
+    }
+    if (j > cc * 100) {
+      this.warnmsg = "SYSTEM OVERLOAD";
+      this.warn_lvl = 2;
+    } else if (j > cc * 75) {
+      this.warnmsg = "SYSTEM BUSY";
+      this.warn_lvl = 1;
+    } else {
+      this.warnmsg = "";
+      this.warn_lvl = 0;
+    }
+    return s;
+  },
+
   update: function () {
     this.cores.forEach (core => {
       core.update ();
     });
+    this._load.set_text (this.loadavg);
   }
 });
 
