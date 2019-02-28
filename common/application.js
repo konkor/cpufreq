@@ -20,6 +20,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+imports.gi.versions.Gtk = '3.0';
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
@@ -50,10 +51,11 @@ var CPUFreqApplication = new Lang.Class ({
     _init: function (args) {
         GLib.set_prgname ("cpufreq-application");
         this.parent ({
-            application_id: "org.konkor.cpufreq.application",
-            flags: Gio.ApplicationFlags.HANDLES_OPEN
+            application_id: "org.konkor.cpufreq.application"
         });
         GLib.set_application_name ("CPUFreq Manager");
+        this.extension = false;
+        if (args.indexOf ("--extension") > -1) this.extension = true;
     },
 
     vfunc_startup: function() {
@@ -115,7 +117,7 @@ var CPUFreqApplication = new Lang.Class ({
         this.cpanel.set_size_request (320, 160);
         this.sidebar.set_size_request (360, 160);
 
-        window.connect ("focus-out-event", ()=>{ this.quit();});
+        if (this.extension) window.connect ("focus-out-event", ()=>{ this.quit();});
         this.prefs_button.connect ("clicked", () => {
           GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
         });
