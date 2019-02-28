@@ -2,7 +2,7 @@
  * CPUFreq Manager - a lightweight CPU frequency scaling monitor
  * and powerful CPU management tool
  *
- * Copyright (C) 2016-2018 konkor <github.com/konkor>
+ * Copyright (C) 2016 konkor <github.com/konkor>
  *
  * This file is part of CPUFreq Manager.
  *
@@ -41,6 +41,11 @@ var InfoPanel = new Lang.Class({
     this.border = 8;
     this.get_style_context ().add_class ("info-widget");
 
+    this.warn_lvl = 0;
+    this.tt = 0;
+    this.tt_time = 0;
+    this.balance = "";
+
     this._cpuname = new Gtk.Label ({label:this.cpu_name, use_markup:true, xalign:0, margin:8});
     this.add (this._cpuname);
 
@@ -69,21 +74,11 @@ var InfoPanel = new Lang.Class({
       this.cores.push (core);
     }
 
-    this._warn = new Gtk.Label ({label:"☺  ☹ WARN MESSAGE", xalign:0, margin:8});
-    this._warn.margin_top = 24;
-    this._warn.get_style_context ().add_class ("warn");
+    this._warn = new WarningInfo ();
     this.add (this._warn);
-    this.warn_lvl = 0;
 
-    /*this.balance = "";
-    this.cpufreqctl_path = GLib.find_program_in_path ('cpufreqctl');
-    if (this.cpufreqctl_path) {
-      cpufreq_output = GLib.spawn_command_line_sync ("pkexec " + this.cpufreqctl_path + " irqbalance");
-      if (cpufreq_output[0]) {
-        freqInfo = Convenience.byteArrayToString(cpufreq_output[1]).toString().split("\n")[0];
-        if (freqInfo) this.balance = "IRQBALANCE DETECTED";
-      }
-    }*/
+    if (Helper.get_cpufreq_info ("irqbalance"))
+      this.balance = "IRQBALANCE DETECTED";
 
     info_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
       this.update ();
@@ -204,14 +199,76 @@ var InfoPanel = new Lang.Class({
     return s;
   },
 
+  get_throttle: function () {
+    let s = "", i = 0;
+    let throttle = Helper.get_cpufreq_info ("throttle");
+
+    if (throttle) {
+      i = parseInt (throttle);
+      if (!i) return;
+      s = "CPU THROTTLE: " + i;
+      if (i != this.tt) {
+        this.warn_lvl = 2;
+        s += "\nTHROTTLE SPEED: " + Math.round ((i-this.tt)/2, 1);
+        this.tt_time = Date.now ();
+      } else if ((this.warn_lvl == 0) && ((Date.now() - this.tt_time) < 600000)) this.warn_lvl = 1;
+      this.tt = i;
+      if (this.warnmsg.length > 0) this.warnmsg += "\n" + s;
+      else this.warnmsg = s;
+    }
+  },
+
+  get_balance: function () {
+    if (this.balance) {
+      if (this.warn_lvl == 0) this.warn_lvl = 1;
+      if (this.warnmsg.length > 0) this.warnmsg += "\n" + this.balance;
+      else this.warnmsg = this.balance;
+    }
+  },
+
   update: function () {
     this.cores.forEach (core => {
       core.update ();
     });
+    this.warnmsg = "";
+    this.warn_lvl = 0;
     this._load.set_text (this.loadavg);
+    this.get_throttle ();
+    this.get_balance ();
+    this._warn.update (this.warn_lvl, this.warnmsg);
   }
 });
 
+var WarningInfo = new Lang.Class({
+  Name: "WarningInfo",
+  Extends: Gtk.Box,
+
+  _init: function () {
+    this.parent ({orientation:Gtk.Orientation.HORIZONTAL, margin:1});
+    this.get_style_context ().add_class ("status");
+    this.margin_top = 24;
+
+    this.icon = new Gtk.Label ({label:"☺", xalign:0.0, margin_left:8});
+    this.add (this.icon);
+
+    this.label = new Gtk.Label ({label:"SYSTEM OK", xalign:0.0});
+    this.pack_start (this.label, true, true, 8);
+  },
+
+  update: function (level, message) {
+    var style = this.get_style_context ();
+    this.label.set_text (message);
+    style.remove_class ("warning");
+    style.remove_class ("critical");
+    if (level > 1) {
+      this.icon.set_text ("☹");
+      style.add_class ("critical");
+    } else if (level > 0) {
+      this.icon.set_text ("");
+      style.add_class ("warning");
+    }
+  }
+});
 
 var CoreInfo = new Lang.Class({
   Name: "CoreInfo",

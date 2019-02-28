@@ -451,6 +451,12 @@ function get_info_string (cmd) {
     return "";
 }
 
+function get_cpufreq_info (params) {
+    if (!cpufreqctl_path || !params) return "";
+    let s = get_info_string (pkexec_path + " " + cpufreqctl_path + " " + params);
+    return s;
+}
+
 const DEBUG_LVL = 2;
 function debug (msg) {
   if (DEBUG_LVL > 1) Convenience.debug ("cpu helper", msg);

@@ -59,7 +59,7 @@ var CPUFreqApplication = new Lang.Class ({
     vfunc_startup: function() {
         this.parent();
         this.settings = new Settings.Settings ();
-        window = new Gtk.Window ();
+        window = new Gtk.ApplicationWindow ();
         window.set_icon_name ("org.konkor.cpufreq");
         if (!window.icon) try {
             window.icon = Gtk.Image.new_from_file (APPDIR + "/data/icons/cpufreq.svg").pixbuf;
@@ -98,6 +98,13 @@ var CPUFreqApplication = new Lang.Class ({
         this.hb.set_show_close_button (false);
         this.hb.get_style_context ().add_class ("hb");
         window.set_titlebar (this.hb);
+
+        this.prefs_button = new Gtk.Button ({always_show_image: true, tooltip_text:"Preferences"});
+        this.prefs_button.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/application-menu-symbolic.svg");
+        this.prefs_button.get_style_context ().add_class ("hb-button");
+        this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
+        this.hb.pack_end (this.prefs_button);
+
         this.cpanel = new ControlPanel.ControlPanel (this);
         //window.add (this.sidebar);
         let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
@@ -109,6 +116,19 @@ var CPUFreqApplication = new Lang.Class ({
         this.sidebar.set_size_request (360, 160);
 
         window.connect ("focus-out-event", ()=>{ this.quit();});
+        this.prefs_button.connect ("clicked", () => {
+          GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
+        });
+
+        this.build_menu ();
+    },
+
+    build_menu: function () {
+
+    },
+
+    set_accel: function (mi, accel) {
+
     },
 
     get cpufreq () {

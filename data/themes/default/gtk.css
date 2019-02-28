@@ -4,14 +4,11 @@
   box-shadow:none;
   outline-width:0;
   border-image:none;
-  padding:0;
-  margin:0;
   border:0;
   text-shadow:none;
 }
 .titlebar {
-  padding:0;
-  margin:0;
+
 }
 .menuitem, .submenu {
   border-radius: 0;
@@ -45,6 +42,16 @@
 }
 .warn:hover {
   background-color: shade (red, 0.8);
+}
+.status {
+  background-color: green;
+  font-weight: bold;
+}
+.warning {
+  background-color: orange;
+}
+.critical {
+  background-color: red;
 }
 .info-widget {
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
