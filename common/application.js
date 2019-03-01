@@ -21,6 +21,7 @@
  */
 
 imports.gi.versions.Gtk = '3.0';
+
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
@@ -97,7 +98,7 @@ var CPUFreqApplication = new Lang.Class ({
         }
         window.get_style_context ().add_class ("main");
         this.hb = new Gtk.HeaderBar ();
-        this.hb.set_show_close_button (false);
+        this.hb.set_show_close_button (!this.extension);
         this.hb.get_style_context ().add_class ("hb");
         window.set_titlebar (this.hb);
 

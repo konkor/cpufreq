@@ -227,6 +227,7 @@ var InfoPanel = new Lang.Class({
   },
 
   update: function () {
+    Helper.get_governors ();
     this.cores.forEach (core => {
       core.update ();
     });

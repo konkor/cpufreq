@@ -45,8 +45,8 @@ var ControlPanel = new Lang.Class({
     this.app = owner;
     cpu = this.app.cpufreq;
     settings = this.app.settings;
-    print (cpu.cpucount);
-    print (cpu.governors);
+    //print (cpu.cpucount);
+    //print (cpu.governors);
 
     this.add_governors ();
     if (cpu.pstate_present) this.pstate_build ();
