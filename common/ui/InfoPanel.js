@@ -253,7 +253,7 @@ var WarningInfo = new Lang.Class({
     this.icon = new Gtk.Label ({label:"☺", xalign:0.0, margin_left:8});
     this.add (this.icon);
 
-    this.label = new Gtk.Label ({label:"SYSTEM OK", xalign:0.0});
+    this.label = new Gtk.Label ({label:"SYSTEM STATUS OK", xalign:0.0});
     this.pack_start (this.label, true, true, 8);
   },
 
@@ -268,6 +268,9 @@ var WarningInfo = new Lang.Class({
     } else if (level > 0) {
       this.icon.set_text ("");
       style.add_class ("warning");
+    } else {
+      this.icon.set_text ("☺");
+      this.label.set_text ("SYSTEM STATUS OK");
     }
   }
 });

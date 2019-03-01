@@ -44,7 +44,7 @@
   background-color: shade (red, 0.8);
 }
 .status {
-  background-color: green;
+  /*background-color: green;*/
   font-weight: bold;
 }
 .warning {
