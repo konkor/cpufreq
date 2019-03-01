@@ -215,7 +215,11 @@ var ControlPanel = new Lang.Class({
       if (!cpu.installed) return;
       this._changed ();
       var cc = Math.floor ((cpu.cpucount - 1) * item.get_value() + 1);
-      cpu.set_cores (cc);
+      cpu.set_cores (cc, () => {
+        cpu.get_governors ();
+        if (cpu.is_mixed_governors ()) this.activeg.set_label ("mixed");
+        else this.activeg.set_label (cpu.governoractual[0]);
+      });
       this.slider_core.update_info (cc);
       this.corewarn.visible = cc == 1;
     }));

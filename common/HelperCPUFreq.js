@@ -176,7 +176,7 @@ function get_governors () {
 
 function is_mixed_governors () {
     let mixed = false;
-    for ( let i = 0; i < governoractual.length-2; i++) {
+    for ( let i = 0; i < governoractual.length-1; i++) {
       if (governoractual[i] != governoractual[i+1]) mixed = true;
     }
     return mixed;
@@ -372,7 +372,7 @@ function set_core (core, state) {
     return state;
 }
 
-function set_cores (count) {
+function set_cores (count, callback) {
     let ccore = count;
     if (core_event != 0) {
         GLib.source_remove (core_event);
@@ -384,6 +384,7 @@ function set_cores (count) {
             set_core (key, key < ccore);
         }
         core_event = 0;
+        if (callback) callback ();
         return false;
     }));
 }

@@ -47,6 +47,7 @@ var InfoPanel = new Lang.Class({
     this.balance = "";
 
     this._cpuname = new Gtk.Label ({label:this.cpu_name, use_markup:true, xalign:0, margin:8});
+    this._cpuname.margin_top = 12;
     this.add (this._cpuname);
 
     this._linux = new Gtk.Label ({label:this.linux_kernel, use_markup:true, xalign:0, margin:8});
