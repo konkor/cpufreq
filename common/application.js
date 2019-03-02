@@ -28,8 +28,8 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 
-const APPDIR = get_appdir ();
-imports.searchPath.unshift(APPDIR);
+const APPDIR = getCurrentFile ()[1];
+
 const cpu = imports.common.HelperCPUFreq;
 const Settings = imports.common.Settings;
 const InfoPanel = imports.common.ui.InfoPanel;
@@ -162,17 +162,6 @@ function getCurrentFile () {
     let path = match[1];
     let file = Gio.File.new_for_path (path).get_parent();
     return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
-}
-
-function get_appdir () {
-    let s = getCurrentFile ()[1];
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
-    s = GLib.get_home_dir () + "/.local/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
-    s = "/usr/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
-    throw "Installation not found...";
-    return s;
 }
 
 function debug (msg) {

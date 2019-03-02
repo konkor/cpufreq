@@ -25,11 +25,10 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 
-imports.searchPath.unshift(getCurrentFile ()[1]);
-const Submenu = imports.ui.Submenu;
-const MenuItem = imports.ui.MenuItem;
-const Slider = imports.ui.Slider;
-const Switch = imports.ui.Switch;
+const Submenu = imports.common.ui.Submenu;
+const MenuItem = imports.common.ui.MenuItem;
+const Slider = imports.common.ui.Slider;
+const Switch = imports.common.ui.Switch;
 
 var cpu = null;
 var settings = null;
@@ -262,17 +261,4 @@ function get_max_label (n) {
     n = (typeof n !== 'undefined') ?  n : 3;
     if (cpu.pstate_present) return cpu.maxfreq + "%";
     return get_label (cpu.get_max (), n);
-}
-
-function getCurrentFile () {
-  let stack = (new Error()).stack;
-  let stackLine = stack.split("\n")[1];
-  if (!stackLine)
-    throw new Error ("Could not find current file");
-  let match = new RegExp ("@(.+):\\d+").exec(stackLine);
-  if (!match)
-    throw new Error ("Could not find current file");
-  let path = match[1];
-  let file = Gio.File.new_for_path (path).get_parent();
-  return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
 }
