@@ -109,7 +109,7 @@ var ControlPanel = new Lang.Class({
   on_governor: function (o) {
     if (!cpu.installed) return;
     this._changed ();
-    cpu.set_governor (o.label);
+    cpu.set_governors (o.label);
     this.activeg.set_label (o.label);
     this.activeg.expanded = false;
     this.check_sliders ();

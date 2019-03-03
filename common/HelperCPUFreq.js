@@ -104,7 +104,6 @@ function get_default_profile () {
   let save_state = settings.save;
   let cores = [];
 
-  if (frequencies)
   settings.save = false; //Disabling restoring on loading values
   for (let key = 0; key < cpucount; key++) {
     let core = {
@@ -123,6 +122,36 @@ function get_default_profile () {
   debug (JSON.stringify (p));
   default_profile = p;
   return default_profile;
+}
+
+function get_profile (name) {
+  let guid = Gio.dbus_generate_guid ();
+  name = name || guid;
+  let save_state = settings.save;
+  let cores = [];
+  let minf = 0, maxf = 100;
+
+  settings.save = false;
+  if (pstate_present) {
+    minf = minfreq;
+    maxf = maxfreq;
+  }
+  for (let key = 0; key < cpucount; key++) {
+    let core = {
+      g: get_governor (key),
+      a: get_coremin (key),
+      b: get_coremax (key)
+    };
+    cores.push (core);
+  }
+  let p = {
+    name:name, minf:minf, maxf:maxf, turbo:get_turbo (), cpu:cpu_online,
+    acpi:!this.pstate_present, guid:guid,
+    core:cores
+  };
+  settings.save = save_state;
+  debug (JSON.stringify (p));
+  return p;
 }
 
 function get_turbo () {
@@ -177,29 +206,16 @@ function get_governors () {
       governortemp = [governor, false];
     governors.push (governortemp);
   });
-  /*governoractual.forEach ((governor)=> {
-    idx = -1;
-    for (let i = 0; i < gn.length; i++)
-      if (gn.indexOf (governor) > -1)
-        idx = i;
-    if (idx > -1) {
-      gc[idx]++;
-    } else {
-      gn.push (governor);
-      gc.push (1);
-    }
-  });
-  governoractual = "";
-  if (gn.length > 1) {
-    for (let i = 0; i < gn.length; i++) {
-      if (i > 0 && (i % 2 == 0))
-        governoractual += "\n" + gc[i].toString() + " " + gn[i];
-      else
-        governoractual += " " + gc[i].toString() + " " + gn[i];
-    }
-    governoractual = governoractual.trim();
-  }*/
+
   return governors;
+}
+
+function set_governors (governor) {
+  if (!util_present || !governor) return;
+
+  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov " + governor);
+
+  if (settings.save) settings.governor = governor;
 }
 
 function is_mixed_governors () {
@@ -210,12 +226,21 @@ function is_mixed_governors () {
   return mixed;
 }
 
-function set_governor (governor) {
+function get_governor (core) {
+  let g = pstate_present?"powersave":"ondemand";
+  core = core || 0;
+  if (!util_present) return g;
+  let res = get_info_string (cpufreqctl_path + " coreg " + core);
+  if (res) g = res;
+  return g;
+}
+
+function set_governor (core, governor) {
+  core = core || 0;
   if (!util_present || !governor) return;
-
-  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov " + governor);
-
-  if (settings.save) settings.governor = governor;
+  GLib.spawn_command_line_sync (
+    pkexec_path + " " + cpufreqctl_path + " coreg " + core + " " + governor
+  );
 }
 
 function set_userspace (frequency) {
