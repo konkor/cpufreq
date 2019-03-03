@@ -24,24 +24,24 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
 var Switch = new Lang.Class({
-    Name: "Switch",
-    Extends: Gtk.Box,
+  Name: "Switch",
+  Extends: Gtk.Box,
 
-    _init: function (text, state, tooltip) {
-        this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:22});
-        state = state || false;
-        this.margin_top = 8;
-        this.margin_bottom = 8;
-        this.get_style_context ().add_class ("switch");
-        this.tooltip_text = tooltip;
+  _init: function (text, state, tooltip) {
+    this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:22});
+    state = state || false;
+    this.margin_top = 8;
+    this.margin_bottom = 8;
+    this.get_style_context ().add_class ("switch");
+    this.tooltip_text = tooltip;
 
-        this.label = new Gtk.Label ({label:"<b>"+text+"</b>", use_markup:true, xalign:0});
-        this.pack_start (this.label, true, true, 0);
-        this.sw = new Gtk.Switch ();
-        this.sw.get_style_context ().add_class ("switch-item");
-        this.sw.active = state;
-        this.pack_end (this.sw, false, false, 0);
+    this.label = new Gtk.Label ({label:"<b>"+text+"</b>", use_markup:true, xalign:0});
+    this.pack_start (this.label, true, true, 0);
+    this.sw = new Gtk.Switch ();
+    this.sw.get_style_context ().add_class ("switch-item");
+    this.sw.active = state;
+    this.pack_end (this.sw, false, false, 0);
 
-        this.show_all ();
-    }
+    this.show_all ();
+  }
 });

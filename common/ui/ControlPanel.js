@@ -242,23 +242,23 @@ var ControlPanel = new Lang.Class({
 });
 
 function get_label (num, n) {
-    if (cpu.pstate_present) return num + "%";
-    n = (typeof n !== 'undefined') ?  n : 3;
-    if (num >= 1000000) {
-        return (num/1000000).toFixed(n).toString() + " \u3393";
-    } else {
-        return (num/1000).toFixed(0).toString() + " \u3392";
-    }
+  if (cpu.pstate_present) return num + "%";
+  n = (typeof n !== 'undefined') ?  n : 3;
+  if (num >= 1000000) {
+    return (num/1000000).toFixed(n).toString() + " \u3393";
+  } else {
+    return (num/1000).toFixed(0).toString() + " \u3392";
+  }
 }
 
 function get_min_label (n) {
-    n = (typeof n !== 'undefined') ?  n : 3;
-    if (cpu.pstate_present) return cpu.minfreq + "%";
-    return get_label (cpu.get_min (), n);
+  n = (typeof n !== 'undefined') ?  n : 3;
+  if (cpu.pstate_present) return cpu.minfreq + "%";
+  return get_label (cpu.get_min (), n);
 }
 
 function get_max_label (n) {
-    n = (typeof n !== 'undefined') ?  n : 3;
-    if (cpu.pstate_present) return cpu.maxfreq + "%";
-    return get_label (cpu.get_max (), n);
+  n = (typeof n !== 'undefined') ?  n : 3;
+  if (cpu.pstate_present) return cpu.maxfreq + "%";
+  return get_label (cpu.get_max (), n);
 }

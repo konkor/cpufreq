@@ -24,34 +24,34 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
 var Submenu = new Lang.Class({
-    Name: "Submenu",
-    Extends: Gtk.Expander,
+  Name: "Submenu",
+  Extends: Gtk.Expander,
 
-    _init: function (text, tooltip, id) {
-        this.parent ({label:text, label_fill:true, expanded:false, resize_toplevel:false});
-        this.get_style_context ().add_class ("submenu");
-        this.tooltip_text = tooltip;
-        this.id = id;
+  _init: function (text, tooltip, id) {
+    this.parent ({label:text, label_fill:true, expanded:false, resize_toplevel:false});
+    this.get_style_context ().add_class ("submenu");
+    this.tooltip_text = tooltip;
+    this.id = id;
 
-        this.scroll = new Gtk.ScrolledWindow ();
-        this.scroll.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
-        this.scroll.shadow_type = Gtk.ShadowType.NONE;
-        //this.add (this.scroll);
+    this.scroll = new Gtk.ScrolledWindow ();
+    this.scroll.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+    this.scroll.shadow_type = Gtk.ShadowType.NONE;
+    //this.add (this.scroll);
 
-        this.section = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL});
-        this.section.get_style_context ().add_class ("submenu-section");
-        this.add (this.section);
-        //this.scroll.add (this.section);
+    this.section = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL});
+    this.section.get_style_context ().add_class ("submenu-section");
+    this.add (this.section);
+    //this.scroll.add (this.section);
 
-        //this.show_all ();
-    },
+    //this.show_all ();
+  },
 
-    add_menuitem: function (menuitem) {
-        this.section.add (menuitem);
-    },
+  add_menuitem: function (menuitem) {
+    this.section.add (menuitem);
+  },
 
-    set_label: function (text) {
-        text = text || "";
-        this.label = "\u26A1 " + text;
-    }
+  set_label: function (text) {
+    text = text || "";
+    this.label = "\u26A1 " + text;
+  }
 });

@@ -24,12 +24,12 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
 var MenuItem = new Lang.Class({
-    Name: "MenuItem",
-    Extends: Gtk.Button,
+  Name: "MenuItem",
+  Extends: Gtk.Button,
 
-    _init: function (text, tooltip) {
-        tooltip = tooltip || "";
-        this.parent ({label:text, tooltip_text:tooltip, xalign:0});
-        this.get_style_context ().add_class ("menuitem");
-    }
+  _init: function (text, tooltip) {
+    tooltip = tooltip || "";
+    this.parent ({label:text, tooltip_text:tooltip, xalign:0});
+    this.get_style_context ().add_class ("menuitem");
+  }
 });
