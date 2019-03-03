@@ -39,8 +39,6 @@ const Convenience = imports.convenience;
 
 const DEBUG_LVL = 2;
 
-let profiles = [];
-
 let theme_gui = APPDIR + "/data/themes/default/gtk.css";
 let cssp = null;
 let window = null;

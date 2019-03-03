@@ -72,7 +72,7 @@ var ControlPanel = new Lang.Class({
       if (g[0] == "userspace") {
         this.userspace = new Submenu.Submenu ("userspace", "Userspace Governor", 1);
         this.userspace.connect ("activate", Lang.bind (this, this.on_submenu));
-        cpu.frequences.forEach ((freq)=>{
+        cpu.frequencies.forEach ((freq)=>{
           var s = "";
           if (freq.length > 6) {
             s = (parseInt(freq)/1000000).toFixed(3).toString() + " GHz";
@@ -97,7 +97,7 @@ var ControlPanel = new Lang.Class({
       }
     });
     this.add (this.activeg);
-    if (this.userspace  && (cpu.frequences.length > 0)) this.add (this.userspace);
+    if (this.userspace  && (cpu.frequencies.length > 0)) this.add (this.userspace);
   },
 
   on_submenu: function (o) {
@@ -133,7 +133,7 @@ var ControlPanel = new Lang.Class({
   },
 
   acpi_build: function () {
-    if (cpu.frequences.length > 1) {
+    if (cpu.frequencies.length > 1) {
       this.sliders_build ();
       if (this.activeg.label.indexOf ("powersave") > -1) {
         this.slider_max.sensitive = false;

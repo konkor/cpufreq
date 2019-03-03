@@ -37,12 +37,13 @@ let cpufreqctl_path = null;
 let pkexec_path = null;
 let installed = false;
 let updated = true;
-let frequences = [];
+let frequencies = [];
 let minimum_freq = 0;
 let maximum_freq = 0;
 let minfreq = 0, maxfreq = 0;
 let cpucount = 1;
 let boost_present = false;
+let default_profile = null;
 
 let settings = null;
 let core_event = 0;
@@ -58,8 +59,9 @@ function init (prefs) {
   check_install ();
   check_extensions ();
   get_governors ();
-  get_frequences ();
+  get_frequencies ();
   cpucount = get_cpu_number ();
+  get_default_profile ();
 }
 
 function check_install () {
@@ -94,6 +96,33 @@ function check_extensions () {
             set_turbo (false);
         }
     } else boost_present = true;
+}
+
+function get_default_profile () {
+    if (!util_present || !installed) return null;
+    if (default_profile) return default_profile;
+    let save_state = settings.save;
+    let cores = [];
+
+    if (frequencies)
+    settings.save = false; //Disabling restoring on loading values
+    for (let key = 0; key < cpucount; key++) {
+      let core = {
+        g: pstate_present?"powersave":"ondemand",
+        a: minimum_freq,
+        b: maximum_freq
+      };
+      cores.push (core);
+    }
+    let p = {
+      name:"Default", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
+      acpi:!this.pstate_present, guid:"00000000000000000000000000000000",
+      core:cores
+    };
+    settings.save = save_state; //Restoring users settings
+    debug (JSON.stringify (p));
+    default_profile = p;
+    return default_profile;
 }
 
 function get_turbo () {
@@ -202,20 +231,20 @@ function set_userspace (frequency) {
     return frequency;
 }
 
-function get_frequences () {
-    let frequenceslist = [];
-    frequences = [];
+function get_frequencies () {
+    let frequencieslist = [];
+    frequencies = [];
     if (!util_present) return;
-    frequenceslist = get_info_string (this.cpufreqctl_path + " freq");
-    if (!frequenceslist) return;
-    frequenceslist = frequenceslist.split (" ");
-    frequenceslist.forEach ((freq)=> {
+    frequencieslist = get_info_string (this.cpufreqctl_path + " freq");
+    if (!frequencieslist) return;
+    frequencieslist = frequencieslist.split (" ");
+    frequencieslist.forEach ((freq)=> {
         if (freq.length > 0)
-            if (parseInt (freq) > 0) frequences.unshift (freq);
+            if (parseInt (freq) > 0) frequencies.unshift (freq);
     });
-    if (frequences.length > 0) {
-        minimum_freq = frequences[0];
-        maximum_freq = frequences[frequences.length - 1];
+    if (frequencies.length > 0) {
+        minimum_freq = frequencies[0];
+        maximum_freq = frequencies[frequencies.length - 1];
     }
     if (pstate_present) {
         minfreq = get_min_pstate ();
@@ -419,16 +448,16 @@ function get_frequency_async (num, callback) {
 }
 
 function get_freq (num) {
-    let n = frequences.length;
+    let n = frequencies.length;
     let step = Math.round (100 / n);
     let i = Math.round (num / step);
     if (i >= n) i = n - 1;
-    return parseInt (frequences[i]);
+    return parseInt (frequencies[i]);
 }
 
 function get_pos (num) {
-    let m = parseFloat (frequences[frequences.length -1]) - parseFloat (frequences[0]);
-    let p = (parseFloat (num) - parseFloat (frequences[0]))/m;
+    let m = parseFloat (frequencies[frequencies.length -1]) - parseFloat (frequencies[0]);
+    let p = (parseFloat (num) - parseFloat (frequencies[0]))/m;
     return p;
 }
 

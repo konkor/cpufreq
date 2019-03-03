@@ -37,6 +37,7 @@ const MONITOR_KEY = 'monitor';
 
 let _save = false;
 let _PID = -1;
+let profiles = [];
 
 var Settings = new Lang.Class({
   Name: "Settings",
@@ -66,6 +67,7 @@ var Settings = new Lang.Class({
   load: function () {
     _save = this.get_boolean (SAVE_SETTINGS_KEY);
     _PID = this.get_int (PROFILE_KEY);
+    this.load_profiles ();
   },
 
   get save () { return _save; },
@@ -83,8 +85,16 @@ var Settings = new Lang.Class({
     this.set_int (PROFILE_KEY, _PID);
   },
 
-  get profiles () { return this.get_string (PROFILES_KEY); },
-  set profiles (val) { this.set_string (PROFILES_KEY, val); },
+  get profiles () { return profiles; },
+
+  load_profiles: function () {
+    let s = this.get_string (PROFILES_KEY);
+    if (s) try {
+      profiles = JSON.parse (s);
+    } catch (e) {
+      profiles = [];
+    }
+  },
 
   get turbo () { return this.get_boolean (TURBO_BOOST_KEY); },
   set turbo (val) { this.set_boolean (TURBO_BOOST_KEY, val); },
