@@ -62,7 +62,7 @@ function init (prefs) {
   get_frequencies ();
   cpucount = get_cpu_number ();
   get_default_profile ();
-  //get_profile ("Testing Profile");
+  get_profile ("Testing Profile");
 }
 
 function check_install () {
@@ -143,6 +143,8 @@ function get_profile (name) {
       a: get_coremin (key),
       b: get_coremax (key)
     };
+    if (core.g == "userspace")
+      core.f = get_frequency (key);
     cores.push (core);
   }
   let p = {
@@ -251,10 +253,9 @@ function set_userspace (frequency) {
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov userspace");
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " set " + frequency);
 
-  if (settings.save) {
-    settings.governor = "userspace";
-    settings.cpu_freq = frequency.toString ();
-  }
+  settings.governor = "userspace";
+  settings.cpu_freq = frequency.toString ();
+
   return frequency;
 }
 
@@ -472,6 +473,23 @@ function get_frequency_async (num, callback) {
       callback (label);
     } catch (e) {}
   });
+}
+
+function get_frequency (num) {
+  let n = 0;
+  num = num || 0;
+  let file = Gio.File.new_for_path ("/sys/devices/system/cpu/cpu" + num + "/cpufreq/scaling_cur_freq");
+  try {
+    let [success, contents, etag] = file.load_contents (null);
+    if (!success) return 0;
+    contents = byteArrayToString (contents).toString ().split ("\n")[0].trim ();
+    n = parseInt (contents);
+    if (!Number.isInteger (n)) n = 0;
+  } catch (e) {
+    n = 0;
+  }
+  debug ("Core %d frequency is %d".format (num, n));
+  return n;
 }
 
 function get_freq (num) {

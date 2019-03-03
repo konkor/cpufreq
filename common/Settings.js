@@ -115,8 +115,16 @@ var Settings = new Lang.Class({
   set max_freq_pstate (val) { this.set_int (MAX_FREQ_PSTATE_KEY, val); },
 
   get cpu_freq () { return this.get_string (CPU_FREQ_KEY); },
-  set cpu_freq (val) { this.set_string (CPU_FREQ_KEY, val); }
+  set cpu_freq (val) { this.set_string (CPU_FREQ_KEY, val); },
 
+  save_current: function (profile) {
+    this.governor = prf.core[0].g;
+    this.turbo = prf.turbo;
+    this.min_freq_pstate = prf.minf;
+    this.max_freq_pstate = prf.maxf;
+    this.min_freq = prf.core[0].a.toString();
+    this.max_freq = prf.core[0].b.toString();
+  },
 });
 
 function getCurrentFile () {

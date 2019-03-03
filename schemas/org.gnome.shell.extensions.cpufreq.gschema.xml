@@ -9,6 +9,12 @@
       <description>Save settings for restore</description>
     </key>
 
+    <key type="s" name="remember-profile">
+      <default>""</default>
+      <summary>Saved settings</summary>
+      <description>Profile for remembered settings</description>
+    </key>
+
     <key type="b" name="units-show">
       <default>true</default>
       <summary>Show Units</summary>
@@ -75,48 +81,6 @@
       <description>Display Monitor in color depending on computer load</description>
     </key>
 
-    <key type="b" name="turbo-boost">
-      <default>true</default>
-      <summary>Processor boosting control</summary>
-      <description>Processor boosting control</description>
-    </key>
-
-    <key type="s" name="governor">
-      <default>'ondemand'</default>
-      <summary>CPU governor</summary>
-      <description>Current CPU governor</description>
-    </key>
-
-    <key type="s" name="cpu-freq">
-      <default>'0'</default>
-      <summary>CPU Frequency</summary>
-      <description>CPU Frequency for userspace mode</description>
-    </key>
-
-    <key type="s" name="min-freq">
-      <default>'0'</default>
-      <summary>Minimum CPU Frequency</summary>
-      <description>Minimum CPU Frequency</description>
-    </key>
-
-    <key type="s" name="max-freq">
-      <default>'0'</default>
-      <summary>Maximum CPU Frequency</summary>
-      <description>Maximum CPU Frequency</description>
-    </key>
-
-    <key type="i" name="min-freq-pstate">
-      <default>0</default>
-      <summary>Minimum CPU Frequency</summary>
-      <description>Minimum CPU Frequency</description>
-    </key>
-
-    <key type="i" name="max-freq-pstate">
-      <default>100</default>
-      <summary>Maximum CPU Frequency</summary>
-      <description>Maximum CPU Frequency</description>
-    </key>
-
     <key type="s" name="profiles">
         <default>''</default>
         <summary>Profiles</summary>
@@ -127,12 +91,6 @@
       <default>-1</default>
       <summary>Profile ID</summary>
       <description>Profile ID</description>
-    </key>
-
-    <key type="s" name="title">
-      <default>'㎓'</default>
-      <summary>Frequency Label</summary>
-      <description>Current Frequency Label</description>
     </key>
 
     <key type="i" name="monitor">
