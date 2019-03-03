@@ -62,6 +62,7 @@ function init (prefs) {
   get_frequencies ();
   cpucount = get_cpu_number ();
   get_default_profile ();
+  //get_profile ("Testing Profile");
 }
 
 function check_install () {
@@ -145,7 +146,8 @@ function get_profile (name) {
     cores.push (core);
   }
   let p = {
-    name:name, minf:minf, maxf:maxf, turbo:get_turbo (), cpu:cpu_online,
+    name:name, minf:minf, maxf:maxf, turbo:get_turbo (),
+    cpu:GLib.get_num_processors (),
     acpi:!this.pstate_present, guid:guid,
     core:cores
   };
