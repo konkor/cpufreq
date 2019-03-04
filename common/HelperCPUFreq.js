@@ -90,7 +90,9 @@ function check_install () {
 
 function check_extensions () {
   if (!util_present || !installed) return;
+  let save_state = settings.save;
   let default_boost = get_turbo ();
+  settings.save = false;
   if (default_boost == false) {
     set_turbo (true);
     let new_state = get_turbo ();
@@ -99,15 +101,14 @@ function check_extensions () {
       set_turbo (false);
     }
   } else boost_present = true;
+  settings.save = save_state;
 }
 
 function get_default_profile () {
   if (!util_present || !installed) return null;
   if (default_profile) return default_profile;
-  let save_state = settings.save;
   let cores = [];
 
-  settings.save = false; //Disabling restoring on loading values
   for (let key = 0; key < cpucount; key++) {
     let core = {
       g: pstate_present?"powersave":"ondemand",
@@ -118,10 +119,9 @@ function get_default_profile () {
   }
   let p = {
     name:"Default", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
-    acpi:!this.pstate_present, guid:"00000000000000000000000000000000",
+    acpi:!pstate_present, guid:"00000000000000000000000000000000",
     core:cores
   };
-  settings.save = save_state; //Restoring users settings
   debug (JSON.stringify (p));
   default_profile = p;
   return default_profile;
@@ -130,11 +130,9 @@ function get_default_profile () {
 function get_profile (name) {
   let guid = Gio.dbus_generate_guid ();
   name = name || guid;
-  let save_state = settings.save;
   let cores = [];
   let minf = 0, maxf = 100;
 
-  settings.save = false;
   if (pstate_present) {
     minf = minfreq;
     maxf = maxfreq;
@@ -152,17 +150,15 @@ function get_profile (name) {
   let p = {
     name:name, minf:minf, maxf:maxf, turbo:get_turbo (),
     cpu:GLib.get_num_processors (),
-    acpi:!this.pstate_present, guid:guid,
+    acpi:!pstate_present, guid:guid,
     core:cores
   };
-  settings.save = save_state;
   debug (JSON.stringify (p));
   return p;
 }
 
 function get_turbo () {
   if (!util_present) return false;
-  if (settings.save) return set_turbo (settings.turbo);
   var res = null;
   if (pstate_present) res = get_info_string (cpufreqctl_path + " turbo");
   else res = get_info_string (cpufreqctl_path + " boost");
@@ -287,11 +283,8 @@ function get_frequencies () {
 function set_frequencies () {
   let cmin, cmax;
   if (pstate_present) {
-    let save_state = settings.save;
-    settings.save = false;
     cmin = get_min_pstate ();
     cmax = get_max_pstate ();
-    settings.save = save_state;
     debug ("%d:%d - %d:%d".format (cmin,cmax,minfreq,maxfreq));
     if ((minfreq == cmin) && (maxfreq == cmax)) return;
     if ((minfreq > cmax) && (minfreq <= maxfreq)) {
@@ -358,7 +351,6 @@ function set_coremax (core, state) {
 
 function get_min () {
   if (!util_present) return minimum_freq;
-  if (settings.save) return set_min (parseInt (settings.min_freq));
   var res = get_info_string (cpufreqctl_path + " minf");
   if (res) return parseInt (res);
   return minimum_freq;
@@ -374,7 +366,6 @@ function set_min (minimum) {
 
 function get_max () {
   if (!util_present) return maximum_freq;
-  if (settings.save) return set_max (parseInt (settings.max_freq));
   var res = get_info_string (cpufreqctl_path + " maxf");
   if (res) return parseInt (res);
   return maximum_freq;
@@ -390,7 +381,6 @@ function set_max (maximum) {
 
 function get_min_pstate () {
   if (!util_present) return 0;
-  if (settings.save) return set_min_pstate (settings.min_freq_pstate);
   var res = get_info_string (cpufreqctl_path + " min");
   if (res) return parseInt (res);
   return 0;
@@ -405,7 +395,6 @@ function set_min_pstate (minimum) {
 
 function get_max_pstate () {
   if (!util_present) return 0;
-  if (settings.save) return set_max_pstate (settings.max_freq_pstate);
   var res = get_info_string (cpufreqctl_path + " max");
   if (res) return parseInt (res);
   return 0;
