@@ -24,13 +24,14 @@ const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
-const TURBO_BOOST_KEY = 'turbo-boost';
+const REMEMBERED_KEY = 'remember-profile';
+/*const TURBO_BOOST_KEY = 'turbo-boost';
 const GOVERNOR_KEY = 'governor';
 const CPU_FREQ_KEY = 'cpu-freq';
 const MIN_FREQ_KEY = 'min-freq';
 const MAX_FREQ_KEY = 'max-freq';
 const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
-const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';
+const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';*/
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
 const MONITOR_KEY = 'monitor';
@@ -38,6 +39,7 @@ const MONITOR_KEY = 'monitor';
 let _save = false;
 let _PID = -1;
 let profiles = [];
+let remember_profile = null;
 
 var Settings = new Lang.Class({
   Name: "Settings",
@@ -68,12 +70,28 @@ var Settings = new Lang.Class({
     _save = this.get_boolean (SAVE_SETTINGS_KEY);
     _PID = this.get_int (PROFILE_KEY);
     this.load_profiles ();
+    let s = this.get_string (REMEMBERED_KEY);
+    if (s) remember_profile = JSON.parse (s);
+    print ("Save settings", _save);
   },
 
   get save () { return _save; },
   set save (val) {
     _save = val;
     this.set_boolean (SAVE_SETTINGS_KEY, _save);
+  },
+
+  get current_profile () { return remember_profile; },
+  set current_profile (val) {
+    if (!val) return;
+    remember_profile = val;
+    this.update_current_profile ();
+  },
+
+  update_current_profile: function () {
+    let s = JSON.stringify (remember_profile);
+    this.set_string (REMEMBERED_KEY, s);
+    print ("Updating settings");
   },
 
   get monitor () { return this.get_int (MONITOR_KEY); },
@@ -96,35 +114,87 @@ var Settings = new Lang.Class({
     }
   },
 
-  get turbo () { return this.get_boolean (TURBO_BOOST_KEY); },
-  set turbo (val) { this.set_boolean (TURBO_BOOST_KEY, val); },
-
-  get min_freq () { return this.get_string (MIN_FREQ_KEY); },
-  set min_freq (val) { this.set_string (MIN_FREQ_KEY, val); },
-
-  get max_freq () { return this.get_string (MAX_FREQ_KEY); },
-  set max_freq (val) { this.set_string (MAX_FREQ_KEY, val); },
-
-  get governor () { return this.get_string (GOVERNOR_KEY); },
-  set governor (val) { this.set_string (GOVERNOR_KEY, val); },
-
-  get min_freq_pstate () { return this.get_int (MIN_FREQ_PSTATE_KEY); },
-  set min_freq_pstate (val) { this.set_int (MIN_FREQ_PSTATE_KEY, val); },
-
-  get max_freq_pstate () { return this.get_int (MAX_FREQ_PSTATE_KEY); },
-  set max_freq_pstate (val) { this.set_int (MAX_FREQ_PSTATE_KEY, val); },
-
-  get cpu_freq () { return this.get_string (CPU_FREQ_KEY); },
-  set cpu_freq (val) { this.set_string (CPU_FREQ_KEY, val); },
-
-  save_current: function (profile) {
-    this.governor = prf.core[0].g;
-    this.turbo = prf.turbo;
-    this.min_freq_pstate = prf.minf;
-    this.max_freq_pstate = prf.maxf;
-    this.min_freq = prf.core[0].a.toString();
-    this.max_freq = prf.core[0].b.toString();
+  get turbo () {
+    if (remember_profile) return remember_profile.turbo;
+    return true;
   },
+  set turbo (val) {
+    print ("set turbo");
+    if (!remember_profile) return;
+    remember_profile.turbo = val;
+    this.update_current_profile ();
+  },
+
+  get min_freq () {
+    if (remember_profile && remember_profile.core[0])
+      return remember_profile.core[0].a;
+    return 0;
+  },
+  set min_freq (val) {
+    print ("set min_freq");
+    if (!remember_profile) return;
+    for (let i = 0; i < remember_profile.cpu; i++)
+      remember_profile.core[i].a = val;
+    this.update_current_profile ();
+  },
+
+  get max_freq () {
+    if (remember_profile && remember_profile.core[0])
+      return remember_profile.core[0].b;
+    return 0;
+  },
+  set max_freq (val) {
+    print ("set max_freq");
+    if (!remember_profile) return;
+    for (let i = 0; i < remember_profile.cpu; i++)
+      remember_profile.core[i].b = val;
+    this.update_current_profile ();
+  },
+
+  get governor () {
+    print ("get governor");
+    if (remember_profile && remember_profile.core[0])
+      return remember_profile.core[0].g;
+    return "";
+  },
+  set governor (val) {
+    print ("set governor");
+    if (!remember_profile) return;
+    for (let i = 0; i < remember_profile.cpu; i++)
+      remember_profile.core[i].g = val;
+    this.update_current_profile ();
+  },
+
+  get min_freq_pstate () {
+    if (remember_profile)
+      return remember_profile.minf;
+    return 0;
+  },
+  set min_freq_pstate (val) {
+    if (!remember_profile) return;
+    remember_profile.minf = val;
+    this.update_current_profile ();
+  },
+
+  get max_freq_pstate () {
+    if (remember_profile)
+      return remember_profile.maxf;
+    return 0;
+  },
+  set max_freq_pstate (val) {
+    if (!remember_profile) return;
+    remember_profile.maxf = val;
+    this.update_current_profile ();
+  },
+
+  set_userspace: function (frequency) {
+    if (!remember_profile) return;
+    for (let i = 0; i < remember_profile.core; i++) {
+      remember_profile.core[i].g = "userspace";
+      remember_profile.core[i].f = frequency;
+    }
+    this.update_current_profile ();
+  }
 });
 
 function getCurrentFile () {

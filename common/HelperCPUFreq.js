@@ -62,6 +62,8 @@ function init (prefs) {
   get_frequencies ();
   cpucount = get_cpu_number ();
   get_default_profile ();
+  if (!settings.current_profile)
+    settings.current_profile = get_profile ("Current");
   get_profile ("Testing Profile");
 }
 
@@ -253,8 +255,7 @@ function set_userspace (frequency) {
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov userspace");
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " set " + frequency);
 
-  settings.governor = "userspace";
-  settings.cpu_freq = frequency.toString ();
+  settings.set_userspace (frequency.toString ());
 
   return frequency;
 }
