@@ -120,7 +120,7 @@ var Settings = new Lang.Class({
   },
   set turbo (val) {
     print ("set turbo");
-    if (!remember_profile) return;
+    if (!remember_profile || (remember_profile.turbo == val)) return;
     remember_profile.turbo = val;
     this.update_current_profile ();
   },

@@ -44,6 +44,7 @@ let minfreq = 0, maxfreq = 0;
 let cpucount = 1;
 let boost_present = false;
 let default_profile = null;
+let profile = null;
 
 let settings = null;
 let core_event = 0;
@@ -64,6 +65,8 @@ function init (prefs) {
   get_default_profile ();
   if (!settings.current_profile)
     settings.current_profile = get_profile ("Current");
+
+  if (settings.save) restore_saved ();
   get_profile ("Testing Profile");
 }
 
@@ -155,6 +158,121 @@ function get_profile (name) {
   };
   debug (JSON.stringify (p));
   return p;
+}
+
+function restore_saved () {
+  if (!settings_equal (settings.current_profile, get_profile ()))
+    load_profile (settings.current_profile);
+}
+
+function settings_equal (a, b) {
+  if (!a || !b) return false;
+  if (a.cpu != b.cpu) return false;
+  if (a.core.length != b.core.length) return false;
+  if (a.minf != b.minf) return false;
+  if (a.maxf != b.maxf) return false;
+  if (a.turbo != b.turbo) return false;
+  for (let key = 0; key < a.core.length; key++) {
+    if (a.core[key].g != b.core[key].g) return false;
+    if (a.core[key].a != b.core[key].a) return false;
+    if (a.core[key].b != b.core[key].b) return false;
+    if (a.core[key].f != b.core[key].f) return false;
+  }
+  return true;
+}
+
+//TODO: Profile applying porting
+let stage = 0;
+let install_event = 0;
+
+function load_profile (prf) {
+  if (install_event) return;
+  debug ("Loading profile...\n" + JSON.stringify (prf));
+  profile = prf;
+  for (let key = 1; key < cpucount; key++) {
+    set_core (key, true);
+  }
+  stage = 0;
+  delayed_load ();
+}
+
+function delayed_load () {
+  let delay = 1000;
+  if (core_event != 0) {
+    GLib.source_remove (core_event);
+    core_event = 0;
+  }
+  debug ("Delayed loading of stage: " + stage);
+  stage++;
+  load_stage (profile);
+  switch (stage) {
+    case 1: // reset min/max frequencies
+      delay = 50;
+      break;
+    case 2: // setting governors
+      delay = 50;
+      break;
+    case 3: // setting boost
+      delay = 50;
+      break;
+    case 4: // setting min frequency
+      delay = 50;
+      break;
+    case 5: // setting max frequency
+      delay = 50;
+      break;
+    case 6: // enable/disable cores
+      delay = 50;
+      break;
+    default:
+      return false;
+  }
+  core_event = GLib.timeout_add (0, delay, delayed_load);
+  return false;
+}
+
+function load_stage (prf) {
+  debug ("Loading stage: " + stage);
+  if (stage == 1) {
+    if (pstate_present) {
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min 0");
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " max 100");
+    } else {
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " minf " + get_freq (0));
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " maxf " + get_freq (100));
+    }
+  } else if (stage == 2) {
+    for (let key = 0; key < cpucount; key++) {
+      if (prf.core[key])
+        set_governor (key, prf.core[key].g);
+    }
+  } else if (stage == 3) {
+    set_turbo (prf.turbo);
+  } else if (stage == 4) {
+    if (pstate_present) {
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min " + prf.minf);
+    } else {
+      for (let key = 0; key < prf.cpu; key++) {
+        if (prf.core[key]) {
+          set_coremin (key, prf.core[key].a);
+        }
+      }
+    }
+  } else if (stage == 5) {
+    if (pstate_present) {
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " max " + prf.maxf);
+    } else {
+      for (let key = 0; key < prf.cpu; key++) {
+        if (prf.core[key]) {
+          set_coremax (key, prf.core[key].b);
+        }
+      }
+    }
+  } else if (stage == 6) {
+    for (let key = 1; key < cpucount; key++) {
+      set_core (key, key < prf.cpu);
+    }
+  }
 }
 
 function get_turbo () {
