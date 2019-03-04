@@ -133,9 +133,12 @@ var Settings = new Lang.Class({
   set min_freq (val) {
     print ("set min_freq");
     if (!remember_profile) return;
-    for (let i = 0; i < remember_profile.cpu; i++)
+    var equal = true;
+    for (let i = 0; i < remember_profile.cpu; i++) {
+      if (remember_profile.core[i].a != val) equal = false;
       remember_profile.core[i].a = val;
-    this.update_current_profile ();
+    }
+    if (!equal) this.update_current_profile ();
   },
 
   get max_freq () {
@@ -146,9 +149,12 @@ var Settings = new Lang.Class({
   set max_freq (val) {
     print ("set max_freq");
     if (!remember_profile) return;
-    for (let i = 0; i < remember_profile.cpu; i++)
+    var equal = true;
+    for (let i = 0; i < remember_profile.cpu; i++) {
+      if (remember_profile.core[i].b != val) equal = false;
       remember_profile.core[i].b = val;
-    this.update_current_profile ();
+    }
+    if (!equal) this.update_current_profile ();
   },
 
   get governor () {
@@ -160,9 +166,12 @@ var Settings = new Lang.Class({
   set governor (val) {
     print ("set governor");
     if (!remember_profile) return;
-    for (let i = 0; i < remember_profile.cpu; i++)
+    var equal = true;
+    for (let i = 0; i < remember_profile.cpu; i++) {
+      if (remember_profile.core[i].g != val) equal = false;
       remember_profile.core[i].g = val;
-    this.update_current_profile ();
+    }
+    if (!equal) this.update_current_profile ();
   },
 
   get min_freq_pstate () {
@@ -171,7 +180,7 @@ var Settings = new Lang.Class({
     return 0;
   },
   set min_freq_pstate (val) {
-    if (!remember_profile) return;
+    if (!remember_profile || (remember_profile.minf == val)) return;
     remember_profile.minf = val;
     this.update_current_profile ();
   },
@@ -182,18 +191,21 @@ var Settings = new Lang.Class({
     return 0;
   },
   set max_freq_pstate (val) {
-    if (!remember_profile) return;
+    if (!remember_profile || (remember_profile.maxf == val)) return;
     remember_profile.maxf = val;
     this.update_current_profile ();
   },
 
   set_userspace: function (frequency) {
     if (!remember_profile) return;
+    var equal = true;
     for (let i = 0; i < remember_profile.core; i++) {
+      if (remember_profile.core[i].g != "userspace") equal = false;
+      if (remember_profile.core[i].f != frequency) equal = false;
       remember_profile.core[i].g = "userspace";
       remember_profile.core[i].f = frequency;
     }
-    this.update_current_profile ();
+    if (!equal) this.update_current_profile ();
   }
 });
 

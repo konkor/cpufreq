@@ -248,7 +248,8 @@ function load_stage (prf) {
     }
   } else if (stage == 3) {
     set_turbo (prf.turbo);
-  } else if (stage == 4) {
+  } else if (stage == 4)
+    //TODO: Test applying per core frequencies on pstate
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min " + prf.minf);
     } else {
