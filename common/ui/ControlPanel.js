@@ -44,6 +44,7 @@ var ControlPanel = new Lang.Class({
     this.app = owner;
     cpu = this.app.cpufreq;
     settings = this.app.settings;
+    this.locked = false;
     //print (cpu.cpucount);
     //print (cpu.governors);
 
@@ -82,7 +83,7 @@ var ControlPanel = new Lang.Class({
           let u_item = new MenuItem.MenuItem (s);
           this.userspace.add_menuitem (u_item);
           u_item.connect ("clicked", Lang.bind (this, function () {
-            if (!cpu.installed) return;
+            if (!cpu.installed || this.locked) return;
             this._changed ();
             cpu.set_userspace (freq);
             this.activeg.set_label ("userspace");
@@ -107,7 +108,7 @@ var ControlPanel = new Lang.Class({
   },
 
   on_governor: function (o) {
-    if (!cpu.installed) return;
+    if (!cpu.installed || this.locked) return;
     this._changed ();
     cpu.set_governors (o.label);
     this.activeg.set_label (o.label);
@@ -158,7 +159,7 @@ var ControlPanel = new Lang.Class({
       this.slider_max.slider.set_value (cpu.get_pos (cpu.maxfreq));
     }
     this.slider_min.slider.connect('value_changed', Lang.bind (this, function (item) {
-      if (!cpu.installed) return;
+      if (!cpu.installed || this.locked) return;
       this._changed ();
       if (item.get_value() > this.slider_max.slider.get_value()) {
         this.slider_max.slider.set_value (item.get_value ());
@@ -171,7 +172,7 @@ var ControlPanel = new Lang.Class({
       freq_event = GLib.timeout_add (0, 1000, this.set_frequencies);
     }));
     this.slider_max.slider.connect('value_changed', Lang.bind (this, function (item) {
-      if (!cpu.installed) return;
+      if (!cpu.installed || this.locked) return;
       this._changed ();
       if (item.get_value() < this.slider_min.slider.get_value()) {
         this.slider_min.slider.set_value (item.get_value ());
@@ -211,7 +212,7 @@ var ControlPanel = new Lang.Class({
       app.launch_uris (["file://" + APPDIR + "/README.md"], null);
     }));
     this.slider_core.slider.connect('value_changed', Lang.bind (this, function (item) {
-      if (!cpu.installed) return;
+      if (!cpu.installed || this.locked) return;
       this._changed ();
       var cc = Math.floor ((cpu.cpucount - 1) * item.get_value() + 1);
       cpu.set_cores (cc, () => {
@@ -228,8 +229,9 @@ var ControlPanel = new Lang.Class({
     this.boost = new Switch.Switch ("Turbo Boost", cpu.get_turbo(), "Enable/Disable Processor Boost");
     this.add (this.boost);
     this.boost.sw.connect ('state_set', Lang.bind (this, function () {
+      if (!cpu.installed || this.locked) return;
       this._changed ();
-      if (cpu.installed) cpu.set_turbo (this.boost.sw.active);
+      cpu.set_turbo (this.boost.sw.active);
     }));
   },
 
@@ -241,6 +243,7 @@ var ControlPanel = new Lang.Class({
   },
 
   update: function () {
+    this.locked = true;
     cpu.get_governors ();
     cpu.get_frequencies ();
     if (cpu.is_mixed_governors ()) this.activeg.set_label ("mixed");
@@ -259,6 +262,7 @@ var ControlPanel = new Lang.Class({
       this.boost.sw.active = cpu.get_turbo ();
     if (this.slider_core)
       this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
+    this.locked = false;
   }
 });
 
