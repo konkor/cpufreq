@@ -49,8 +49,11 @@ let profile = null;
 let settings = null;
 let core_event = 0;
 
+var profile_changed_callback = null;
+
 function init (prefs) {
   settings = prefs;
+  cpucount = get_cpu_number ();
 
   let res = get_info_string (APPDIR + "/cpufreqctl driver");
   if (res && GLib.file_test ("/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver", GLib.FileTest.EXISTS)) {
@@ -59,15 +62,14 @@ function init (prefs) {
   }
   check_install ();
   check_extensions ();
-  get_governors ();
-  get_frequencies ();
-  cpucount = get_cpu_number ();
-  get_default_profile ();
   if (!settings.current_profile)
     settings.current_profile = get_profile ("Current");
-
   if (settings.save) restore_saved ();
-  get_profile ("Testing Profile");
+  get_governors ();
+  get_frequencies ();
+  get_default_profile ();
+
+  //get_profile ("Testing Profile");
 }
 
 function check_install () {
@@ -248,7 +250,7 @@ function load_stage (prf) {
     }
   } else if (stage == 3) {
     set_turbo (prf.turbo);
-  } else if (stage == 4)
+  } else if (stage == 4) {
     //TODO: Test applying per core frequencies on pstate
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min " + prf.minf);
@@ -273,6 +275,7 @@ function load_stage (prf) {
     for (let key = 1; key < cpucount; key++) {
       set_core (key, key < prf.cpu);
     }
+    if (profile_changed_callback) profile_changed_callback (profile);
   }
 }
 
@@ -602,7 +605,7 @@ function get_frequency (num) {
 }
 
 function get_freq (num) {
-  let n = frequencies.length;
+  let n = frequencies.length - 1;
   let step = Math.round (100 / n);
   let i = Math.round (num / step);
   if (i >= n) i = n - 1;

@@ -70,6 +70,7 @@ var CPUFreqApplication = new Lang.Class ({
     this.add_window (window);
 
     cpu.init (this.settings);
+    cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
 
     //save = settings.get_boolean (SAVE_SETTINGS_KEY);
     //PID =  settings.get_int (PROFILE_KEY);
@@ -128,8 +129,9 @@ var CPUFreqApplication = new Lang.Class ({
 
   },
 
-  set_accel: function (mi, accel) {
-
+  on_profile_changed: function (profile) {
+    if (!this.cpanel) return;
+    this.cpanel.update ();
   },
 
   get cpufreq () {

@@ -238,6 +238,27 @@ var ControlPanel = new Lang.Class({
       settings.PID = -1;
     }
     if (this.profmenu) this.profmenu.label = "Custom";
+  },
+
+  update: function () {
+    cpu.get_governors ();
+    cpu.get_frequencies ();
+    if (cpu.is_mixed_governors ()) this.activeg.set_label ("mixed");
+    else this.activeg.set_label (cpu.governoractual[0]);
+    this.check_sliders ();
+    if (this.slider_min)
+      if (cpu.pstate_present) {
+        this.slider_min.slider.set_value (cpu.minfreq/100);
+        this.slider_max.slider.set_value (cpu.maxfreq/100);
+      } else {
+        print ("update min freq", cpu.minfreq, cpu.get_pos (cpu.minfreq));
+        this.slider_min.slider.set_value (cpu.get_pos (cpu.minfreq));
+        this.slider_max.slider.set_value (cpu.get_pos (cpu.maxfreq));
+      }
+    if (this.boost)
+      this.boost.sw.active = cpu.get_turbo ();
+    if (this.slider_core)
+      this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
   }
 });
 
