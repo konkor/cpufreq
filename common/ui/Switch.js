@@ -43,5 +43,12 @@ var Switch = new Lang.Class({
     this.pack_end (this.sw, false, false, 0);
 
     this.show_all ();
+  },
+
+  get active () { return this.sw.active; },
+  set active (val) {
+    this.sw.active = val;
   }
+
+
 });

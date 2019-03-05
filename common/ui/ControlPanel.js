@@ -231,7 +231,7 @@ var ControlPanel = new Lang.Class({
     this.boost.sw.connect ('state_set', Lang.bind (this, function () {
       if (!cpu.installed || this.locked) return;
       this._changed ();
-      cpu.set_turbo (this.boost.sw.active);
+      cpu.set_turbo (this.boost.active);
     }));
   },
 
@@ -259,7 +259,7 @@ var ControlPanel = new Lang.Class({
         this.slider_max.slider.set_value (cpu.get_pos (cpu.maxfreq));
       }
     if (this.boost)
-      this.boost.sw.active = cpu.get_turbo ();
+      this.boost.active = cpu.get_turbo ();
     if (this.slider_core)
       this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
     this.locked = false;
