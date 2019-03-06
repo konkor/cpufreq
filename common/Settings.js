@@ -125,6 +125,17 @@ var Settings = new Lang.Class({
     this.update_current_profile ();
   },
 
+  get cpu_cores () {
+    if (remember_profile) return remember_profile.cpu;
+    return 1;
+  },
+  set cpu_cores (val) {
+    print ("set cores online");
+    if (!remember_profile || (remember_profile.cpu == val)) return;
+    remember_profile.cpu = val;
+    this.update_current_profile ();
+  },
+
   get min_freq () {
     if (remember_profile && remember_profile.core[0])
       return remember_profile.core[0].a;

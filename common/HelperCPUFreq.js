@@ -255,7 +255,7 @@ function load_stage (prf) {
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min " + prf.minf);
     } else {
-      for (let key = 0; key < prf.cpu; key++) {
+      for (let key = 0; key < cpucount; key++) {
         if (prf.core[key]) {
           set_coremin (key, prf.core[key].a);
         }
@@ -265,7 +265,7 @@ function load_stage (prf) {
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " max " + prf.maxf);
     } else {
-      for (let key = 0; key < prf.cpu; key++) {
+      for (let key = 0; key < cpucount; key++) {
         if (prf.core[key]) {
           set_coremax (key, prf.core[key].b);
         }
@@ -551,6 +551,7 @@ function set_cores (count, callback) {
     for (let key = 1; key < cpucount; key++) {
       set_core (key, key < ccore);
     }
+    if (settings.save) settings.cpu_cores = ccore;
     core_event = 0;
     if (callback) callback ();
     return false;
@@ -606,6 +607,7 @@ function get_frequency (num) {
 
 function get_freq (num) {
   let n = frequencies.length - 1;
+  if (n < 1) n = 1;
   let step = Math.round (100 / n);
   let i = Math.round (num / step);
   if (i >= n) i = n - 1;
