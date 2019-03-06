@@ -83,11 +83,22 @@ var ControlPanel = new Lang.Class({
     this.profmenu =  new Submenu.Submenu (cpu.default_profile.name, _("Profiles Menu"), 2);
     this.profmenu.connect ("activate", Lang.bind (this, this.on_submenu));
     this.add (this.profmenu);
+    mi = new MenuItem.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
+    this.profmenu.add_menuitem (mi);
+    mi.connect ('clicked', Lang.bind (this, (o) => {
+      print ("New Item", o.text);
+      settings.add_profile (cpu.get_profile (o.text));
+      this.add_profile (settings.profiles.length);
+    }));
     mi = new MenuItem.MenuItem (cpu.default_profile.name, _("Load default system settings"));
     this.profmenu.add_menuitem (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.reset_defaults ();
     }));
+  },
+
+  add_profile: function (index) {
+    //TODO: add profile item for profiles[index]
   },
 
   add_governors: function () {

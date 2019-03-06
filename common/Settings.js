@@ -114,6 +114,11 @@ var Settings = new Lang.Class({
     }
   },
 
+  add_profile: function (profile) {
+    profiles.push (profile);
+    this.set_string (PROFILES_KEY, JSON.stringify (profiles));
+  },
+
   get turbo () {
     if (remember_profile) return remember_profile.turbo;
     return true;
