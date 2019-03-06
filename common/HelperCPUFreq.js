@@ -109,6 +109,13 @@ function check_extensions () {
   settings.save = save_state;
 }
 
+function reset_defaults () {
+  load_profile (default_profile);
+  settings.current_profile = default_profile;
+  settings.PID = -1;
+  settings.update_current_profile ();
+}
+
 function get_default_profile () {
   if (!util_present || !installed) return null;
   if (default_profile) return default_profile;
@@ -123,7 +130,7 @@ function get_default_profile () {
     cores.push (core);
   }
   let p = {
-    name:"Default", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
+    name:"Default Settings", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
     acpi:!pstate_present, guid:"00000000000000000000000000000000",
     core:cores
   };

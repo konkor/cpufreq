@@ -79,9 +79,15 @@ var ControlPanel = new Lang.Class({
   },
 
   add_profiles: function () {
+    let mi;
     this.profmenu =  new Submenu.Submenu (cpu.default_profile.name, _("Profiles Menu"), 2);
     this.profmenu.connect ("activate", Lang.bind (this, this.on_submenu));
     this.add (this.profmenu);
+    mi = new MenuItem.MenuItem (cpu.default_profile.name, _("Load default system settings"));
+    this.profmenu.add_menuitem (mi);
+    mi.connect ('clicked', Lang.bind (this, () => {
+      cpu.reset_defaults ();
+    }));
   },
 
   add_governors: function () {
@@ -126,7 +132,14 @@ var ControlPanel = new Lang.Class({
   on_submenu: function (o) {
     if (o.id == 0) {
       if (this.userspace) this.userspace.expanded = false;
-    } else this.activeg.expanded = false;
+      this.profmenu.expanded = false;
+    } else if (o.id == 1) {
+      this.activeg.expanded = false;
+      this.profmenu.expanded = false;
+    } else if (o.id == 2) {
+      this.activeg.expanded = false;
+      if (this.userspace) this.userspace.expanded = false;
+    }
   },
 
   on_governor: function (o) {
