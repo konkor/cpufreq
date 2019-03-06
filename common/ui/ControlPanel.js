@@ -30,6 +30,9 @@ const MenuItem = imports.common.ui.MenuItem;
 const Slider = imports.common.ui.Slider;
 const Switch = imports.common.ui.Switch;
 
+const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
+const _ = Gettext.gettext;
+
 var cpu = null;
 var settings = null;
 
@@ -45,14 +48,8 @@ var ControlPanel = new Lang.Class({
     cpu = this.app.cpufreq;
     settings = this.app.settings;
     this.locked = false;
-    //print (cpu.cpucount);
-    //print (cpu.governors);
 
-    this.add_governors ();
-    if (cpu.pstate_present) this.pstate_build ();
-    else this.acpi_build ();
-    if (cpu.cpucount > 1) this.add_cores ();
-    if (cpu.boost_present) this.add_boost ();
+    this.build ();
 
     //this.show_all ();
   },
@@ -60,6 +57,24 @@ var ControlPanel = new Lang.Class({
   post_init: function () {
     if (cpu.cpucount > 1)
       this.corewarn.visible = GLib.get_num_processors () == 1;
+  },
+
+  build: function () {
+    this.add_governors ();
+    if (cpu.pstate_present) this.pstate_build ();
+    else this.acpi_build ();
+    if (cpu.cpucount > 1) this.add_cores ();
+    if (cpu.boost_present) this.add_boost ();
+
+    this.save = Gtk.CheckButton.new_with_label (_("Remember settings"));
+    this.save.tooltip_text = _("Check to restore settings on the next startup");
+    this.save.active = settings.save;
+    this.save.margin_top = 22;
+    this.save.opacity = 0.7;
+    this.add (this.save);
+    this.save.connect ('toggled', Lang.bind (this, ()=>{
+        settings.save = this.save.active;
+    }));
   },
 
   add_governors: function () {

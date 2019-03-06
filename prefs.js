@@ -47,7 +47,7 @@ const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
 const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
 const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
 
-const Gettext = imports.gettext.domain('gnome-shell-extensions-cpufreq');
+const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
 
 const EXTENSIONDIR = getCurrentFile ()[1];
