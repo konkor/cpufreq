@@ -65,9 +65,10 @@ var ControlPanel = new Lang.Class({
     else this.acpi_build ();
     if (cpu.cpucount > 1) this.add_cores ();
     if (cpu.boost_present) this.add_boost ();
+    this.add_profiles ();
 
     this.save = Gtk.CheckButton.new_with_label (_("Remember settings"));
-    this.save.tooltip_text = _("Check to restore settings on the next startup");
+    this.save.tooltip_text = _("Check to restore settings on the startup");
     this.save.active = settings.save;
     this.save.margin_top = 22;
     this.save.opacity = 0.7;
@@ -75,6 +76,12 @@ var ControlPanel = new Lang.Class({
     this.save.connect ('toggled', Lang.bind (this, ()=>{
         settings.save = this.save.active;
     }));
+  },
+
+  add_profiles: function () {
+    this.profmenu =  new Submenu.Submenu (cpu.default_profile.name, _("Profiles Menu"), 2);
+    this.profmenu.connect ("activate", Lang.bind (this, this.on_submenu));
+    this.add (this.profmenu);
   },
 
   add_governors: function () {

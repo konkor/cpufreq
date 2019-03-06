@@ -144,7 +144,7 @@ var PageGeneralCPUFreq = new Lang.Class({
 
         this.add (new Gtk.Label ({label: _("<b>System</b>"), use_markup:true, xalign:0, margin_top:8}));
         this.cb_startup = Gtk.CheckButton.new_with_label (_("Remember settings"));
-        this.cb_startup.tooltip_text = _("Remember settings to restore on the next startup");
+        this.cb_startup.tooltip_text = _("Check to restore settings on the startup");
         this.cb_startup.margin = 6;
         this.add (this.cb_startup);
         this.cb_startup.active = save;
