@@ -28,9 +28,10 @@ var Submenu = new Lang.Class({
   Extends: Gtk.Expander,
 
   _init: function (text, tooltip, id, scroll) {
-    this.parent ({label:text, label_fill:true, expanded:false, resize_toplevel:false});
+    this.parent ({label:text, label_fill:false, expanded:false, resize_toplevel:false});
     scroll = scroll || false;
     this.get_style_context ().add_class ("submenu");
+    this.get_style_context ().add_class ("status");
     this.tooltip_text = tooltip;
     this.id = id;
 
@@ -53,6 +54,6 @@ var Submenu = new Lang.Class({
 
   set_label: function (text) {
     text = text || "";
-    this.label = "\u26A1 " + text;
+    this.label = text; //"\u26A1 " + text;
   }
 });

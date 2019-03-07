@@ -105,10 +105,33 @@ var ControlPanel = new Lang.Class({
   },
 
   add_profile: function (index) {
-    //TODO: add profile item for profiles[index]
     let prf = new MenuItem.ProfileItem (settings.profiles[index].name);
-    prf.ID = index;
+    prf.ID = parseInt (index);
     this.profmenu.add_menuitem (prf);
+
+    prf.connect ('clicked', Lang.bind (this, function (o) {
+      cpu.load_profile (settings.profiles[o.ID]);
+      settings.PID = o.ID;
+    }));
+
+    prf.connect ('edited', Lang.bind (this, function (o) {
+      settings.update_profile (o.ID, cpu.get_profile (o.text));
+    }));
+
+    prf.connect ('delete', Lang.bind (this, function (o) {
+      var id = parseInt (o.ID);
+      settings.delete_profile (id);
+      o.destroy ();
+      id += 1;
+      let i = 0;
+      this.profmenu.section.get_children ().forEach ((p) => {
+        if (i > id) {
+          p.ID -= 1;
+        }
+        i++;
+      });
+    }));
+
     prf.show_all ();
   },
 
@@ -334,6 +357,7 @@ var ControlPanel = new Lang.Class({
       this.slider_core.slider.set_value (cc / cpu.cpucount);
       this.slider_core.update_info (cc);
     }
+    if (settings.PID > -1) this.profmenu.label = settings.profiles[settings.PID].name;
     this.locked = false;
   }
 });

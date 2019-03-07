@@ -83,3 +83,9 @@
   background-color: #bb0a1b;
   border: none;
 }
+.bold {
+  font-weight: bold;
+}
+.normal {
+  font-weight: normal;
+}

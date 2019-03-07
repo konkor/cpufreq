@@ -32,6 +32,7 @@ var MenuItem = new Lang.Class({
     tooltip = tooltip || "";
     this.parent ({label:text, tooltip_text:tooltip, xalign:0});
     this.get_style_context ().add_class ("menuitem");
+    this.get_style_context ().add_class ("normal");
   }
 });
 
@@ -107,6 +108,7 @@ var ProfileItem = new Lang.Class({
 
   _init: function (name) {
     this.parent (name, name, "Profile Name");
+    this.get_style_context ().add_class ("normal");
     this.entry.text = name;
 
     this.delete_button = new MenuButton ("edit-delete-symbolic", "Delete", "delete-button");

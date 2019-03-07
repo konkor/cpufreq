@@ -99,6 +99,7 @@ var Settings = new Lang.Class({
 
   get PID () { return _PID; },
   set PID (val) {
+    if (_PID == val) return;
     _PID = val;
     this.set_int (PROFILE_KEY, _PID);
   },
@@ -116,6 +117,20 @@ var Settings = new Lang.Class({
 
   add_profile: function (profile) {
     profiles.push (profile);
+    this.set_string (PROFILES_KEY, JSON.stringify (profiles));
+  },
+
+  update_profile: function (id, profile) {
+    profiles[id] = profile;
+    this.set_string (PROFILES_KEY, JSON.stringify (profiles));
+  },
+
+  delete_profile: function (id) {
+    if (this.PID > -1) {
+      if (id == this.PID) this.PID = -1;
+      if (this.PID > id) this.PID--;
+    }
+    profiles.splice (id, 1);
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));
   },
 
