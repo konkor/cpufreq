@@ -62,7 +62,8 @@ var NewProfileItem = new Lang.Class({
     this.entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "edit-clear-symbolic");
     this.entry.connect ('icon-press', Lang.bind (this, (o, pos, e)=>{
       if (pos == Gtk.EntryIconPosition.SECONDARY)
-        this.entry.text = "";
+      if (this.entry.text) this.entry.text = "";
+      else this.toggle ();
     }));
     this.entry.connect ('key_press_event', Lang.bind (this, (o, e)=>{
       var [,key] = e.get_keyval ();
@@ -71,23 +72,102 @@ var NewProfileItem = new Lang.Class({
         else this.toggle ();
       }
     }));
-    this.entry.connect ('activate', Lang.bind (this, ()=>{
-      if (this.entry.text) {
-        this.toggle ();
-        this.emit ('clicked');
-      }
-    }));
 
-    this.button.connect ('clicked', Lang.bind (this, (o) => {
-      //this.emit ('clicked');
-      //this.edit_mode = true;
+    this.entry.connect ('activate', Lang.bind (this, this.on_entry_activate));
+    this.button.connect ('clicked', Lang.bind (this, this.on_button_clicked));
+  },
+
+  on_button_clicked: function (o) {
+    this.toggle ();
+  },
+
+  on_entry_activate: function (o) {
+    if (this.entry.text) {
       this.toggle ();
-    }));
+      this.emit ('clicked');
+    }
   },
 
   toggle: function () {
     this.edit_mode = !this.edit_mode;
     this.button.visible = !this.edit_mode;
     this.entry.visible = this.edit_mode;
+  },
+
+  get text () { return this.entry.text; }
+});
+
+var ProfileItem = new Lang.Class({
+  Name: "ProfileItem",
+  Extends: NewProfileItem,
+  Signals: {
+    'delete': {},
+    'edited': {},
+  },
+
+  _init: function (name) {
+    this.parent (name, name, "Profile Name");
+    this.entry.text = name;
+
+    this.delete_button = new MenuButton ("edit-delete-symbolic", "Delete", "delete-button");
+    this.pack_end (this.delete_button, false, false, 0);
+
+    this.edit_button = new MenuButton ("open-menu-symbolic", "Edit", "edit-button");
+    this.pack_end (this.edit_button, false, false, 0);
+
+    this.delete_button.connect ('clicked', Lang.bind (this, (o) => {
+      this.emit ('delete');
+    }));
+    this.edit_button.connect ('clicked', Lang.bind (this, (o) => {
+      this.toggle ();
+      if (this.edit_mode) this.entry.text = this.button.label;
+    }));
+  },
+
+  on_button_clicked: function (o) {
+    this.emit ('clicked');
+  },
+
+  on_entry_activate: function (o) {
+    if (this.entry.text) {
+      this.toggle ();
+      this.button.label = this.entry.text;
+      this.emit ('edited');
+    }
+  },
+
+  toggle: function () {
+    this.parent ();
+    this.delete_button.visible = this.button.visible;
+  }
+});
+
+
+var MenuButton = new Lang.Class({
+  Name: "MenuButton",
+  Extends: Gtk.Box,
+  Signals: {
+    'clicked': {},
+  },
+
+  _init: function (iconname, tooltip, style_class) {
+    this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:0});
+
+    let space = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
+    this.pack_start (space, true, true, 0);
+
+    this.button = Gtk.Button.new_from_icon_name (iconname, Gtk.IconSize.SMALL_TOOLBAR);
+    this.button.get_style_context ().add_class ("menuitem");
+    this.button.get_style_context ().add_class (style_class);
+    this.button.set_relief (Gtk.ReliefStyle.NONE);
+    this.button.tooltip_text = tooltip;
+    this.pack_start (this.button, false, false, 0);
+
+    let space = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
+    this.pack_start (space, true, true, 0);
+
+    this.button.connect ('clicked', Lang.bind (this, (o) => {
+      this.emit ('clicked');
+    }));
   }
 });

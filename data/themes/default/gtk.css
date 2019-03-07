@@ -70,3 +70,16 @@
 .coreinfo {
   font-weight:normal;
 }
+
+.edit-button, .delete-button {
+  border-radius: 32px;
+  padding: 4px;
+}
+.edit-button:hover {
+  background-color: orange;
+  border: none;
+}
+.delete-button:hover {
+  background-color: #bb0a1b;
+  border: none;
+}

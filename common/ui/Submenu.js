@@ -27,23 +27,24 @@ var Submenu = new Lang.Class({
   Name: "Submenu",
   Extends: Gtk.Expander,
 
-  _init: function (text, tooltip, id) {
+  _init: function (text, tooltip, id, scroll) {
     this.parent ({label:text, label_fill:true, expanded:false, resize_toplevel:false});
+    scroll = scroll || false;
     this.get_style_context ().add_class ("submenu");
     this.tooltip_text = tooltip;
     this.id = id;
 
     this.scroll = new Gtk.ScrolledWindow ();
     this.scroll.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+    this.scroll.hscrollbar_policy = Gtk.PolicyType.NEVER;
     this.scroll.shadow_type = Gtk.ShadowType.NONE;
-    //this.add (this.scroll);
+    if (scroll) this.add (this.scroll);
 
     this.section = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL});
     this.section.get_style_context ().add_class ("submenu-section");
-    this.add (this.section);
-    //this.scroll.add (this.section);
 
-    //this.show_all ();
+    if (scroll) this.scroll.add (this.section);
+    else this.add (this.section);
   },
 
   add_menuitem: function (menuitem) {

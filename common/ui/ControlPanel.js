@@ -70,7 +70,7 @@ var ControlPanel = new Lang.Class({
     this.save = Gtk.CheckButton.new_with_label (_("Remember settings"));
     this.save.tooltip_text = _("Check to restore settings on the startup");
     this.save.active = settings.save;
-    this.save.margin_top = 22;
+    this.save.margin = 22;
     this.save.opacity = 0.7;
     this.add (this.save);
     this.save.connect ('toggled', Lang.bind (this, ()=>{
@@ -80,30 +80,40 @@ var ControlPanel = new Lang.Class({
 
   add_profiles: function () {
     let mi;
-    this.profmenu =  new Submenu.Submenu (cpu.default_profile.name, _("Profiles Menu"), 2);
+    this.profmenu =  new Submenu.Submenu (cpu.default_profile.name, _("Profiles Menu"), 2, true);
     this.profmenu.connect ("activate", Lang.bind (this, this.on_submenu));
+    //this.pack_start (this.profmenu, true, true, 0);
     this.add (this.profmenu);
+
     mi = new MenuItem.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
     this.profmenu.add_menuitem (mi);
     mi.connect ('clicked', Lang.bind (this, (o) => {
       print ("New Item", o.text);
       settings.add_profile (cpu.get_profile (o.text));
-      this.add_profile (settings.profiles.length);
+      this.add_profile (settings.profiles.length - 1);
     }));
+
     mi = new MenuItem.MenuItem (cpu.default_profile.name, _("Load default system settings"));
     this.profmenu.add_menuitem (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.reset_defaults ();
     }));
+
+    for (let p in settings.profiles) {
+      this.add_profile (p);
+    }
   },
 
   add_profile: function (index) {
     //TODO: add profile item for profiles[index]
+    let prf = new MenuItem.ProfileItem (settings.profiles[index].name);
+    prf.ID = index;
+    this.profmenu.add_menuitem (prf);
+    prf.show_all ();
   },
 
   add_governors: function () {
     this.activeg = new Submenu.Submenu ("Governors", "Active Governor", 0);
-    //this.pack_start (this.activeg, true, true, 0);
     this.activeg.connect ("activate", Lang.bind (this, this.on_submenu));
     var mixed = cpu.is_mixed_governors ();
     if (mixed) this.activeg.set_label ("mixed");
@@ -137,19 +147,30 @@ var ControlPanel = new Lang.Class({
       }
     });
     this.add (this.activeg);
+    //this.pack_start (this.activeg, true, true, 0);
     if (this.userspace  && (cpu.frequencies.length > 0)) this.add (this.userspace);
+    //  this.pack_start (this.userspace, true, true, 0);
   },
 
   on_submenu: function (o) {
     if (o.id == 0) {
       if (this.userspace) this.userspace.expanded = false;
       this.profmenu.expanded = false;
+      //this.activeg.vexpand = !this.activeg.expanded;
+      //if (this.userspace) this.userspace.vexpand = false;
+      this.profmenu.vexpand = false;
     } else if (o.id == 1) {
       this.activeg.expanded = false;
       this.profmenu.expanded = false;
+      //this.activeg.vexpand = false;
+      //this.userspace.vexpand = !this.userspace.expanded;
+      this.profmenu.vexpand = false;
     } else if (o.id == 2) {
       this.activeg.expanded = false;
       if (this.userspace) this.userspace.expanded = false;
+      //this.activeg.vexpand = false;
+      //if (this.userspace) this.userspace.vexpand = false;
+      this.profmenu.vexpand = !this.profmenu.expanded;
     }
   },
 
