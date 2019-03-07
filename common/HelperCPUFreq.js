@@ -29,21 +29,21 @@ const APPDIR = getCurrentFile ()[1];
 const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 
-let governors = [];
-let governoractual = [];
+var governors = [];
+var governoractual = [];
 let util_present = false;
-let pstate_present = false;
-let cpufreqctl_path = null;
+var pstate_present = false;
+var cpufreqctl_path = null;
 let pkexec_path = null;
-let installed = false;
-let updated = true;
-let frequencies = [];
+var installed = false;
+var updated = true;
+var frequencies = [];
 let minimum_freq = 0;
 let maximum_freq = 0;
-let minfreq = 0, maxfreq = 0;
-let cpucount = 1;
-let boost_present = false;
-let default_profile = null;
+var minfreq = 0, maxfreq = 0;
+var cpucount = 1;
+var boost_present = false;
+var default_profile = null;
 let profile = null;
 
 let settings = null;
@@ -185,7 +185,7 @@ function settings_equal (a, b) {
     if (a.core[key].g != b.core[key].g) return false;
     if (a.core[key].a != b.core[key].a) return false;
     if (a.core[key].b != b.core[key].b) return false;
-    if (a.core[key].f != b.core[key].f) return false;
+    if (a.core[key].f && a.core[key].f != b.core[key].f) return false;
   }
   return true;
 }
@@ -641,7 +641,7 @@ function get_cpu_number () {
 let cmd_out, info_out;
 function get_info_string (cmd) {
   cmd_out = GLib.spawn_command_line_sync (cmd);
-  if (cmd_out[0]) info_out = cmd_out[1].toString().split("\n")[0];
+  if (cmd_out[0]) info_out = byteArrayToString (cmd_out[1]).toString().split("\n")[0];
   if (info_out) return info_out;
   return "";
 }

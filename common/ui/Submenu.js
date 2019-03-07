@@ -32,6 +32,8 @@ var Submenu = new Lang.Class({
     scroll = scroll || false;
     this.get_style_context ().add_class ("submenu");
     this.get_style_context ().add_class ("status");
+    this.label_widget.margin = 8;
+    this.label_widget.margin_top = 4;
     this.tooltip_text = tooltip;
     this.id = id;
 

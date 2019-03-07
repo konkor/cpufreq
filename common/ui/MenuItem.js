@@ -46,7 +46,7 @@ var NewProfileItem = new Lang.Class({
   _init: function (text, tooltip, placeholder) {
     tooltip = tooltip || "";
     placeholder = placeholder || "";
-    this.parent ({orientation:Gtk.Orientation.HORIZONTAL, margin:0, tooltip_text:tooltip});
+    this.parent ({orientation:Gtk.Orientation.HORIZONTAL, spacing:0, tooltip_text:tooltip});
     this.get_style_context ().add_class ("menuitem");
     this.edit_mode = false;
 
@@ -165,7 +165,7 @@ var MenuButton = new Lang.Class({
     this.button.tooltip_text = tooltip;
     this.pack_start (this.button, false, false, 0);
 
-    let space = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
+    space = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
     this.pack_start (space, true, true, 0);
 
     this.button.connect ('clicked', Lang.bind (this, (o) => {

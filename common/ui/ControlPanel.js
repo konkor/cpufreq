@@ -194,6 +194,7 @@ var ControlPanel = new Lang.Class({
       //this.activeg.vexpand = false;
       //if (this.userspace) this.userspace.vexpand = false;
       this.profmenu.vexpand = !this.profmenu.expanded;
+      this.profmenu.scroll.vexpand = this.profmenu.vexpand;
     }
   },
 
