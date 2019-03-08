@@ -88,7 +88,7 @@ var CPUFreqApplication = new Lang.Class ({
 
   build: function() {
     window.window_position = Gtk.WindowPosition.MOUSE;
-    Gtk.Settings.get_default().gtk_application_prefer_dark_theme = true;
+    //Gtk.Settings.get_default().gtk_application_prefer_dark_theme = true;
     window.set_default_size (480, 2400);
     cssp = get_css_provider ();
     if (cssp) {

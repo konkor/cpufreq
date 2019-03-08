@@ -6,6 +6,8 @@
   border-image:none;
   border:0;
   text-shadow:none;
+  background-image: none;
+  background-color: @theme_bg_color;
 }
 .titlebar {
 
@@ -16,6 +18,7 @@
   box-shadow:none;
   outline-width:0;
   border-image:none;
+  padding-left: 16px;
   margin:0;
   border:0;
   text-shadow:none;
