@@ -130,7 +130,7 @@ function get_default_profile () {
     cores.push (core);
   }
   let p = {
-    name:"Default Settings", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
+    name:"Default", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
     acpi:!pstate_present, guid:"00000000000000000000000000000000",
     core:cores
   };

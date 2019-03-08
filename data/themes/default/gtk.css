@@ -10,28 +10,32 @@
 .titlebar {
 
 }
-.menuitem, .submenu {
+.sideitem, .sidesubmenu {
   border-radius: 0;
   border-style:none;
   box-shadow:none;
   outline-width:0;
   border-image:none;
-  font-size: 1em;
-  padding:0.55em;
   margin:0;
   border:0;
-  color: #7f7f7f;
   text-shadow:none;
   background-image: none;
   background-color: transparent;
 }
-.menuitem:hover, .submenu:hover, .slider-item:hover, .submenu *:hover {
+.sideitem {
+  color: #7f7f7f;
+  font-weight: normal;
+}
+.sidesubmenu {
+  font-weight: bold;
+}
+.sideitem:hover, .sidesubmenu:hover, .slider-item:hover, .submenu *:hover {
   color: #fff;
   background-color: #215d9c;
 }
-.submenu-section {
-  box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
-  /*background-color: @cpufreq_bg_color;*/
+.sidesection {
+  /*box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);*/
+  background-color: shade (@theme_bg_color, 0.9);;
 }
 .slider-item {
 
@@ -73,19 +77,26 @@
 
 .edit-button, .delete-button {
   border-radius: 32px;
+  border: none;
   padding: 4px;
 }
 .edit-button:hover {
   background-color: orange;
   border: none;
+  padding: 4px;
 }
 .delete-button:hover {
   background-color: #bb0a1b;
   border: none;
+  padding: 4px;
 }
 .bold {
   font-weight: bold;
 }
 .normal {
   font-weight: normal;
+}
+.transparent {
+  background-image: none;
+  background-color: transparent;
 }

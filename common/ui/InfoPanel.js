@@ -38,6 +38,7 @@ var InfoPanel = new Lang.Class({
 
   _init: function () {
     this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:20});
+    this.margin_top = 0;
     this.border = 8;
     this.get_style_context ().add_class ("info-widget");
 

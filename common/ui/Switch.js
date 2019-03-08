@@ -28,10 +28,10 @@ var Switch = new Lang.Class({
   Extends: Gtk.Box,
 
   _init: function (text, state, tooltip) {
-    this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:22});
+    this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:8});
     state = state || false;
-    this.margin_top = 8;
-    this.margin_bottom = 8;
+    this.margin_left = 16;
+    //this.margin_bottom = 8;
     this.get_style_context ().add_class ("switch");
     this.tooltip_text = tooltip;
 

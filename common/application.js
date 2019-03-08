@@ -108,11 +108,11 @@ var CPUFreqApplication = new Lang.Class ({
     this.hb.pack_end (this.prefs_button);
 
     this.cpanel = new ControlPanel.ControlPanel (this);
-    //window.add (this.sidebar);
-    let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
+
+    let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
     window.add (box);
+
     this.sidebar = new InfoPanel.InfoPanel ();
-    //box.pack_start (this.sidebar, true, true, 24);
     box.add (this.sidebar);
     box.pack_end (this.cpanel, true, true, 8);
     this.cpanel.set_size_request (320, 160);

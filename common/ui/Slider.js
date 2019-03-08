@@ -28,9 +28,8 @@ var Slider = new Lang.Class({
   Extends: Gtk.Box,
 
   _init: function (text, info, tooltip) {
-    this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:22});
-    this.margin_top = 8;
-    this.margin_bottom = 8;
+    this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:8});
+    this.margin_left = 16;
     this.get_style_context ().add_class ("slider-item");
     this.tooltip_text = tooltip;
 

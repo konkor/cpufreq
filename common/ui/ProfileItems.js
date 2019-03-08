@@ -24,18 +24,6 @@ const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Lang = imports.lang;
 
-var MenuItem = new Lang.Class({
-  Name: "MenuItem",
-  Extends: Gtk.Button,
-
-  _init: function (text, tooltip) {
-    tooltip = tooltip || "";
-    this.parent ({label:text, tooltip_text:tooltip, xalign:0});
-    this.get_style_context ().add_class ("menuitem");
-    this.get_style_context ().add_class ("normal");
-  }
-});
-
 var NewProfileItem = new Lang.Class({
   Name: "NewProfileItem",
   Extends: Gtk.Box,
@@ -47,11 +35,11 @@ var NewProfileItem = new Lang.Class({
     tooltip = tooltip || "";
     placeholder = placeholder || "";
     this.parent ({orientation:Gtk.Orientation.HORIZONTAL, spacing:0, tooltip_text:tooltip});
-    this.get_style_context ().add_class ("menuitem");
+    //this.get_style_context ().add_class ("sideitem");
     this.edit_mode = false;
 
     this.button = new Gtk.Button ({label:text, xalign:0});
-    this.button.get_style_context ().add_class ("menuitem");
+    this.button.get_style_context ().add_class ("sideitem");
     this.pack_start (this.button, true, true, 0);
 
     this.entry = new Gtk.Entry ();
@@ -76,6 +64,8 @@ var NewProfileItem = new Lang.Class({
 
     this.entry.connect ('activate', Lang.bind (this, this.on_entry_activate));
     this.button.connect ('clicked', Lang.bind (this, this.on_button_clicked));
+
+    this.show_all ();
   },
 
   on_button_clicked: function (o) {
@@ -108,8 +98,9 @@ var ProfileItem = new Lang.Class({
 
   _init: function (name) {
     this.parent (name, name, "Profile Name");
-    this.get_style_context ().add_class ("normal");
     this.entry.text = name;
+
+    this.pack_end (new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL}), false, false, 2);
 
     this.delete_button = new MenuButton ("edit-delete-symbolic", "Delete", "delete-button");
     this.pack_end (this.delete_button, false, false, 0);
@@ -143,7 +134,6 @@ var ProfileItem = new Lang.Class({
     this.delete_button.visible = this.button.visible;
   }
 });
-
 
 var MenuButton = new Lang.Class({
   Name: "MenuButton",

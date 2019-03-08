@@ -25,8 +25,8 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 
-const Submenu = imports.common.ui.Submenu;
-const MenuItem = imports.common.ui.MenuItem;
+const SideMenu = imports.common.ui.SideMenu;
+const ProfileItems = imports.common.ui.ProfileItems;
 const Slider = imports.common.ui.Slider;
 const Switch = imports.common.ui.Switch;
 
@@ -40,18 +40,16 @@ let freq_event = 0;
 
 var ControlPanel = new Lang.Class({
   Name: "ControlPanel",
-  Extends: Gtk.Box,
+  Extends: SideMenu.SideMenu,
 
   _init: function (owner) {
-    this.parent ({orientation:Gtk.Orientation.VERTICAL});
+    this.parent ();
     this.app = owner;
     cpu = this.app.cpufreq;
     settings = this.app.settings;
     this.locked = false;
 
     this.build ();
-
-    //this.show_all ();
   },
 
   post_init: function () {
@@ -70,9 +68,9 @@ var ControlPanel = new Lang.Class({
     this.save = Gtk.CheckButton.new_with_label (_("Remember settings"));
     this.save.tooltip_text = _("Check to restore settings on the startup");
     this.save.active = settings.save;
-    this.save.margin = 22;
+    this.save.margin = 18;
     this.save.opacity = 0.7;
-    this.add (this.save);
+    this.add_item (this.save);
     this.save.connect ('toggled', Lang.bind (this, ()=>{
         settings.save = this.save.active;
     }));
@@ -80,21 +78,19 @@ var ControlPanel = new Lang.Class({
 
   add_profiles: function () {
     let mi;
-    this.profmenu =  new Submenu.Submenu (cpu.default_profile.name, _("Profiles Menu"), 2, true);
-    this.profmenu.connect ("activate", Lang.bind (this, this.on_submenu));
-    //this.pack_start (this.profmenu, true, true, 0);
-    this.add (this.profmenu);
+    this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Profiles Menu"));
+    this.add_submenu (this.profmenu);
 
-    mi = new MenuItem.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
-    this.profmenu.add_menuitem (mi);
+    mi = new ProfileItems.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
+    this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, (o) => {
       print ("New Item", o.text);
       settings.add_profile (cpu.get_profile (o.text));
       this.add_profile (settings.profiles.length - 1);
     }));
 
-    mi = new MenuItem.MenuItem (cpu.default_profile.name, _("Load default system settings"));
-    this.profmenu.add_menuitem (mi);
+    mi = new SideMenu.SideItem (cpu.default_profile.name, _("Load default system settings"));
+    this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.reset_defaults ();
     }));
@@ -105,9 +101,9 @@ var ControlPanel = new Lang.Class({
   },
 
   add_profile: function (index) {
-    let prf = new MenuItem.ProfileItem (settings.profiles[index].name);
+    let prf = new ProfileItems.ProfileItem (settings.profiles[index].name);
     prf.ID = parseInt (index);
-    this.profmenu.add_menuitem (prf);
+    this.profmenu.add_item (prf);
 
     prf.connect ('clicked', Lang.bind (this, function (o) {
       cpu.load_profile (settings.profiles[o.ID]);
@@ -136,15 +132,13 @@ var ControlPanel = new Lang.Class({
   },
 
   add_governors: function () {
-    this.activeg = new Submenu.Submenu ("Governors", "Active Governor", 0);
-    this.activeg.connect ("activate", Lang.bind (this, this.on_submenu));
+    this.activeg = new SideMenu.SideSubmenu ("Governors", "Active Governor");
     var mixed = cpu.is_mixed_governors ();
-    if (mixed) this.activeg.set_label ("mixed");
+    if (mixed) this.activeg.label = "mixed";
     cpu.governors.forEach (g => {
-      if ((g[1] == true) && !mixed) this.activeg.set_label (g[0]);
+      if ((g[1] == true) && !mixed) this.activeg.label = g[0];
       if (g[0] == "userspace") {
-        this.userspace = new Submenu.Submenu ("userspace", "Userspace Governor", 1);
-        this.userspace.connect ("activate", Lang.bind (this, this.on_submenu));
+        this.userspace = new SideMenu.SideSubmenu ("userspace", "Userspace Governor");
         cpu.frequencies.forEach ((freq)=>{
           var s = "";
           if (freq.length > 6) {
@@ -152,57 +146,34 @@ var ControlPanel = new Lang.Class({
           } else {
             s = (parseInt(freq)/1000).toFixed(0).toString() + " MHz";
           }
-          let u_item = new MenuItem.MenuItem (s);
-          this.userspace.add_menuitem (u_item);
+          let u_item = new SideMenu.SideItem (s);
+          this.userspace.add_item (u_item);
           u_item.connect ("clicked", Lang.bind (this, function () {
             if (!cpu.installed || this.locked) return;
             this._changed ();
             cpu.set_userspace (freq);
-            this.activeg.set_label ("userspace");
+            this.activeg.label = "userspace";
             this.userspace.expanded = false;
             this.check_sliders ();
           }));
         });
       } else {
-        let gi = new MenuItem.MenuItem (g[0], g[0] + " governor");
-        this.activeg.add_menuitem (gi);
+        let gi = new SideMenu.SideItem (g[0], g[0] + " governor");
+        this.activeg.add_item (gi);
         gi.connect ('clicked', Lang.bind (this, this.on_governor));
       }
     });
-    this.add (this.activeg);
+    this.add_submenu (this.activeg);
     //this.pack_start (this.activeg, true, true, 0);
-    if (this.userspace  && (cpu.frequencies.length > 0)) this.add (this.userspace);
+    if (this.userspace  && (cpu.frequencies.length > 0)) this.add_submenu (this.userspace);
     //  this.pack_start (this.userspace, true, true, 0);
-  },
-
-  on_submenu: function (o) {
-    if (o.id == 0) {
-      if (this.userspace) this.userspace.expanded = false;
-      this.profmenu.expanded = false;
-      //this.activeg.vexpand = !this.activeg.expanded;
-      //if (this.userspace) this.userspace.vexpand = false;
-      this.profmenu.vexpand = false;
-    } else if (o.id == 1) {
-      this.activeg.expanded = false;
-      this.profmenu.expanded = false;
-      //this.activeg.vexpand = false;
-      //this.userspace.vexpand = !this.userspace.expanded;
-      this.profmenu.vexpand = false;
-    } else if (o.id == 2) {
-      this.activeg.expanded = false;
-      if (this.userspace) this.userspace.expanded = false;
-      //this.activeg.vexpand = false;
-      //if (this.userspace) this.userspace.vexpand = false;
-      this.profmenu.vexpand = !this.profmenu.expanded;
-      this.profmenu.scroll.vexpand = this.profmenu.vexpand;
-    }
   },
 
   on_governor: function (o) {
     if (!cpu.installed || this.locked) return;
     this._changed ();
     cpu.set_governors (o.label);
-    this.activeg.set_label (o.label);
+    this.activeg.label = o.label;
     this.activeg.expanded = false;
     this.check_sliders ();
   },
@@ -237,11 +208,11 @@ var ControlPanel = new Lang.Class({
   },
 
   sliders_build: function () {
-    this.add (new Gtk.Separator ());
+    this.add_item (new Gtk.Separator ());
     this.slider_min = new Slider.Slider ("Minimum", get_min_label (), "Minimum Frequency");
-    this.add (this.slider_min);
+    this.add_item (this.slider_min);
     this.slider_max = new Slider.Slider ("Maximum", get_max_label (), "Maximum Frequency");
-    this.add (this.slider_max);
+    this.add_item (this.slider_max);
     if (cpu.pstate_present) {
       this.slider_min.slider.set_value (cpu.minfreq/100);
       this.slider_max.slider.set_value (cpu.maxfreq/100);
@@ -292,12 +263,12 @@ var ControlPanel = new Lang.Class({
   add_cores: function () {
     this.slider_core = new Slider.Slider ("Cores Online",
       GLib.get_num_processors (), "Number Of Active Core Threads");
-    this.add (this.slider_core);
+    this.add_item (this.slider_core);
     this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
-    this.corewarn = new MenuItem.MenuItem ("⚠ Single Core Thread","Single Core Thread Is Not Recommended");
+    this.corewarn = new SideMenu.SideItem ("⚠ Single Core Thread","Single Core Thread Is Not Recommended");
     this.corewarn.get_style_context ().add_class ("warn");
     this.corewarn.xalign = 0.5;
-    this.add (this.corewarn);
+    this.add_item (this.corewarn);
     this.corewarn.connect ('clicked', Lang.bind (this, function () {
       let app = Gio.AppInfo.get_default_for_type ("text/plain", false);
       app.launch_uris (["file://" + APPDIR + "/README.md"], null);
@@ -318,7 +289,7 @@ var ControlPanel = new Lang.Class({
 
   add_boost: function () {
     this.boost = new Switch.Switch ("Turbo Boost", cpu.get_turbo(), "Enable/Disable Processor Boost");
-    this.add (this.boost);
+    this.add_item (this.boost);
     this.boost.sw.connect ('state_set', Lang.bind (this, function () {
       if (!cpu.installed || this.locked) return;
       this._changed ();
@@ -337,8 +308,8 @@ var ControlPanel = new Lang.Class({
     this.locked = true;
     cpu.get_governors ();
     cpu.get_frequencies ();
-    if (cpu.is_mixed_governors ()) this.activeg.set_label ("mixed");
-    else this.activeg.set_label (cpu.governoractual[0]);
+    if (cpu.is_mixed_governors ()) this.activeg.label = "mixed";
+    else this.activeg.set_label = cpu.governoractual[0];
     this.check_sliders ();
     if (this.slider_min) {
       if (cpu.pstate_present) {
