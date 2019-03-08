@@ -9,6 +9,13 @@
   background-image: none;
   background-color: @theme_bg_color;
 }
+.hb-button {
+  background-image: none;
+  background-color: @theme_bg_color;
+}
+.hb-button:hover {
+  background-color: shade (@theme_bg_color, 0.4);
+}
 .titlebar {
 
 }
@@ -26,7 +33,7 @@
   background-color: transparent;
 }
 .sideitem {
-  color: #7f7f7f;
+  /*color: #7f7f7f;*/
   font-weight: normal;
 }
 .sidesubmenu {
@@ -38,7 +45,7 @@
 }
 .sidesection {
   /*box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);*/
-  background-color: shade (@theme_bg_color, 0.9);;
+  /*background-color: shade (@theme_bg_color, 0.9);*/
 }
 .slider-item {
 
@@ -80,6 +87,7 @@
 
 .edit-button, .delete-button {
   border-radius: 32px;
+  background-image: none;
   border: none;
   padding: 4px;
 }

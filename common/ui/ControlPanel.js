@@ -69,7 +69,7 @@ var ControlPanel = new Lang.Class({
     this.save.tooltip_text = _("Check to restore settings on the startup");
     this.save.active = settings.save;
     this.save.margin = 18;
-    this.save.opacity = 0.7;
+    this.save.opacity = 0.85;
     this.add_item (this.save);
     this.save.connect ('toggled', Lang.bind (this, ()=>{
         settings.save = this.save.active;
