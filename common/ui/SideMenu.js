@@ -67,7 +67,6 @@ var SideSubmenu = new Lang.Class({
 
   _init: function (text, tooltip) {
     this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:0, spacing:0});
-    //this.get_style_context ().add_class ("sidesubmenu");
     this.id = 0;
 
     this.button = new Gtk.ToggleButton ({label:text, tooltip_text:tooltip, xalign:0});

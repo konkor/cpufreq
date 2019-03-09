@@ -38,6 +38,8 @@
 }
 .sidesubmenu {
   font-weight: bold;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 .sidesubmenu:checked {
   color: @theme_fg_color;
