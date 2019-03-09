@@ -39,6 +39,9 @@
 .sidesubmenu {
   font-weight: bold;
 }
+.sidesubmenu:checked {
+  color: @theme_fg_color;
+}
 .sideitem:hover, .sidesubmenu:hover, .slider-item:hover, .submenu *:hover {
   color: #fff;
   background-color: #215d9c;

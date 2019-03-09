@@ -303,6 +303,8 @@ var CoreInfo = new Lang.Class({
     this.get_frequency ();
     this.get_governor ();
     this.sensitive = this.core < cpu_online;
+    if (this.sensitive) this.opacity = 1;
+    else  this.opacity = 0.5;
   },
 
   get_frequency: function () {
