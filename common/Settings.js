@@ -39,7 +39,7 @@ const MONITOR_KEY = 'monitor';
 let _save = false;
 let _PID = -1;
 let profiles = [];
-let remember_profile = null;
+let current = null;
 
 var Settings = new Lang.Class({
   Name: "Settings",
@@ -71,7 +71,7 @@ var Settings = new Lang.Class({
     _PID = this.get_int (PROFILE_KEY);
     this.load_profiles ();
     let s = this.get_string (REMEMBERED_KEY);
-    if (s) remember_profile = JSON.parse (s);
+    if (s) current = JSON.parse (s);
     print ("Save settings", _save);
   },
 
@@ -81,15 +81,15 @@ var Settings = new Lang.Class({
     this.set_boolean (SAVE_SETTINGS_KEY, _save);
   },
 
-  get current_profile () { return remember_profile; },
+  get current_profile () { return current; },
   set current_profile (val) {
     if (!val) return;
-    remember_profile = val;
+    current = val;
     this.update_current_profile ();
   },
 
   update_current_profile: function () {
-    let s = JSON.stringify (remember_profile);
+    let s = JSON.stringify (current);
     this.set_string (REMEMBERED_KEY, s);
     print ("Updating settings");
   },
@@ -97,11 +97,22 @@ var Settings = new Lang.Class({
   get monitor () { return this.get_int (MONITOR_KEY); },
   set monitor (val) { this.set_int (MONITOR_KEY, val); },
 
-  get PID () { return _PID; },
+  get PID () {
+    if (_PID >= profiles.length) this.PID = -1;
+    return _PID;
+  },
   set PID (val) {
     if (_PID == val) return;
     _PID = val;
     this.set_int (PROFILE_KEY, _PID);
+    if (val > -1) {
+      let p = profiles[val];
+      current = {
+        name:current.name, minf:p.minf, maxf:p.maxf, turbo:p.turbo, cpu:p.cpu,
+        acpi:current.acpi, guid:current.guid, core:p.core
+      };
+      this.update_current_profile ();
+    }
   },
 
   get profiles () { return profiles; },
@@ -135,106 +146,106 @@ var Settings = new Lang.Class({
   },
 
   get turbo () {
-    if (remember_profile) return remember_profile.turbo;
+    if (current) return current.turbo;
     return true;
   },
   set turbo (val) {
     print ("set turbo");
-    if (!remember_profile || (remember_profile.turbo == val)) return;
-    remember_profile.turbo = val;
+    if (!current || (current.turbo == val)) return;
+    current.turbo = val;
     this.update_current_profile ();
   },
 
   get cpu_cores () {
-    if (remember_profile) return remember_profile.cpu;
+    if (current) return current.cpu;
     return 1;
   },
   set cpu_cores (val) {
     print ("set cores online");
-    if (!remember_profile || (remember_profile.cpu == val)) return;
-    remember_profile.cpu = val;
+    if (!current || (current.cpu == val)) return;
+    current.cpu = val;
     this.update_current_profile ();
   },
 
   get min_freq () {
-    if (remember_profile && remember_profile.core[0])
-      return remember_profile.core[0].a;
+    if (current && current.core[0])
+      return current.core[0].a;
     return 0;
   },
   set min_freq (val) {
     print ("set min_freq");
-    if (!remember_profile) return;
+    if (!current) return;
     var equal = true;
-    for (let i = 0; i < remember_profile.cpu; i++) {
-      if (remember_profile.core[i].a != val) equal = false;
-      remember_profile.core[i].a = val;
+    for (let i = 0; i < current.cpu; i++) {
+      if (current.core[i].a != val) equal = false;
+      current.core[i].a = val;
     }
     if (!equal) this.update_current_profile ();
   },
 
   get max_freq () {
-    if (remember_profile && remember_profile.core[0])
-      return remember_profile.core[0].b;
+    if (current && current.core[0])
+      return current.core[0].b;
     return 0;
   },
   set max_freq (val) {
     print ("set max_freq");
-    if (!remember_profile) return;
+    if (!current) return;
     var equal = true;
-    for (let i = 0; i < remember_profile.cpu; i++) {
-      if (remember_profile.core[i].b != val) equal = false;
-      remember_profile.core[i].b = val;
+    for (let i = 0; i < current.cpu; i++) {
+      if (current.core[i].b != val) equal = false;
+      current.core[i].b = val;
     }
     if (!equal) this.update_current_profile ();
   },
 
   get governor () {
     print ("get governor");
-    if (remember_profile && remember_profile.core[0])
-      return remember_profile.core[0].g;
+    if (current && current.core[0])
+      return current.core[0].g;
     return "";
   },
   set governor (val) {
     print ("set governor");
-    if (!remember_profile) return;
+    if (!current) return;
     var equal = true;
-    for (let i = 0; i < remember_profile.cpu; i++) {
-      if (remember_profile.core[i].g != val) equal = false;
-      remember_profile.core[i].g = val;
+    for (let i = 0; i < current.cpu; i++) {
+      if (current.core[i].g != val) equal = false;
+      current.core[i].g = val;
     }
     if (!equal) this.update_current_profile ();
   },
 
   get min_freq_pstate () {
-    if (remember_profile)
-      return remember_profile.minf;
+    if (current)
+      return current.minf;
     return 0;
   },
   set min_freq_pstate (val) {
-    if (!remember_profile || (remember_profile.minf == val)) return;
-    remember_profile.minf = val;
+    if (!current || (current.minf == val)) return;
+    current.minf = val;
     this.update_current_profile ();
   },
 
   get max_freq_pstate () {
-    if (remember_profile)
-      return remember_profile.maxf;
+    if (current)
+      return current.maxf;
     return 0;
   },
   set max_freq_pstate (val) {
-    if (!remember_profile || (remember_profile.maxf == val)) return;
-    remember_profile.maxf = val;
+    if (!current || (current.maxf == val)) return;
+    current.maxf = val;
     this.update_current_profile ();
   },
 
   set_userspace: function (frequency) {
-    if (!remember_profile) return;
+    if (!current) return;
     var equal = true;
-    for (let i = 0; i < remember_profile.core; i++) {
-      if (remember_profile.core[i].g != "userspace") equal = false;
-      if (remember_profile.core[i].f != frequency) equal = false;
-      remember_profile.core[i].g = "userspace";
-      remember_profile.core[i].f = frequency;
+    for (let i = 0; i < current.core; i++) {
+      if (current.core[i].g != "userspace") equal = false;
+      if (current.core[i].f != frequency) equal = false;
+      current.core[i].g = "userspace";
+      current.core[i].f = frequency;
     }
     if (!equal) this.update_current_profile ();
   }

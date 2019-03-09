@@ -62,9 +62,11 @@ function init (prefs) {
   }
   check_install ();
   check_extensions ();
-  if (!settings.current_profile)
-    settings.current_profile = get_profile ("Current");
-  if (settings.save) restore_saved ();
+  if (!settings.current_profile) {
+    let p = get_profile ("Saved settings");
+    p.guid = "0001";
+    settings.current_profile = p;
+  }
   get_governors ();
   get_frequencies ();
   get_default_profile ();
@@ -131,8 +133,7 @@ function get_default_profile () {
   }
   let p = {
     name:"Default", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
-    acpi:!pstate_present, guid:"00000000000000000000000000000000",
-    core:cores
+    acpi:!pstate_present, guid:"0000", core:cores
   };
   debug (JSON.stringify (p));
   default_profile = p;
@@ -170,8 +171,14 @@ function get_profile (name) {
 }
 
 function restore_saved () {
-  if (!settings_equal (settings.current_profile, get_profile ()))
-    load_profile (settings.current_profile);
+  var prf;
+  if (settings.PID > -1) prf = settings.profiles[settings.PID];
+  else prf = settings.current_profile;
+  if (!settings_equal (prf, get_profile ()))
+    load_profile (prf);
+  else {
+    if (profile_changed_callback) profile_changed_callback (prf);
+  }
 }
 
 function settings_equal (a, b) {
@@ -282,7 +289,11 @@ function load_stage (prf) {
     for (let key = 1; key < cpucount; key++) {
       set_core (key, key < prf.cpu);
     }
-    if (profile_changed_callback) profile_changed_callback (profile);
+    if (profile_changed_callback)
+      GLib.timeout_add (0, 500, () => {
+        profile_changed_callback (profile);
+        return false;
+      });
   }
 }
 

@@ -75,6 +75,8 @@ var CPUFreqApplication = new Lang.Class ({
     //save = settings.get_boolean (SAVE_SETTINGS_KEY);
     //PID =  settings.get_int (PROFILE_KEY);
     this.build ();
+
+    if (this.settings.save) cpu.restore_saved ();
   },
 
   vfunc_activate: function() {
@@ -132,7 +134,7 @@ var CPUFreqApplication = new Lang.Class ({
 
   on_profile_changed: function (profile) {
     if (!this.cpanel) return;
-    this.cpanel.update ();
+    this.cpanel.update (profile.name);
   },
 
   get cpufreq () {

@@ -328,12 +328,12 @@ var ControlPanel = new Lang.Class({
     if (this.profmenu) this.profmenu.label = "Custom";
   },
 
-  update: function () {
+  update: function (profile_name) {
     this.locked = true;
     cpu.get_governors ();
     cpu.get_frequencies ();
     if (cpu.is_mixed_governors ()) this.activeg.label = "mixed";
-    else this.activeg.set_label = cpu.governoractual[0];
+    else this.activeg.label = cpu.governoractual[0];
     this.check_sliders ();
     if (this.slider_min) {
       if (cpu.pstate_present) {
@@ -353,7 +353,7 @@ var ControlPanel = new Lang.Class({
       this.slider_core.slider.set_value (cc / cpu.cpucount);
       this.slider_core.update_info (cc);
     }
-    if (settings.PID > -1) this.profmenu.label = settings.profiles[settings.PID].name;
+    if (profile_name) this.profmenu.label = profile_name;
     this.locked = false;
   }
 });
