@@ -112,6 +112,10 @@ const FrequencyIndicator = new Lang.Class({
 
     this._add_event ();
 
+    //TODO: Workaround updating title
+    this._settings.set_boolean (SAVE_SETTINGS_KEY, !save);
+    this._settings.set_boolean (SAVE_SETTINGS_KEY, save);
+
     if (settingsID) this._settings.disconnect (settingsID);
     settingsID = this._settings.connect ("changed", Lang.bind (this, this.load_settings));
 
