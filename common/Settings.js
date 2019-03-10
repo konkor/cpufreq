@@ -1,23 +1,11 @@
 /*
- * CPUFreq Manager - a lightweight CPU frequency scaling monitor
- * and powerful CPU management tool
+ * This is a part of CPUFreq Manager
+ * Copyright (C) 2016-2019 konkor <konkor.github.io>
  *
- * Copyright (C) 2016-2018 konkor <github.com/konkor>
- *
- * This file is part of CPUFreq Manager.
- *
- * CPUFreq Manager is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * CPUFreq Manager is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
  * You should have received a copy of the GNU General Public License along
- * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 const Lang = imports.lang;
@@ -25,13 +13,6 @@ const Gio = imports.gi.Gio;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const REMEMBERED_KEY = 'remember-profile';
-/*const TURBO_BOOST_KEY = 'turbo-boost';
-const GOVERNOR_KEY = 'governor';
-const CPU_FREQ_KEY = 'cpu-freq';
-const MIN_FREQ_KEY = 'min-freq';
-const MAX_FREQ_KEY = 'max-freq';
-const MIN_FREQ_PSTATE_KEY = 'min-freq-pstate';
-const MAX_FREQ_PSTATE_KEY = 'max-freq-pstate';*/
 const PROFILES_KEY = 'profiles';
 const PROFILE_KEY = 'profile';
 const MONITOR_KEY = 'monitor';

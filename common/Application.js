@@ -1,23 +1,11 @@
 /*
- * CPUFreq Manager - a lightweight CPU frequency scaling monitor
- * and powerful CPU management tool
+ * This is a part of CPUFreq Manager
+ * Copyright (C) 2016-2019 konkor <konkor.github.io>
  *
- * Copyright (C) 2016-2019 konkor <github.com/konkor>
- *
- * This file is part of CPUFreq Manager.
- *
- * CPUFreq Manager is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * CPUFreq Manager is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
  * You should have received a copy of the GNU General Public License along
- * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 imports.gi.versions.Gtk = '3.0';
@@ -31,6 +19,7 @@ const Lang = imports.lang;
 const Convenience = imports.convenience;
 const cpu = imports.common.HelperCPUFreq;
 const Settings = imports.common.Settings;
+const Logger = imports.common.Logger;
 const MainWindow = imports.common.ui.MainWindow;
 
 const DEBUG_LVL = 2;
@@ -54,6 +43,7 @@ var CPUFreqApplication = new Lang.Class ({
 
   vfunc_startup: function() {
     this.parent();
+    Logger.init (DEBUG_LVL);
     this.settings = new Settings.Settings ();
     cpu.init (this.settings);
   },
@@ -82,11 +72,3 @@ var CPUFreqApplication = new Lang.Class ({
     return cpu;
   }
 });
-
-function debug (msg) {
-  if (msg && (DEBUG_LVL > 1)) print ("[cpufreq][manager]", msg);
-}
-
-function error (msg) {
-  log ("[cpufreq][manager] (EE) " + msg);
-}
