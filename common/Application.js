@@ -36,14 +36,38 @@ var CPUFreqApplication = new Lang.Class ({
       application_id: "org.konkor.cpufreq.application"
     });
     GLib.set_application_name ("CPUFreq Manager");
+
+    Logger.init (DEBUG_LVL);
     this.extension = false;
-    if (args.indexOf ("--extension") > -1) this.extension = true;
-    print (this.extension);
+
+    this.connect ('handle-local-options', (o) => {
+      let s, prf = false;
+      for (let i = 0; i < args.length; i++) {
+        var s = args[i];
+        if ((s == "-h") || (s == "--help")) {
+            print ("cpufreq-application [[OPTION] [PARAMETERS]]\n" +
+            " --help         : Show this screen\n" +
+            " --debug        : Enable debugging messages\n" +
+            " --extension    : Extension mode\n" +
+            " --profile GUID : Load power profile by GUID\n");
+            return 0; //success
+        } else if (s == "--extension") {
+          this.extension = true;
+        } else if (s == "--debug") {
+          Logger.init (2);
+        } else if (s == "--profile") {
+          prf = true;
+        } else if (prf) {
+          guid = s;
+          prf = false;
+        }
+      }
+      return -1; //continue
+    });
   },
 
   vfunc_startup: function() {
     this.parent();
-    Logger.init (DEBUG_LVL);
     this.settings = new Settings.Settings ();
     cpu.init (this.settings);
   },
