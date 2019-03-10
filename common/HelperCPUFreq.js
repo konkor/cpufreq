@@ -657,9 +657,11 @@ function get_info_string (cmd) {
   return "";
 }
 
-function get_cpufreq_info (params) {
+function get_cpufreq_info (params, user) {
   if (!cpufreqctl_path || !params) return "";
-  let s = get_info_string (pkexec_path + " " + cpufreqctl_path + " " + params);
+  let s = cpufreqctl_path + " " + params;
+  if (!user) s = pkexec_path + " " + s;
+  s = get_info_string (s);
   return s;
 }
 

@@ -203,7 +203,7 @@ var InfoPanel = new Lang.Class({
 
   get_throttle: function () {
     let s = "", i = 0;
-    let throttle = Helper.get_cpufreq_info ("throttle");
+    let throttle = Helper.get_cpufreq_info ("throttle", true);
 
     if (throttle) {
       i = parseInt (throttle);
