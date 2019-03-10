@@ -2,7 +2,7 @@
  * CPUFreq Manager - a lightweight CPU frequency scaling monitor
  * and powerful CPU management tool
  *
- * Copyright (C) 2016-2018 konkor <github.com/konkor>
+ * Copyright (C) 2016-2019 konkor <github.com/konkor>
  *
  * This file is part of CPUFreq Manager.
  *
@@ -28,19 +28,13 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 
-const APPDIR = getCurrentFile ()[1];
-
+const Convenience = imports.convenience;
 const cpu = imports.common.HelperCPUFreq;
 const Settings = imports.common.Settings;
-const InfoPanel = imports.common.ui.InfoPanel;
-const ControlPanel = imports.common.ui.ControlPanel;
-
-const Convenience = imports.convenience;
+const MainWindow = imports.common.ui.MainWindow;
 
 const DEBUG_LVL = 2;
 
-let theme_gui = APPDIR + "/data/themes/default/gtk.css";
-let cssp = null;
 let window = null;
 
 var CPUFreqApplication = new Lang.Class ({
@@ -55,117 +49,39 @@ var CPUFreqApplication = new Lang.Class ({
     GLib.set_application_name ("CPUFreq Manager");
     this.extension = false;
     if (args.indexOf ("--extension") > -1) this.extension = true;
+    print (this.extension);
   },
 
   vfunc_startup: function() {
     this.parent();
     this.settings = new Settings.Settings ();
-    window = new Gtk.ApplicationWindow ();
-    window.set_icon_name ("org.konkor.cpufreq");
-    if (!window.icon) try {
-      window.icon = Gtk.Image.new_from_file (APPDIR + "/data/icons/cpufreq.svg").pixbuf;
-    } catch (e) {
-      error (e);
-    }
-    this.add_window (window);
-
     cpu.init (this.settings);
-    cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
-
-    //save = settings.get_boolean (SAVE_SETTINGS_KEY);
-    //PID =  settings.get_int (PROFILE_KEY);
-    this.build ();
-
-    if (this.settings.save) cpu.restore_saved ();
   },
 
   vfunc_activate: function() {
-    window.connect("destroy", () => {
-      //remove all glib events
-    });
-    window.show_all ();
-    window.present ();
-    this.cpanel.post_init ();
-  },
-
-  build: function() {
-    window.window_position = Gtk.WindowPosition.MOUSE;
-    //Gtk.Settings.get_default().gtk_application_prefer_dark_theme = true;
-    window.set_default_size (480, 2400);
-    cssp = get_css_provider ();
-    if (cssp) {
-      Gtk.StyleContext.add_provider_for_screen (
-        window.get_screen(), cssp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+    print ("activate");
+    if (!this.active_window) {
+      window = new MainWindow.MainWindow ({ application:this });
+      window.connect ("destroy", () => {
+        return true;
+      });
+      window.show_all ();
+      cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
+      if (this.settings.save) cpu.restore_saved ();
+      window.cpanel.post_init ();
     }
-    window.get_style_context ().add_class ("main");
-    this.hb = new Gtk.HeaderBar ();
-    this.hb.set_show_close_button (!this.extension);
-    this.hb.get_style_context ().add_class ("hb");
-    window.set_titlebar (this.hb);
-
-    this.prefs_button = new Gtk.Button ({always_show_image: true, tooltip_text:"Preferences"});
-    this.prefs_button.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/application-menu-symbolic.svg");
-    this.prefs_button.get_style_context ().add_class ("hb-button");
-    this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
-    this.hb.pack_end (this.prefs_button);
-
-    this.cpanel = new ControlPanel.ControlPanel (this);
-
-    let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
-    window.add (box);
-
-    this.sidebar = new InfoPanel.InfoPanel ();
-    box.add (this.sidebar);
-    box.pack_end (this.cpanel, true, true, 8);
-    this.cpanel.set_size_request (320, 160);
-    this.sidebar.set_size_request (360, 160);
-
-    if (this.extension) window.connect ("focus-out-event", ()=>{ this.quit();});
-    this.prefs_button.connect ("clicked", () => {
-      GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
-    });
-
-    this.build_menu ();
-  },
-
-  build_menu: function () {
-
+    this.active_window.present ();
   },
 
   on_profile_changed: function (profile) {
-    if (!this.cpanel) return;
-    this.cpanel.update (profile.name);
+    if (!this.active_window) return;
+    this.active_window.cpanel.update (profile.name);
   },
 
   get cpufreq () {
     return cpu;
   }
 });
-
-function get_css_provider () {
-  let cssp = new Gtk.CssProvider ();
-  let css_file = Gio.File.new_for_path (theme_gui);
-  try {
-    cssp.load_from_file (css_file);
-  } catch (e) {
-    debug (e);
-    cssp = null;
-  }
-  return cssp;
-}
-
-function getCurrentFile () {
-  let stack = (new Error()).stack;
-  let stackLine = stack.split("\n")[1];
-  if (!stackLine)
-    throw new Error ("Could not find current file");
-  let match = new RegExp ("@(.+):\\d+").exec(stackLine);
-  if (!match)
-    throw new Error ("Could not find current file");
-  let path = match[1];
-  let file = Gio.File.new_for_path (path).get_parent();
-  return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
-}
 
 function debug (msg) {
   if (msg && (DEBUG_LVL > 1)) print ("[cpufreq][manager]", msg);

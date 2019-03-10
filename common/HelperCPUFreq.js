@@ -64,7 +64,7 @@ function init (prefs) {
   check_extensions ();
   if (!settings.current_profile) {
     let p = get_profile ("Saved settings");
-    p.guid = "0001";
+    p.guid = "saved";
     settings.current_profile = p;
   }
   get_governors ();
@@ -133,7 +133,7 @@ function get_default_profile () {
   }
   let p = {
     name:"Default", minf:0, maxf:100, turbo:boost_present, cpu:cpucount,
-    acpi:!pstate_present, guid:"0000", core:cores
+    acpi:!pstate_present, guid:"default", core:cores
   };
   debug (JSON.stringify (p));
   default_profile = p;

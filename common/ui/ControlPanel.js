@@ -352,6 +352,7 @@ var ControlPanel = new Lang.Class({
       let cc = GLib.get_num_processors ();
       this.slider_core.slider.set_value (cc / cpu.cpucount);
       this.slider_core.update_info (cc);
+      this.post_init ();
     }
     if (profile_name) this.profmenu.label = profile_name;
     this.locked = false;
