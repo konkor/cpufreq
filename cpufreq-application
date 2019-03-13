@@ -12,6 +12,7 @@
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const System = imports.system;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
@@ -43,5 +44,13 @@ function get_appdir () {
     return s;
 }
 
-let app = new Application.CPUFreqApplication (ARGV);
-app.run (ARGV);
+function main (args) {
+  let app = new Application.CPUFreqApplication ({
+    application_id: "org.konkor.cpufreq.application"
+  });
+  app.run (args);
+}
+
+ARGV.unshift (System.programInvocationName);
+
+main (ARGV);

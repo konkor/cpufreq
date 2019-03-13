@@ -16,7 +16,6 @@ const Gdk = imports.gi.Gdk;
 const Lang = imports.lang;
 
 const APPDIR = getCurrentFile ()[1];
-print (APPDIR);
 
 const cpu = imports.common.HelperCPUFreq;
 const InfoPanel = imports.common.ui.InfoPanel;
@@ -55,7 +54,7 @@ var MainWindow = new Lang.Class ({
     }
     this.get_style_context ().add_class ("main");
     this.hb = new Gtk.HeaderBar ();
-    this.hb.set_show_close_button (!this.extension);
+    this.hb.set_show_close_button (!this.application.extension);
     this.hb.get_style_context ().add_class ("hb");
     this.set_titlebar (this.hb);
 
@@ -76,7 +75,7 @@ var MainWindow = new Lang.Class ({
     this.cpanel.set_size_request (320, 160);
     this.sidebar.set_size_request (360, 160);
 
-    if (this.extension) this.connect ("focus-out-event", ()=>{ this.quit();});
+    if (this.application.extension) this.connect ("focus-out-event", ()=>{ this.application.quit();});
     this.prefs_button.connect ("clicked", () => {
       GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
     });

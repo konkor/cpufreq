@@ -53,7 +53,6 @@ var Settings = new Lang.Class({
     this.load_profiles ();
     let s = this.get_string (REMEMBERED_KEY);
     if (s) current = JSON.parse (s);
-    print ("Save settings", _save);
   },
 
   get save () { return _save; },

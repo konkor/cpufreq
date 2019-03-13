@@ -22,7 +22,7 @@ const Settings = imports.common.Settings;
 const Logger = imports.common.Logger;
 const MainWindow = imports.common.ui.MainWindow;
 
-const DEBUG_LVL = 2;
+var DEBUG_LVL = 0;
 
 let window = null;
 
@@ -30,50 +30,80 @@ var CPUFreqApplication = new Lang.Class ({
   Name: "CPUFreqApplication",
   Extends: Gtk.Application,
 
-  _init: function (args) {
+  _init: function (props={}) {
+    print ("init constructor");
     GLib.set_prgname ("cpufreq-application");
-    this.parent ({
-      application_id: "org.konkor.cpufreq.application"
-    });
+    this.parent (props);
     GLib.set_application_name ("CPUFreq Manager");
-
     Logger.init (DEBUG_LVL);
     this.extension = false;
 
-    this.connect ('handle-local-options', (o) => {
-      let s, prf = false;
-      for (let i = 0; i < args.length; i++) {
-        var s = args[i];
-        if ((s == "-h") || (s == "--help")) {
-            print ("cpufreq-application [[OPTION] [PARAMETERS]]\n" +
-            " --help         : Show this screen\n" +
-            " --debug        : Enable debugging messages\n" +
-            " --extension    : Extension mode\n" +
-            " --profile GUID : Load power profile by GUID\n");
-            return 0; //success
-        } else if (s == "--extension") {
-          this.extension = true;
-        } else if (s == "--debug") {
-          Logger.init (2);
-        } else if (s == "--profile") {
-          prf = true;
-        } else if (prf) {
-          guid = s;
-          prf = false;
-        }
-      }
-      return -1; //continue
-    });
+    this.add_main_option (
+      'debug', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Enable debugging messages", null
+    );
+    this.add_main_option (
+      'verbose', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Enable verbose output", null
+    );
+    this.add_main_option (
+      'extension', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Enable extension mode", null
+    );
+    this.add_main_option (
+      'profile', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Activating power profile by GUID", null
+    );
+    this.connect ('handle-local-options', this.on_local_options.bind (this));
   },
 
-  vfunc_startup: function() {
+  on_local_options: function (app, options) {
+    print ("local-options", options);
+
+    try {
+      this.register (null);
+    } catch (e) {
+      Logger.error ("Unable to register.\n %s".format (e.message));
+      return 1;
+    }
+
+    if (options.contains ("verbose")) {
+      DEBUG_LVL = 1; //Enable info messages
+      Logger.init (1);
+    }
+
+    if (options.contains ("debug")) {
+      DEBUG_LVL = 2;
+      Logger.init (2);
+    }
+
+    if (options.contains ("extension")) {
+      this.extension = true;
+    }
+
+    if (options.contains ("profile")) {
+      //TODO: activating power profile
+      Logger.debug ("finishing loading profile: %s".format ("profile"));
+      return 0;
+    }
+
+    Logger.debug ("verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
+    return -1;
+  },
+
+  vfunc_startup: function () {
+    print ("vfunc_startup");
     this.parent();
     this.settings = new Settings.Settings ();
     cpu.init (this.settings);
+
+    /*this.connect ('open', Lang.bind (this, (files) => {
+      print ("open", files.map(function(f) { return f.get_uri(); }));
+    }));*/
   },
 
-  vfunc_activate: function() {
-    print ("activate");
+  vfunc_activate: function () {
+    print ("activate", "verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
     if (!this.active_window) {
       window = new MainWindow.MainWindow ({ application:this });
       window.connect ("destroy", () => {
