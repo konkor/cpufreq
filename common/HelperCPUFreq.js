@@ -617,7 +617,7 @@ function get_freq (num) {
   if (n < 1) n = 1;
   let step = Math.round (100 / n);
   let i = Math.round (num / step);
-  if (i >= n) i = n - 1;
+  if (i > n) i = n - 1;
   return parseInt (frequencies[i]);
 }
 
