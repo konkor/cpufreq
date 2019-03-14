@@ -46,7 +46,7 @@ var MainWindow = new Lang.Class ({
   build: function() {
     this.window_position = Gtk.WindowPosition.MOUSE;
     //Gtk.Settings.get_default().gtk_application_prefer_dark_theme = true;
-    this.set_default_size (480, 2400);
+    this.set_default_size (480, 720);
     cssp = get_css_provider ();
     if (cssp) {
       Gtk.StyleContext.add_provider_for_screen (
