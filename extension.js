@@ -217,7 +217,7 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   load_saved_settings: function () {
-    //TODO: load saved settings on startup
+    GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=user');
   },
 
   remove_events: function () {
