@@ -100,6 +100,19 @@ function check_extensions () {
   settings.save = save_state;
 }
 
+function power_profile (id) {
+  if (!installed) {
+    if (profile_changed_callback) profile_changed_callback (id);
+    return;
+  }
+  if (id == "system") reset_defaults ();
+  else if (id == "user") restore_saved ();
+  else if (id == "battery") return; //TODO:
+  else if (id == "balanced") return; //TODO:
+  else if (id == "performance") return; //TODO:
+  else load_profile (settings.get_profile (id));
+}
+
 function reset_defaults () {
   load_profile (default_profile);
   settings.current_profile = default_profile;
@@ -129,8 +142,8 @@ function get_default_profile () {
   return default_profile;
 }
 
-function get_profile (name) {
-  let guid = Gio.dbus_generate_guid ();
+function get_profile (name, guid) {
+  guid = guid || Gio.dbus_generate_guid ();
   name = name || guid;
   let cores = [];
   let minf = 0, maxf = 100;
@@ -191,7 +204,10 @@ let stage = 0;
 let install_event = 0;
 
 function load_profile (prf) {
-  if (install_event) return;
+  if (install_event || !prf) {
+    if (profile_changed_callback) profile_changed_callback (prf);
+    return;
+  }
   debug ("Loading profile...\n" + JSON.stringify (prf));
   profile = prf;
   for (let key = 1; key < cpucount; key++) {

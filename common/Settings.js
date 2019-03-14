@@ -111,6 +111,14 @@ var Settings = new Lang.Class({
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));
   },
 
+  get_profile: function (id) {
+    let profile = null;
+    if (profiles.length && id) profiles.forEach (p => {
+      if (p.guid == id) profile = p;
+    });
+    return profile;
+  },
+
   update_profile: function (id, profile) {
     profiles[id] = profile;
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));

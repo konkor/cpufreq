@@ -31,7 +31,7 @@ var CPUFreqApplication = new Lang.Class ({
   Extends: Gtk.Application,
 
   _init: function (props={}) {
-    print ("init constructor");
+    print ("Starting the application...");
     GLib.set_prgname ("cpufreq-application");
     this.parent (props);
     GLib.set_application_name ("CPUFreq Manager");
@@ -51,19 +51,20 @@ var CPUFreqApplication = new Lang.Class ({
       "Enable extension mode", null
     );
     this.add_main_option (
-      'profile', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-      "Activating power profile by GUID", null
+      'profile', 0, GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+      "Enable power profile battery|balanced|performance|system|user|GUID", "GUID"
     );
     this.connect ('handle-local-options', this.on_local_options.bind (this));
   },
 
   on_local_options: function (app, options) {
     print ("local-options", options);
+    let v;
 
     try {
       this.register (null);
     } catch (e) {
-      Logger.error ("Unable to register.\n %s".format (e.message));
+      Logger.error ("Failed to register: %s".format (e.message));
       return 1;
     }
 
@@ -71,19 +72,19 @@ var CPUFreqApplication = new Lang.Class ({
       DEBUG_LVL = 1; //Enable info messages
       Logger.init (1);
     }
-
     if (options.contains ("debug")) {
       DEBUG_LVL = 2;
       Logger.init (2);
     }
-
     if (options.contains ("extension")) {
       this.extension = true;
     }
-
     if (options.contains ("profile")) {
-      //TODO: activating power profile
-      Logger.debug ("finishing loading profile: %s".format ("profile"));
+      v = options.lookup_value ("profile", null);
+      if (v) [v, ] = v.get_string ();
+      this.process_profile (v);
+      Logger.debug ("finishing loading profile: \`%s\`".format (v));
+      //TODO: fix https://gitlab.gnome.org/GNOME/gjs/issues/232
       return 0;
     }
 
@@ -94,16 +95,22 @@ var CPUFreqApplication = new Lang.Class ({
   vfunc_startup: function () {
     print ("vfunc_startup");
     this.parent();
-    this.settings = new Settings.Settings ();
-    cpu.init (this.settings);
+    this.initialize ();
 
     /*this.connect ('open', Lang.bind (this, (files) => {
       print ("open", files.map(function(f) { return f.get_uri(); }));
     }));*/
   },
 
+  initialize: function () {
+    if (this.settings) return;
+    this.settings = new Settings.Settings ();
+    cpu.init (this.settings);
+  },
+
   vfunc_activate: function () {
     print ("activate", "verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
+    if (this.finishing) return;
     if (!this.active_window) {
       window = new MainWindow.MainWindow ({ application:this });
       window.connect ("destroy", () => {
@@ -113,6 +120,11 @@ var CPUFreqApplication = new Lang.Class ({
       cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
       if (this.settings.save) cpu.restore_saved ();
       window.cpanel.post_init ();
+    } else {
+      if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
+        //TODO: find current prf name
+        this.active_window.cpanel.update ("Current");
+      });
     }
     this.active_window.present ();
   },
@@ -120,6 +132,32 @@ var CPUFreqApplication = new Lang.Class ({
   on_profile_changed: function (profile) {
     if (!this.active_window) return;
     this.active_window.cpanel.update (profile.name);
+  },
+
+  process_profile: function (id) {
+    if (!id) {
+      this.finishing = true;
+      Logger.error ("No profile GUID specified...");
+      return 1;
+    }
+    this.initialize ();
+    this.finishing = true;
+    this.hold ();
+    cpu.profile_changed_callback = this.quit_cb.bind (this);
+    cpu.power_profile (id);
+    //this.quit_timeout ();
+  },
+
+  quit_cb: function (profile) {
+    this.release ();
+  },
+
+  quit_timeout: function (sec) {
+    sec = sec || 3;
+    this.hold ();
+    GLib.timeout_add_seconds (0, sec, () => {
+      this.release ();
+    });
   },
 
   get cpufreq () {
