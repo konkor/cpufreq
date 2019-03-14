@@ -121,7 +121,8 @@ var CPUFreqApplication = new Lang.Class ({
       if (this.settings.save) cpu.restore_saved ();
       window.cpanel.post_init ();
     } else {
-      if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
+      if (this.extension) this.quit ();
+      else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
         //TODO: find current prf name
         this.active_window.cpanel.update ("Current");
       });
