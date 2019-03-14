@@ -162,14 +162,14 @@ const FrequencyIndicator = new Lang.Class({
       id = this.get_profile_id (eprofiles[0].guid);
       if (id == -1 || id == this.PID) return;
       if (this.power.Percentage >= eprofiles[0].percent) {
-        this._load_profile (profiles[id]);
+        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=' + profiles[id].guid);
         this.PID = id;
       }
     } else if (this.power.State == 2) {
       id = this.get_profile_id (eprofiles[1].guid);
       if (id == -1 || id == this.PID) return;
       if (this.power.Percentage <= eprofiles[1].percent) {
-        this._load_profile (profiles[id]);
+        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=' + profiles[id].guid);
         this.PID = id;
       }
     }
