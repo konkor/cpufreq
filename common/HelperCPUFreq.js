@@ -58,7 +58,7 @@ function init (prefs) {
   }
   get_governors ();
   get_frequencies ();
-  get_default_profile ();
+  default_profile = get_default_profile ();
 
   //get_profile ("Testing Profile");
 }
@@ -107,22 +107,26 @@ function power_profile (id) {
   }
   if (id == "system") reset_defaults ();
   else if (id == "user") restore_saved ();
-  else if (id == "battery") return; //TODO:
-  else if (id == "balanced") return; //TODO:
-  else if (id == "performance") return; //TODO:
-  else load_profile (settings.get_profile (id));
+  else if (id == "battery") set_power_profile (get_battery_profile ());
+  else if (id == "balanced") set_power_profile (get_balanced_profile ());
+  else if (id == "performance") set_power_profile (get_performance_profile ());
+  else set_power_profile (settings.get_profile (id));
 }
 
 function reset_defaults () {
   load_profile (default_profile);
-  settings.current_profile = default_profile;
-  settings.PID = -1;
-  settings.update_current_profile ();
+  settings.save = false;
+}
+
+function set_power_profile (prf) {
+  if (!prf) return;
+  load_profile (prf);
+  settings.save = true;
+  //TODO: settings.guid = prf.guid
 }
 
 function get_default_profile () {
   if (!util_present || !installed) return null;
-  if (default_profile) return default_profile;
   let cores = [];
 
   for (let key = 0; key < cpucount; key++) {
@@ -138,8 +142,49 @@ function get_default_profile () {
     acpi:!pstate_present, guid:"default", core:cores
   };
   debug (JSON.stringify (p));
-  default_profile = p;
-  return default_profile;
+  return p;
+}
+
+// "balance" - turbo:OFF
+function get_balanced_profile () {
+  let p = get_default_profile ();
+  p.guid = "balanced";
+  p.name = "Balanced";
+  p.turbo = false;
+  debug (JSON.stringify (p));
+  return p;
+}
+
+// "battery" - turbo:OFF, cores:50%, max frequency:50%, governor:powersave
+// TODO: ACPI governor for battery pp I would preffer schedutil or conservative
+function get_performance_profile () {
+  let p = get_default_profile ();
+  let cores = Math.floor (p.cpu / 2);
+  if (cores < 2) cores = 2;
+  if (cores > cpucount) cores = cpucount;
+  p.guid = "battery";
+  p.name = "Powersave";
+  p.turbo = false;
+  p.maxf = 50;
+  p.cores.forEach (p => {
+    p.g = "powersave";
+  });
+  debug (JSON.stringify (p));
+  return p;
+}
+
+// "performance" - turbo:ON, min/max:50%/100%, governor:performance/ondemand
+function get_battery_profile () {
+  let p = get_default_profile ();
+  p.guid = "performance";
+  p.name = "Performance";
+  p.minf = 50;
+  p.cores.forEach (p => {
+    if (pstate_present) p.g = "performance";
+    else p.a = get_freq (50);
+  });
+  debug (JSON.stringify (p));
+  return p;
 }
 
 function get_profile (name, guid) {
