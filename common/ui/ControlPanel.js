@@ -93,15 +93,27 @@ var ControlPanel = new Lang.Class({
     this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Profiles Menu"));
     this.add_submenu (this.profmenu);
 
-    mi = new ProfileItems.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
+    mi = new SideMenu.SideItem (_("Balanced"), _("Optimal settings for the daily usage"));
+    mi.margin_top = 8;
     this.profmenu.add_item (mi);
-    mi.connect ('clicked', Lang.bind (this, (o) => {
-      print ("New Item", o.text);
-      settings.add_profile (cpu.get_profile (o.text));
-      this.add_profile (settings.profiles.length - 1);
+    mi.connect ('clicked', Lang.bind (this, () => {
+      cpu.power_profile ("balanced");
     }));
 
-    mi = new SideMenu.SideItem (cpu.default_profile.name, _("Load default system settings"));
+    mi = new SideMenu.SideItem (_("High Performance"), _("High responsive settings for high performance"));
+    this.profmenu.add_item (mi);
+    mi.connect ('clicked', Lang.bind (this, () => {
+      cpu.power_profile ("performance");
+    }));
+
+    mi = new SideMenu.SideItem (_("Power Saving"), _("ECO Battery life and power saver"));
+    this.profmenu.add_item (mi);
+    mi.connect ('clicked', Lang.bind (this, () => {
+      cpu.power_profile ("battery");
+    }));
+
+    mi = new SideMenu.SideItem (cpu.default_profile.name, _("Reset to default system settings"));
+    mi.margin_top = mi.margin_bottom = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.reset_defaults ();
@@ -110,6 +122,15 @@ var ControlPanel = new Lang.Class({
     for (let p in settings.profiles) {
       this.add_profile (p);
     }
+
+    mi = new ProfileItems.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
+    mi.margin_top = 8;
+    this.profmenu.add_item (mi);
+    mi.connect ('clicked', Lang.bind (this, (o) => {
+      print ("New Item", o.text);
+      settings.add_profile (cpu.get_profile (o.text));
+      this.add_profile (settings.profiles.length - 1);
+    }));
   },
 
   add_profile: function (index) {

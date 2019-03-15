@@ -157,16 +157,17 @@ function get_balanced_profile () {
 
 // "battery" - turbo:OFF, cores:50%, max frequency:50%, governor:powersave
 // TODO: ACPI governor for battery pp I would preffer schedutil or conservative
-function get_performance_profile () {
+function get_battery_profile () {
   let p = get_default_profile ();
   let cores = Math.floor (p.cpu / 2);
   if (cores < 2) cores = 2;
   if (cores > cpucount) cores = cpucount;
+  p.cpu = cores;
   p.guid = "battery";
   p.name = "Powersave";
   p.turbo = false;
   p.maxf = 50;
-  p.cores.forEach (p => {
+  p.core.forEach (p => {
     p.g = "powersave";
   });
   debug (JSON.stringify (p));
@@ -174,12 +175,12 @@ function get_performance_profile () {
 }
 
 // "performance" - turbo:ON, min/max:50%/100%, governor:performance/ondemand
-function get_battery_profile () {
+function get_performance_profile () {
   let p = get_default_profile ();
   p.guid = "performance";
   p.name = "Performance";
   p.minf = 50;
-  p.cores.forEach (p => {
+  p.core.forEach (p => {
     if (pstate_present) p.g = "performance";
     else p.a = get_freq (50);
   });
