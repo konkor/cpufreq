@@ -10,6 +10,7 @@ BASE_MODULES = metadata.json \
   cpufreqctl \
   cpufreq-service \
   cpufreq-application \
+  cpufreq-preferences \
   konkor.cpufreq.policy \
   install.sh \
   BACKERS.md \
