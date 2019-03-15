@@ -120,6 +120,9 @@ var Settings = new Lang.Class({
   },
 
   update_profile: function (id, profile) {
+    let p = profiles[id];
+    if (!p || !profile) return;
+    profile.guid = p.guid;
     profiles[id] = profile;
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));
   },
