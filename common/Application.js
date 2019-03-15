@@ -146,19 +146,11 @@ var CPUFreqApplication = new Lang.Class ({
     this.hold ();
     cpu.profile_changed_callback = this.quit_cb.bind (this);
     cpu.power_profile (id);
-    //this.quit_timeout ();
+    return 0;
   },
 
   quit_cb: function (profile) {
     this.release ();
-  },
-
-  quit_timeout: function (sec) {
-    sec = sec || 3;
-    this.hold ();
-    GLib.timeout_add_seconds (0, sec, () => {
-      this.release ();
-    });
   },
 
   get cpufreq () {

@@ -95,7 +95,7 @@ const FrequencyIndicator = new Lang.Class({
     this.load_settings (null, null);
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
-    if (this.installed && save && first_boot) this.load_saved_settings ();
+    if (save && first_boot) this.load_saved_settings ();
     first_boot = false;
 
     this._add_event ();
