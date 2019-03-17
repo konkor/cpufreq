@@ -119,7 +119,8 @@ var CPUFreqApplication = new Lang.Class ({
       window.show_all ();
       cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
       if (this.settings.save) cpu.restore_saved ();
-      window.cpanel.post_init ();
+      if (window.cpanel) window.cpanel.post_init ();
+      else this.quit ();
     } else {
       if (this.extension) this.quit ();
       else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
@@ -131,7 +132,7 @@ var CPUFreqApplication = new Lang.Class ({
   },
 
   on_profile_changed: function (profile) {
-    if (!this.active_window) return;
+    if (!this.active_window || !this.active_window.cpanel) return;
     this.active_window.cpanel.update (profile.name);
   },
 

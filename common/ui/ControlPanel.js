@@ -75,7 +75,7 @@ var ControlPanel = new Lang.Class({
     else this.acpi_build ();
     if (cpu.cpucount > 1) this.add_cores ();
     if (cpu.boost_present) this.add_boost ();
-    this.add_profiles ();
+    if (cpu.default_profile) this.add_profiles ();
 
     this.save = Gtk.CheckButton.new_with_label (_("Remember settings"));
     this.save.tooltip_text = _("Check to restore settings on the startup");
@@ -363,7 +363,7 @@ var ControlPanel = new Lang.Class({
       this.slider_core.update_info (cc);
       this.post_init ();
     }
-    if (profile_name) this.profmenu.label = profile_name;
+    if (this.profmenu && profile_name) this.profmenu.label = profile_name;
     this.locked = false;
   }
 });

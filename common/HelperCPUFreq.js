@@ -25,7 +25,7 @@ var pstate_present = false;
 var cpufreqctl_path = null;
 let pkexec_path = null;
 var installed = false;
-var updated = true;
+var updated = false;
 var frequencies = [];
 let minimum_freq = 0;
 let maximum_freq = 0;
@@ -67,7 +67,7 @@ function check_install () {
   pkexec_path = GLib.find_program_in_path ("pkexec");
   cpufreqctl_path = GLib.find_program_in_path ("cpufreqctl");
   installed = false;
-  updated = true;
+  updated = false;
   if (!cpufreqctl_path)
     cpufreqctl_path = APPDIR + "/cpufreqctl";
   else
@@ -80,7 +80,9 @@ function check_install () {
     let localctl = null, globalctl = null;
     globalctl = get_info_string ("/usr/bin/cpufreqctl version");
     localctl = get_info_string (APPDIR + "/cpufreqctl version");
-    if (localctl != globalctl) updated = false;
+    debug ("Versions local:%s global:%s".format (localctl, globalctl));
+    updated = localctl == globalctl;
+    //if (!updated) cpufreqctl_path = APPDIR + "/cpufreqctl";
   }
 }
 
@@ -98,6 +100,18 @@ function check_extensions () {
     }
   } else boost_present = true;
   settings.save = save_state;
+}
+
+function install_components (update) {
+  if (!pkexec_path) return false;
+  debug (pkexec_path + " " + cpufreqctl_path);
+  try {
+    GLib.spawn_command_line_sync ("%s %s/cpufreqctl install".format (pkexec_path, APPDIR));
+  } catch (e) {
+    error (e.message);
+  }
+  init (settings);
+  return updated;
 }
 
 function power_profile (id) {

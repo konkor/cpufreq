@@ -56,6 +56,5 @@ function print_msg (domain, source, output) {
     domain_color[domain],ds,domain_name[domain],source,output));
   else {
     log ("(%s) [cpufreq][%s] %s".format (domain_name[domain], source, output));
-    if (logger) logger.put ("[%s](%s) %s".format (ds, domain_name[domain], output));
   }
 }

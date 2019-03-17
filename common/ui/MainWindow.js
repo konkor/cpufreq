@@ -21,6 +21,9 @@ const cpu = imports.common.HelperCPUFreq;
 const InfoPanel = imports.common.ui.InfoPanel;
 const ControlPanel = imports.common.ui.ControlPanel;
 
+const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
+const _ = Gettext.gettext;
+
 let theme_gui = APPDIR + "/data/themes/default/gtk.css";
 let cssp = null;
 
@@ -36,14 +39,47 @@ var MainWindow = new Lang.Class ({
     } catch (e) {
       error (e.message);
     }
+    if (!cpu.installed) this.install ();
+    else if (!cpu.updated) this.install (true);
+    else this.build ();
+  },
 
-    this.build ();
+  install: function (update) {
+    update = update || false;
+    let msg = ("<b>" + _("%s required system components?") + "</b>\n").format (update ? _("Update") : _("Install"));
+    let sec = _("This action will be require root permissions to complete installation. ");
+    sec += _("It could take some time depending on your system configuration.\n");
+    let dlg = new Gtk.MessageDialog ({
+      message_type: Gtk.MessageType.WARNING, buttons: Gtk.ButtonsType.OK_CANCEL,
+      text: msg, use_markup: true, secondary_text: sec, icon: this.icon
+    });
+    let res = dlg.run ();
+    dlg.hide ();
+    dlg.destroy ();
+    if (res == Gtk.ResponseType.OK) {
+      if (cpu.install_components (update)) this.build ();
+      else {
+        if (!cpu.pkexec_path)
+          this.error_message (_("The application is requiring pkexec package installed."));
+        else
+          this.error_message (_("Error during installation of system components..."));
+      }
+    }
+  },
 
-    //this.restore_position ();
-    //if (this.settings.window_maximized) this.maximize ();
+  error_message: function (msg, secondary) {
+    msg = "<b>" + (msg || _("ERROR: Something going wrong!")) + "</b>";
+    secondary = secondary || null;
+    let dlg = new Gtk.MessageDialog ({
+      message_type: Gtk.MessageType.ERROR, buttons: Gtk.ButtonsType.OK,
+      text: msg, use_markup: true, secondary_text: secondary, icon: this.icon
+    });
+    dlg.run ();
+    dlg.destroy ();
   },
 
   build: function() {
+    let box;
     this.window_position = Gtk.WindowPosition.MOUSE;
     //Gtk.Settings.get_default().gtk_application_prefer_dark_theme = true;
     this.set_default_size (480, 720);
@@ -66,7 +102,7 @@ var MainWindow = new Lang.Class ({
 
     this.cpanel = new ControlPanel.ControlPanel (this.application);
 
-    let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
+    box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
     this.add (box);
 
     this.sidebar = new InfoPanel.InfoPanel ();
@@ -81,6 +117,8 @@ var MainWindow = new Lang.Class ({
     });
 
     this.connect ('unmap', Lang.bind (this, this.save_geometry));
+    //this.restore_position ();
+    //if (this.settings.window_maximized) this.maximize ();
   },
 
   save_geometry: function () {
