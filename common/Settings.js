@@ -47,6 +47,17 @@ var Settings = new Lang.Class({
       );
     this.parent ({ settings_schema: schemaObj });
     this.load ();
+
+    this.connect ("changed", this.on_settings.bind (this));
+  },
+
+  on_settings: function (o, key) {
+    if (key == PROFILE_ID_KEY) {
+      _guid =  o.get_string (PROFILE_ID_KEY);
+    }
+    if (key == SAVE_SETTINGS_KEY) {
+      _save = this.get_boolean (SAVE_SETTINGS_KEY);
+    }
   },
 
   load: function () {

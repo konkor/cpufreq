@@ -31,7 +31,6 @@ var CPUFreqApplication = new Lang.Class ({
   Extends: Gtk.Application,
 
   _init: function (props={}) {
-    print ("Starting the application...");
     GLib.set_prgname ("cpufreq-application");
     this.parent (props);
     GLib.set_application_name ("CPUFreq Manager");
@@ -63,9 +62,6 @@ var CPUFreqApplication = new Lang.Class ({
   },
 
   on_local_options: function (app, options) {
-    print ("local-options", options);
-    let v;
-
     try {
       this.register (null);
     } catch (e) {
@@ -88,7 +84,7 @@ var CPUFreqApplication = new Lang.Class ({
       this.save = false;
     }
     if (options.contains ("profile")) {
-      v = options.lookup_value ("profile", null);
+      let v = options.lookup_value ("profile", null);
       if (v) [v, ] = v.get_string ();
       this.process_profile (v);
       Logger.debug ("finishing loading profile: \`%s\`".format (v));
@@ -101,7 +97,6 @@ var CPUFreqApplication = new Lang.Class ({
   },
 
   vfunc_startup: function () {
-    print ("vfunc_startup");
     this.parent();
     this.initialize ();
 
@@ -117,7 +112,6 @@ var CPUFreqApplication = new Lang.Class ({
   },
 
   vfunc_activate: function () {
-    print ("activate", "verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
     if (this.finishing) return;
     if (!this.active_window) {
       window = new MainWindow.MainWindow ({ application:this });
@@ -132,8 +126,16 @@ var CPUFreqApplication = new Lang.Class ({
     } else {
       if (this.extension) this.quit ();
       else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
-        //TODO: find current prf name
-        this.active_window.cpanel.update ("Current");
+        //TODO: name of current prf on --no-save
+        let s, p = this.settings.get_profile (this.settings.guid);
+        if (p) s = p.name;
+        else if (this.settings.guid == "default") s = cpu.get_default_profile().name;
+        else if (this.settings.guid == "battery") s = cpu.get_battery_profile().name;
+        else if (this.settings.guid == "balanced") s = cpu.get_balanced_profile().name;
+        else if (this.settings.guid == "performance") s = cpu.get_performance_profile().name;
+        else if (this.settings.guid == "user") s = this.settings.user_profile.name;
+        else s = "Current system settings";
+        this.active_window.cpanel.update (s);
       });
     }
     this.active_window.present ();

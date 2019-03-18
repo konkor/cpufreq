@@ -84,7 +84,7 @@ var ControlPanel = new Lang.Class({
     this.save.opacity = 0.85;
     this.add_item (this.save);
     this.save.connect ('toggled', Lang.bind (this, ()=>{
-        settings.save = this.save.active;
+      if (!this.locked) settings.save = this.save.active;
     }));
   },
 
@@ -361,6 +361,7 @@ var ControlPanel = new Lang.Class({
       this.post_init ();
     }
     if (this.profmenu && profile_name) this.profmenu.label = profile_name;
+    this.save.active = settings.save;
     this.locked = false;
   }
 });
