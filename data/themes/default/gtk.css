@@ -9,7 +9,12 @@
   background-image: none;
   background-color: @theme_bg_color;
 }
+.hb GtkButton, .hb button {
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+}
 .hb-button {
+  border-width: 0;
   background-image: none;
   background-color: @theme_bg_color;
 }
@@ -76,12 +81,13 @@
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
   color: #fff;
   background-color: #215d9c;
-  margin: 8px;
-  padding: 8px;
-  border: 8px;
-  /*color: #215d9c;*/
-  font-family: cpufreq;
+  margin: 0;
+  padding: 2px;
+  /*border: 8px;
+  color: #215d9c;*/
+  font-family: cpufreq, sans;
   font-weight: bold;
+  font-size: 95%;
 }
 .amd {
   background-color: #bb0a1b;
