@@ -4,12 +4,18 @@
   <schema id="org.gnome.shell.extensions.cpufreq" path="/org/gnome/shell/extensions/cpufreq/">
 
     <key type="b" name="save-settings">
-      <default>false</default>
-      <summary>Save last settings</summary>
-      <description>Save settings for restore</description>
+      <default>true</default>
+      <summary>Save settings</summary>
+      <description>Restore settings on startup</description>
     </key>
 
-    <key type="s" name="remember-profile">
+    <key type="s" name="profile-id">
+      <default>"balanced"</default>
+      <summary>Current profile</summary>
+      <description>Power profile ID = balanced|battery|performance|default|GUID</description>
+    </key>
+
+    <key type="s" name="user-profile">
       <default>""</default>
       <summary>Saved settings</summary>
       <description>Profile for remembered settings</description>
@@ -76,7 +82,7 @@
     </key>
 
     <key type="b" name="color-show">
-      <default>false</default>
+      <default>true</default>
       <summary>Display Monitor in color</summary>
       <description>Display Monitor in color depending on computer load</description>
     </key>
@@ -87,12 +93,6 @@
         <description>User profiles</description>
     </key>
 
-    <key type="i" name="profile">
-      <default>-1</default>
-      <summary>Profile ID</summary>
-      <description>Profile ID</description>
-    </key>
-
     <key type="i" name="monitor">
       <default>500</default>
       <summary>Frequency monitor interval</summary>
@@ -100,7 +100,7 @@
     </key>
 
     <key type="s" name="event-profiles">
-      <default>''</default>
+      <default>'[{"percent":0,"event":0,"guid":"user"},{"percent":100,"event":1,"guid":"battery"}]'</default>
       <summary>Events Profiles</summary>
       <description>Power Events Profiles</description>
     </key>

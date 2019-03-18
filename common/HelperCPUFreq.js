@@ -37,6 +37,7 @@ let profile = null;
 
 let settings = null;
 let core_event = 0;
+let save_changes = true;
 
 var profile_changed_callback = null;
 
@@ -51,10 +52,10 @@ function init (prefs) {
   }
   check_install ();
   check_extensions ();
-  if (!settings.current_profile) {
+  if (!settings.user_profile) {
     let p = get_profile ("Saved settings");
-    p.guid = "saved";
-    settings.current_profile = p;
+    p.guid = "user";
+    settings.user_profile = p;
   }
   get_governors ();
   get_frequencies ();
@@ -114,12 +115,13 @@ function install_components (update) {
   return updated;
 }
 
-function power_profile (id) {
+function power_profile (id, save) {
+  save_changes = (typeof save !== 'undefined') ?  save : true;
   if (!installed) {
     if (profile_changed_callback) profile_changed_callback (id);
     return;
   }
-  if (id == "system") reset_defaults ();
+  if ((id == "system") || (id == "default")) set_power_profile (default_profile);
   else if (id == "user") restore_saved ();
   else if (id == "battery") set_power_profile (get_battery_profile ());
   else if (id == "balanced") set_power_profile (get_balanced_profile ());
@@ -127,16 +129,16 @@ function power_profile (id) {
   else set_power_profile (settings.get_profile (id));
 }
 
-function reset_defaults () {
-  load_profile (default_profile);
-  settings.save = false;
-}
-
 function set_power_profile (prf) {
   if (!prf) return;
-  load_profile (prf);
-  settings.save = true;
-  //TODO: settings.guid = prf.guid
+  if (!settings_equal (prf, get_profile ()))
+    load_profile (prf);
+  else if (profile_changed_callback)
+    profile_changed_callback (prf);
+  if (save_changes) {
+    settings.save = prf.guid != default_profile.guid;
+    settings.guid = prf.guid;
+  }
 }
 
 function get_default_profile () {
@@ -234,13 +236,13 @@ function get_profile (name, guid) {
 
 function restore_saved () {
   var prf;
-  if (settings.PID > -1) prf = settings.profiles[settings.PID];
-  else prf = settings.current_profile;
-  if (!settings_equal (prf, get_profile ()))
-    load_profile (prf);
-  else {
-    if (profile_changed_callback) profile_changed_callback (prf);
-  }
+  if (settings.guid == settings.user_profile.guid) {
+    prf = settings.user_profile;
+    if (!settings_equal (prf, get_profile ()))
+      load_profile (prf);
+    else if (profile_changed_callback)
+      profile_changed_callback (prf);
+  } else power_profile (settings.guid);
 }
 
 function settings_equal (a, b) {

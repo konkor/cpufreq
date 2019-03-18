@@ -12,13 +12,13 @@ const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
-const REMEMBERED_KEY = 'remember-profile';
+const USER_PROFILE_KEY = 'user-profile';
 const PROFILES_KEY = 'profiles';
-const PROFILE_KEY = 'profile';
+const PROFILE_ID_KEY = 'profile-id';
 const MONITOR_KEY = 'monitor';
 
-let _save = false;
-let _PID = -1;
+let _save = true;
+let _guid = "balanced";
 let profiles = [];
 let current = null;
 
@@ -32,26 +32,28 @@ var Settings = new Lang.Class({
 
     let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
     let schemaSource;
-    if (schemaDir.query_exists(null))
-      schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
-                                              GioSSS.get_default(),
-                                              false);
+    if (schemaDir.query_exists (null))
+      schemaSource = GioSSS.new_from_directory (
+        schemaDir.get_path (), GioSSS.get_default (), false
+      );
     else
-      schemaSource = GioSSS.get_default();
+      schemaSource = GioSSS.get_default ();
 
-    let schemaObj = schemaSource.lookup(schema, true);
+    let schemaObj = schemaSource.lookup (schema, true);
     if (!schemaObj)
-      throw new Error('Schema ' + schema + ' could not be found for the extension. ' +
-                      'Please check your installation.');
+      throw new Error (
+        'Schema ' + schema + ' could not be found for the extension. ' +
+        'Please check your installation.'
+      );
     this.parent ({ settings_schema: schemaObj });
     this.load ();
   },
 
   load: function () {
     _save = this.get_boolean (SAVE_SETTINGS_KEY);
-    _PID = this.get_int (PROFILE_KEY);
+    _guid = this.get_string (PROFILE_ID_KEY);
     this.load_profiles ();
-    let s = this.get_string (REMEMBERED_KEY);
+    let s = this.get_string (USER_PROFILE_KEY);
     if (s) current = JSON.parse (s);
   },
 
@@ -61,37 +63,37 @@ var Settings = new Lang.Class({
     this.set_boolean (SAVE_SETTINGS_KEY, _save);
   },
 
-  get current_profile () { return current; },
-  set current_profile (val) {
+  get user_profile () { return current; },
+  set user_profile (val) {
     if (!val) return;
     current = val;
-    this.update_current_profile ();
+    this.update_user_profile ();
   },
 
-  update_current_profile: function () {
+  update_user_profile: function () {
     let s = JSON.stringify (current);
-    this.set_string (REMEMBERED_KEY, s);
+    this.set_string (USER_PROFILE_KEY, s);
     print ("Updating settings");
   },
 
   get monitor () { return this.get_int (MONITOR_KEY); },
   set monitor (val) { this.set_int (MONITOR_KEY, val); },
 
-  get PID () {
-    if (_PID >= profiles.length) this.PID = -1;
-    return _PID;
+  get guid () {
+    return _guid;
   },
-  set PID (val) {
-    if (_PID == val) return;
-    _PID = val;
-    this.set_int (PROFILE_KEY, _PID);
-    if (val > -1) {
-      let p = profiles[val];
+  set guid (val) {
+    print ("set guid:", val, _guid);
+    if (_guid == val) return;
+    _guid = val;
+    this.set_string (PROFILE_ID_KEY, _guid);
+    let p = this.get_profile (val);
+    if (p) {
       current = {
         name:current.name, minf:p.minf, maxf:p.maxf, turbo:p.turbo, cpu:p.cpu,
         acpi:current.acpi, guid:current.guid, core:p.core
       };
-      this.update_current_profile ();
+      this.update_user_profile ();
     }
   },
 
@@ -119,20 +121,21 @@ var Settings = new Lang.Class({
     return profile;
   },
 
-  update_profile: function (id, profile) {
-    let p = profiles[id];
+  update_profile: function (index, profile) {
+    if (index >= profiles.length) return;
+    let p = profiles[index];
     if (!p || !profile) return;
     profile.guid = p.guid;
-    profiles[id] = profile;
+    profiles[index] = profile;
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));
   },
 
-  delete_profile: function (id) {
-    if (this.PID > -1) {
-      if (id == this.PID) this.PID = -1;
-      if (this.PID > id) this.PID--;
+  delete_profile: function (index) {
+    if (index >= profiles.length) return;
+    if (this.guid == profiles[index].guid) {
+      this.guid = this.user_profile.guid;
     }
-    profiles.splice (id, 1);
+    profiles.splice (index, 1);
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));
   },
 
@@ -144,7 +147,7 @@ var Settings = new Lang.Class({
     print ("set turbo");
     if (!current || (current.turbo == val)) return;
     current.turbo = val;
-    this.update_current_profile ();
+    this.update_user_profile ();
   },
 
   get cpu_cores () {
@@ -155,7 +158,7 @@ var Settings = new Lang.Class({
     print ("set cores online");
     if (!current || (current.cpu == val)) return;
     current.cpu = val;
-    this.update_current_profile ();
+    this.update_user_profile ();
   },
 
   get min_freq () {
@@ -171,7 +174,7 @@ var Settings = new Lang.Class({
       if (current.core[i].a != val) equal = false;
       current.core[i].a = val;
     }
-    if (!equal) this.update_current_profile ();
+    if (!equal) this.update_user_profile ();
   },
 
   get max_freq () {
@@ -187,7 +190,7 @@ var Settings = new Lang.Class({
       if (current.core[i].b != val) equal = false;
       current.core[i].b = val;
     }
-    if (!equal) this.update_current_profile ();
+    if (!equal) this.update_user_profile ();
   },
 
   get governor () {
@@ -204,7 +207,7 @@ var Settings = new Lang.Class({
       if (current.core[i].g != val) equal = false;
       current.core[i].g = val;
     }
-    if (!equal) this.update_current_profile ();
+    if (!equal) this.update_user_profile ();
   },
 
   get min_freq_pstate () {
@@ -215,7 +218,7 @@ var Settings = new Lang.Class({
   set min_freq_pstate (val) {
     if (!current || (current.minf == val)) return;
     current.minf = val;
-    this.update_current_profile ();
+    this.update_user_profile ();
   },
 
   get max_freq_pstate () {
@@ -226,7 +229,7 @@ var Settings = new Lang.Class({
   set max_freq_pstate (val) {
     if (!current || (current.maxf == val)) return;
     current.maxf = val;
-    this.update_current_profile ();
+    this.update_user_profile ();
   },
 
   set_userspace: function (frequency) {
@@ -238,7 +241,7 @@ var Settings = new Lang.Class({
       current.core[i].g = "userspace";
       current.core[i].f = frequency;
     }
-    if (!equal) this.update_current_profile ();
+    if (!equal) this.update_user_profile ();
   }
 });
 

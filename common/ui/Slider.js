@@ -8,8 +8,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
+const Gtk = imports.gi.Gtk;
+const GObject = imports.gi.GObject;
 
 var Slider = new Lang.Class({
   Name: "Slider",
@@ -32,6 +33,11 @@ var Slider = new Lang.Class({
     this.get_style_context ().add_class ("slider");
     this.slider.draw_value = false;
     this.add (this.slider);
+
+    this.slider.connect ("scroll-event", (o) => {
+      GObject.signal_stop_emission_by_name (o, "scroll-event");
+      return false;
+    });
 
     this.show_all ();
   },

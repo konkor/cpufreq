@@ -36,6 +36,7 @@ var CPUFreqApplication = new Lang.Class ({
     this.parent (props);
     GLib.set_application_name ("CPUFreq Manager");
     Logger.init (DEBUG_LVL);
+    this.save = true;
     this.extension = false;
 
     this.add_main_option (
@@ -49,6 +50,10 @@ var CPUFreqApplication = new Lang.Class ({
     this.add_main_option (
       'extension', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
       "Enable extension mode", null
+    );
+    this.add_main_option (
+      'no-save', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Do not remember applying profile", null
     );
     this.add_main_option (
       'profile', 0, GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
@@ -78,6 +83,9 @@ var CPUFreqApplication = new Lang.Class ({
     }
     if (options.contains ("extension")) {
       this.extension = true;
+    }
+    if (options.contains ("no-save")) {
+      this.save = false;
     }
     if (options.contains ("profile")) {
       v = options.lookup_value ("profile", null);
@@ -146,7 +154,7 @@ var CPUFreqApplication = new Lang.Class ({
     this.finishing = true;
     this.hold ();
     cpu.profile_changed_callback = this.quit_cb.bind (this);
-    cpu.power_profile (id);
+    cpu.power_profile (id, this.save);
     return 0;
   },
 

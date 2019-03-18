@@ -17,7 +17,7 @@ const Gio = imports.gi.Gio;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const PROFILES_KEY = 'profiles';
-const PROFILE_KEY = 'profile';
+const PROFILE_ID_KEY = 'profile-id';
 const MONITOR_KEY = 'monitor';
 const EPROFILES_KEY = 'event-profiles';
 const LABEL_KEY = 'label'
@@ -123,7 +123,7 @@ const FrequencyIndicator = new Lang.Class({
     o = o || this._settings;
 
     if (!key) {
-      this.PID =  o.get_int (PROFILE_KEY);
+      this.guid =  o.get_string (PROFILE_ID_KEY);
       s =  o.get_string (PROFILES_KEY);
       if (s.length > 0) profiles = JSON.parse (s);
       monitor_timeout =  o.get_int (MONITOR_KEY);
@@ -141,8 +141,8 @@ const FrequencyIndicator = new Lang.Class({
       }
       monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
     }
-    if (key == PROFILE_KEY) {
-      this.PID = o.get_int (PROFILE_KEY);
+    if (key == PROFILE_ID_KEY) {
+      this.guid =  o.get_string (PROFILE_ID_KEY);
     }
     if (key == LABEL_KEY) {
       label_text = o.get_string (LABEL_KEY);
@@ -156,21 +156,20 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   on_power_state: function () {
-    let id = -1;
+    let id = eprofiles[1].guid;
+    if (!id || id == this.guid_battery) return;
     //print ("on_power_state", this.power.State, this.power.Percentage);
     if (this.power.State == 1 || this.power.State == 4) {
-      id = this.get_profile_id (eprofiles[0].guid);
-      if (id == -1 || id == this.PID) return;
-      if (this.power.Percentage >= eprofiles[0].percent) {
-        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=' + profiles[id].guid);
-        this.PID = id;
+      if (this.power.Percentage >= eprofiles[1].percent) {
+        //restoring prev state
+        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=user');
+        this.guid_battery = this.guid;
       }
     } else if (this.power.State == 2) {
-      id = this.get_profile_id (eprofiles[1].guid);
-      if (id == -1 || id == this.PID) return;
-      if (this.power.Percentage <= eprofiles[1].percent) {
-        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=' + profiles[id].guid);
-        this.PID = id;
+      if (this.power.Percentage < eprofiles[1].percent) {
+        //on battery
+        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --no-save --profile=' + id);
+        this.guid_battery = id;
       }
     }
   },

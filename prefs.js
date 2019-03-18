@@ -59,6 +59,12 @@ let governor_show = false;
 let load_show = false;
 let units_show = true;
 
+let auto_profiles = [
+  {name:_("Battery"), guid:"battery"},
+  {name:_("Balanced"), guid:"balanced"},
+  {name:_("High Performance"), guid:"performance"}
+];
+
 let color_show = false;
 let color_show_custom = false;
 let color_show_custom_normal = '#ebebeb';
@@ -114,7 +120,7 @@ var CPUFreqPreferences = new Lang.Class({
 
         this.power = new PagePowerCPUFreq ();
         this.notebook.add (this.power);
-        label = new Gtk.Label ({label: _("Power")});
+        label = new Gtk.Label ({label: _("Power Events")});
         this.notebook.set_tab_label (this.power, label);
 
         this.notebook.show_all ();
@@ -317,34 +323,25 @@ var PagePowerCPUFreq = new Lang.Class({
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
         this.border_width = 6;
 
-        this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING], "Battery discharging",
-          "You can set less then 100% (ex.90%) to do not apply Powersaving profile immidiatly " +
-          "when a disconecting is temporary or you just have issues with a power connector."
+        this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING],
+          _("On Battery"),
+          _("You can set less then 100% of the battery level. ") +
+          _("It will do not apply \'Powersaving Profile\' immidiatly on the event. ") +
+          _("It could be helpful on temporary disconections, issues with a power connector etc.")
         );
         this.add (this.unplug);
-        this.plug = new PowerProfile (eprofiles[EventType.CHARGING], "Battery charging",
-          "You can set more then 0% (ex.30%) to do not apply Daily profile immidiatly " +
-          "when a conecting is temporary or you just want the battery to get some level before it."
-        );
-        this.add (this.plug);
         this.unplug.combo.connect ('changed', Lang.bind (this, (o)=>{
-            if (o.active == 0) eprofiles[EventType.DISCHARGING].guid = "";
-            else eprofiles[EventType.DISCHARGING].guid = profiles[o.active - 1].guid;
-            this.unplug.slider.set_value (100);
+            if (o.active == 0)
+              eprofiles[EventType.DISCHARGING].guid = "";
+            else if (o.active <= auto_profiles.length)
+              eprofiles[EventType.DISCHARGING].guid = auto_profiles[o.active - 1].guid;
+            else
+              eprofiles[EventType.DISCHARGING].guid = profiles[o.active - auto_profiles.length - 1].guid;
+            //this.unplug.slider.set_value (100);
             settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
         }));
         this.unplug.slider.connect('value_changed', Lang.bind (this, function (o) {
             eprofiles[EventType.DISCHARGING].percent = Math.round (o.get_value ());
-            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
-        }));
-        this.plug.combo.connect ('changed', Lang.bind (this, (o)=>{
-            if (o.active == 0) eprofiles[EventType.CHARGING].guid = "";
-            else eprofiles[EventType.CHARGING].guid = profiles[o.active - 1].guid;
-            this.plug.slider.set_value (0);
-            settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
-        }));
-        this.plug.slider.connect('value_changed', Lang.bind (this, function (o) {
-            eprofiles[EventType.CHARGING].percent = Math.round (o.get_value ());
             settings.set_string (EPROFILES_KEY, JSON.stringify (eprofiles));
         }));
 
@@ -362,15 +359,19 @@ var PowerProfile = new Lang.Class({
         this.border_width = 6;
         let id = 0, i = 1;
 
-        this.add (new Gtk.Label ({label:"<b>"+text+"</b>",use_markup:true,xalign:0,margin_top:8}));
-
         let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
         this.pack_start (hbox, false, false, 0);
-        hbox.add (new Gtk.Label ({label: _("Power Profile")}));
+        hbox.add (new Gtk.Label ({label:"<b>"+text+"</b>",use_markup:true,xalign:0}));
         this.combo = new Gtk.ComboBoxText ();
+        this.combo.tooltip_text = _("Power Profile");
         this.combo.append_text (_("do nothing"));
-        profiles.forEach (s => {
+        auto_profiles.forEach (s => {
             this.combo.append_text (s.name);
+            if (s.guid == profile.guid) id = i;
+            i++;
+        });
+        profiles.forEach (s => {
+            this.combo.append_text (s.name + " (user profile)");
             if (s.guid == profile.guid) id = i;
             i++;
         });
@@ -378,8 +379,9 @@ var PowerProfile = new Lang.Class({
         hbox.pack_end (this.combo, false, false, 0);
 
         hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
+        hbox.margin_top = 8;
         this.add (hbox);
-        this.label = new Gtk.Label ({label:"when battery level", use_markup:true, xalign:0});
+        this.label = new Gtk.Label ({label:_("Level"), use_markup:true, xalign:0});
         hbox.pack_start (this.label, true, true, 0);
         this.info = new Gtk.Label ({label:"<i>"+profile.percent+"%</i>", use_markup:true});
         hbox.pack_end (this.info, false, false, 0);

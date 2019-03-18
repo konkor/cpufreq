@@ -116,7 +116,7 @@ var ControlPanel = new Lang.Class({
     mi.margin_top = mi.margin_bottom = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
-      cpu.reset_defaults ();
+      cpu.power_profile ("system");
     }));
 
     for (let p in settings.profiles) {
@@ -139,8 +139,7 @@ var ControlPanel = new Lang.Class({
     this.profmenu.add_item (prf);
 
     prf.connect ('clicked', Lang.bind (this, function (o) {
-      cpu.load_profile (settings.profiles[o.ID]);
-      settings.PID = o.ID;
+      cpu.set_power_profile (settings.profiles[o.ID]);
     }));
 
     prf.connect ('edited', Lang.bind (this, function (o) {
@@ -331,10 +330,8 @@ var ControlPanel = new Lang.Class({
   },
 
   _changed: function () {
-    if (settings.PID > -1) {
-      settings.PID = -1;
-    }
-    if (this.profmenu) this.profmenu.label = "Custom";
+    settings.guid = settings.user_profile.guid;
+    if (this.profmenu) this.profmenu.label = _("Custom user settings");
   },
 
   update: function (profile_name) {
