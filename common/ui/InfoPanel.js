@@ -70,6 +70,7 @@ var InfoPanel = new Lang.Class({
     if (Helper.get_cpufreq_info ("irqbalance"))
       this.balance = "IRQBALANCE DETECTED";
 
+    //TODO: handle dispose event
     info_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
       this.update ();
       return true;
@@ -297,7 +298,7 @@ var CoreInfo = new Lang.Class({
 
   get_frequency: function () {
     Helper.get_frequency_async (this.core, Lang.bind (this, (label) => {
-      this.freqlabel.set_text (label);
+      if (this.freqlabel) this.freqlabel.set_text (label);
     }));
   },
 
