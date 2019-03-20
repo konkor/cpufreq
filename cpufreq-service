@@ -153,21 +153,20 @@ var CpufreqService = new Lang.Class ({
       } else if (key == LABEL_KEY) {
         label_text = o.get_string (LABEL_KEY);
       } else if (key == FREQ_SHOW_KEY) {
-        frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
+        frequency_show = o.get_boolean (FREQ_SHOW_KEY);
       } else if (key == COLOR_SHOW_KEY) {
-        color_show = settings.get_boolean (COLOR_SHOW_KEY);
+        color_show = o.get_boolean (COLOR_SHOW_KEY);
       } else if (key == COLOR_SHOW_CUSTOM_KEY) {
-        color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+        color_show_custom = o.get_boolean (COLOR_SHOW_CUSTOM_KEY);
       } else if (key == COLOR_SHOW_CUSTOM_NORMAL_KEY) {
-        color_show_custom_normal = settings.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+        color_show_custom_normal = o.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
       } else if (key == COLOR_SHOW_CUSTOM_WARNING_KEY) {
-        color_show_custom_warning = settings.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+        color_show_custom_warning = o.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
       } else if (key == COLOR_SHOW_CUSTOM_CRITICAL_KEY) {
-        color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
+        color_show_custom_critical = o.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
       }
 
       style_state = -1;
-
       this.max0 = 0;
     },
 
