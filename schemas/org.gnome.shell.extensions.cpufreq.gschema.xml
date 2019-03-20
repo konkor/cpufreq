@@ -100,7 +100,7 @@
     </key>
 
     <key type="s" name="event-profiles">
-      <default>'[{"percent":0,"event":0,"guid":"user"},{"percent":100,"event":1,"guid":"battery"}]'</default>
+      <default>'[{"percent":0,"event":0,"guid":"user"},{"percent":100,"event":1,"guid":""}]'</default>
       <summary>Events Profiles</summary>
       <description>Power Events Profiles</description>
     </key>
