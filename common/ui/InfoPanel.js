@@ -166,7 +166,7 @@ var InfoPanel = new Lang.Class({
     if (load) {
       load = load.split(" ")[0];
       j = i = Math.round (parseFloat (load * 100));
-      while (i > 100) {
+      /*while (i > 100) {
         s += "\u25cf";
         i -= 100;
       }
@@ -174,7 +174,7 @@ var InfoPanel = new Lang.Class({
       else if (i < 50) s += "◔ ";
       else if (i < 75) s += "◑ ";
       else if (i < 100) s += "◕ ";
-      else s += "\u25cf ";
+      else s += "\u25cf ";*/
       s += j.toString () + "%";
     }
     if (j > cc * 100) {
