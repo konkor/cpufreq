@@ -175,10 +175,11 @@ function get_balanced_profile () {
 // TODO: ACPI governor for battery pp I would preffer schedutil or conservative
 function get_battery_profile () {
   let p = get_default_profile ();
-  let cores = Math.floor (p.cpu / 2);
+  //TODO: Is it too aggressive?
+  /*let cores = Math.floor (p.cpu / 2);
   if (cores < 2) cores = 2;
   if (cores > cpucount) cores = cpucount;
-  p.cpu = cores;
+  p.cpu = cores;*/
   p.guid = "battery";
   p.name = "Powersave";
   p.turbo = false;
