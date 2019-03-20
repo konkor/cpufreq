@@ -25,6 +25,9 @@ let current = null;
 var Settings = new Lang.Class({
   Name: "Settings",
   Extends: Gio.Settings,
+  Signals: {
+    'update': {},
+  },
 
   _init: function () {
     const schema = 'org.gnome.shell.extensions.cpufreq';
@@ -54,9 +57,11 @@ var Settings = new Lang.Class({
   on_settings: function (o, key) {
     if (key == PROFILE_ID_KEY) {
       _guid =  o.get_string (PROFILE_ID_KEY);
+      this.emit ("update");
     }
     if (key == SAVE_SETTINGS_KEY) {
       _save = this.get_boolean (SAVE_SETTINGS_KEY);
+      this.emit ("update");
     }
   },
 

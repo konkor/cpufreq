@@ -100,6 +100,7 @@ var CPUFreqApplication = new Lang.Class ({
     this.parent();
     this.initialize ();
 
+    this.settings.connect ("update", this.on_settings.bind (this));
     /*this.connect ('open', Lang.bind (this, (files) => {
       print ("open", files.map(function(f) { return f.get_uri(); }));
     }));*/
@@ -126,16 +127,7 @@ var CPUFreqApplication = new Lang.Class ({
     } else {
       if (this.extension) this.quit ();
       else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
-        //TODO: name of current prf on --no-save
-        let s, p = this.settings.get_profile (this.settings.guid);
-        if (p) s = p.name;
-        else if (this.settings.guid == "default") s = cpu.get_default_profile().name;
-        else if (this.settings.guid == "battery") s = cpu.get_battery_profile().name;
-        else if (this.settings.guid == "balanced") s = cpu.get_balanced_profile().name;
-        else if (this.settings.guid == "performance") s = cpu.get_performance_profile().name;
-        else if (this.settings.guid == "user") s = this.settings.user_profile.name;
-        else s = "Current system settings";
-        this.active_window.cpanel.update (s);
+        this.refresh ();
       });
     }
     this.active_window.present ();
@@ -162,6 +154,23 @@ var CPUFreqApplication = new Lang.Class ({
 
   quit_cb: function (profile) {
     this.release ();
+  },
+
+  refresh: function () {
+    //TODO: name of current prf on --no-save
+    let s, p = this.settings.get_profile (this.settings.guid);
+    if (p) s = p.name;
+    else if (this.settings.guid == "default") s = cpu.get_default_profile().name;
+    else if (this.settings.guid == "battery") s = cpu.get_battery_profile().name;
+    else if (this.settings.guid == "balanced") s = cpu.get_balanced_profile().name;
+    else if (this.settings.guid == "performance") s = cpu.get_performance_profile().name;
+    else if (this.settings.guid == "user") s = this.settings.user_profile.name;
+    else s = "Current system settings";
+    this.active_window.cpanel.update (s);
+  },
+
+  on_settings: function () {
+    this.refresh ();
   },
 
   get cpufreq () {
