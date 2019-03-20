@@ -211,17 +211,20 @@ var ControlPanel = new Lang.Class({
   },
 
   check_sliders: function () {
+    if (this.slider_min) {
+      this.slider_max.slider.set_value (1);
+      this.slider_min.slider.set_value (0);
+    }
     if (cpu.pstate_present) {
-      this.slider_min.slider.set_value (cpu.get_min_pstate() / 100);
-      this.slider_max.slider.set_value (cpu.get_max_pstate() / 100);
+      if (this.boost) {
+        cpu.set_turbo (this.boost.active);
+      }
     } else if (this.slider_min) {
       this.slider_min.sensitive = true;
       this.slider_max.sensitive = true;
       if (this.activeg.label.indexOf ("powersave") > -1) {
-        this.slider_min.slider.set_value (0);
         this.slider_max.sensitive = false;
       } else if (this.activeg.label.indexOf ("performance") > -1) {
-        this.slider_max.slider.set_value (1);
         this.slider_min.sensitive = false;
       }
     }
