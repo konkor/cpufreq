@@ -468,6 +468,13 @@ function get_frequencies () {
   let frequencieslist = [];
   frequencies = [];
   if (!util_present) return;
+  if (pstate_present) {
+    minfreq = get_min_pstate ();
+    maxfreq = get_max_pstate ();
+  } else {
+    minfreq = get_min ();
+    maxfreq = get_max ();
+  }
   frequencieslist = get_info_string (this.cpufreqctl_path + " freq");
   if (!frequencieslist) return;
   frequencieslist = frequencieslist.split (" ");
@@ -478,13 +485,6 @@ function get_frequencies () {
   if (frequencies.length > 0) {
     minimum_freq = frequencies[0];
     maximum_freq = frequencies[frequencies.length - 1];
-  }
-  if (pstate_present) {
-    minfreq = get_min_pstate ();
-    maxfreq = get_max_pstate ();
-  } else {
-    minfreq = get_min ();
-    maxfreq = get_max ();
   }
 }
 
