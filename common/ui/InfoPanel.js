@@ -152,7 +152,7 @@ var InfoPanel = new Lang.Class({
       distro += "\nKernel " + kernel_version;
     }
     distro += "\nDriver ";
-    if (Helper.intel_pstate) distro += "Intel PState";
+    if (Helper.pstate_present) distro += "Intel PState";
     else distro += "ACPI";
     distro += "\nTurbo Boost ";
     if (!Helper.boost_present) distro += "not ";
