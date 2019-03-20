@@ -19,6 +19,7 @@ var Format = imports.format;
 String.prototype.format = Format.format;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
+const DARK_THEME_KEY = 'dark-theme';
 const PROFILES_KEY = 'profiles';
 const EPROFILES_KEY = 'event-profiles';
 const MONITOR_KEY = 'monitor';
@@ -50,6 +51,7 @@ DISCHARGING:  1
 const suggestions = ["☃","⚡","㎒","㎓","","","","","","","","CPU"];
 
 let save = false;
+let dark = false;
 let profiles = [];
 let monitor_timeout = 500;
 let label_text = "\u269b";
@@ -87,6 +89,7 @@ var CPUFreqPreferences = new Lang.Class({
 
         settings = Convenience.getSettings ();
         save = settings.get_boolean (SAVE_SETTINGS_KEY);
+        dark = settings.get_boolean (DARK_THEME_KEY);
         monitor_timeout = settings.get_int (MONITOR_KEY);
         label_text = settings.get_string (LABEL_KEY);
         label_show = settings.get_boolean (LABEL_SHOW_KEY);
@@ -118,6 +121,11 @@ var CPUFreqPreferences = new Lang.Class({
         label = new Gtk.Label ({label: _("General")});
         this.notebook.set_tab_label (this.general, label);
 
+        this.monitor_page = new PageMonitorCPUFreq ();
+        this.notebook.add (this.monitor_page);
+        label = new Gtk.Label ({label: _("Monitor")});
+        this.notebook.set_tab_label (this.monitor_page, label);
+
         this.power = new PagePowerCPUFreq ();
         this.notebook.add (this.power);
         label = new Gtk.Label ({label: _("Power Events")});
@@ -127,18 +135,18 @@ var CPUFreqPreferences = new Lang.Class({
     }
 });
 
+
 var PageGeneralCPUFreq = new Lang.Class({
     Name: 'PageGeneralCPUFreq',
     Extends: Gtk.Box,
 
     _init: function () {
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
-        let id = 0, i = 0, rb;
         this.border_width = 6;
 
         this.add (new Gtk.Label ({label: _("<b>System</b>"), use_markup:true, xalign:0, margin_top:8}));
         this.cb_startup = Gtk.CheckButton.new_with_label (_("Remember settings"));
-        this.cb_startup.tooltip_text = _("Check to restore settings on the startup");
+        this.cb_startup.tooltip_text = _("Check to restore settings on startup");
         this.cb_startup.margin = 6;
         this.add (this.cb_startup);
         this.cb_startup.active = save;
@@ -146,7 +154,30 @@ var PageGeneralCPUFreq = new Lang.Class({
             save = this.cb_startup.active;
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
         }));
-        this.add (new Gtk.Label ({label: _("<b>Monitor</b>"), use_markup:true, xalign:0, margin_top:12}));
+        this.add (new Gtk.Label ({label: _("<b>User Interface</b>"), use_markup:true, xalign:0, margin_top:12}));
+        this.cb_dark = Gtk.CheckButton.new_with_label (_("Dark theme"));
+        this.cb_dark.tooltip_text = _("Prefer dark theme");
+        this.cb_dark.margin = 6;
+        this.add (this.cb_dark);
+        this.cb_dark.active = dark;
+        this.cb_dark.connect ('toggled', Lang.bind (this, ()=>{
+            dark = this.cb_dark.active;
+            settings.set_boolean (DARK_THEME_KEY, dark);
+        }));
+
+        this.show_all ();
+    }
+});
+
+var PageMonitorCPUFreq = new Lang.Class({
+    Name: 'PageMonitorCPUFreq',
+    Extends: Gtk.Box,
+
+    _init: function () {
+        this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
+        let id = 0, i = 0, rb;
+        this.border_width = 6;
+
         let hbox = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));

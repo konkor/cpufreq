@@ -33,6 +33,7 @@ var MainWindow = new Lang.Class ({
 
   _init: function (params) {
     this.parent (params);
+    this.settings = this.application.settings;
     this.set_icon_name ("org.konkor.cpufreq");
     if (!this.icon) try {
       this.icon = Gtk.Image.new_from_file (APPDIR + "/data/icons/cpufreq.svg").pixbuf;
@@ -81,7 +82,7 @@ var MainWindow = new Lang.Class ({
   build: function() {
     let box;
     this.window_position = Gtk.WindowPosition.MOUSE;
-    //Gtk.Settings.get_default().gtk_application_prefer_dark_theme = true;
+    Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
     this.set_default_size (480, 720);
     cssp = get_css_provider ();
     if (cssp) {
@@ -115,10 +116,32 @@ var MainWindow = new Lang.Class ({
     this.prefs_button.connect ("clicked", () => {
       GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
     });
+    this.settings.connect ("changed", this.on_settings.bind (this));
 
     this.connect ('unmap', Lang.bind (this, this.save_geometry));
     //this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
+  },
+
+  on_settings: function (o, key) {
+    if ((key == "profile-id") || (key == "save-settings")) {
+      this.update ();
+    } else if (key == "dark-theme") {
+      Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
+    }
+  },
+
+  update: function () {
+    //TODO: name of current prf on --no-save
+    let s, p = this.settings.get_profile (this.settings.guid);
+    if (p) s = p.name;
+    else if (this.settings.guid == "default") s = cpu.get_default_profile().name;
+    else if (this.settings.guid == "battery") s = cpu.get_battery_profile().name;
+    else if (this.settings.guid == "balanced") s = cpu.get_balanced_profile().name;
+    else if (this.settings.guid == "performance") s = cpu.get_performance_profile().name;
+    else if (this.settings.guid == "user") s = this.settings.user_profile.name;
+    else s = "Current system settings";
+    this.cpanel.update (s);
   },
 
   save_geometry: function () {

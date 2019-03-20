@@ -12,12 +12,14 @@ const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
+const DARK_THEME_KEY = 'dark-theme';
 const USER_PROFILE_KEY = 'user-profile';
 const PROFILES_KEY = 'profiles';
 const PROFILE_ID_KEY = 'profile-id';
 const MONITOR_KEY = 'monitor';
 
 let _save = true;
+let _dark = false;
 let _guid = "balanced";
 let profiles = [];
 let current = null;
@@ -25,9 +27,6 @@ let current = null;
 var Settings = new Lang.Class({
   Name: "Settings",
   Extends: Gio.Settings,
-  Signals: {
-    'update': {},
-  },
 
   _init: function () {
     const schema = 'org.gnome.shell.extensions.cpufreq';
@@ -57,16 +56,16 @@ var Settings = new Lang.Class({
   on_settings: function (o, key) {
     if (key == PROFILE_ID_KEY) {
       _guid =  o.get_string (PROFILE_ID_KEY);
-      this.emit ("update");
-    }
-    if (key == SAVE_SETTINGS_KEY) {
+    } else if (key == SAVE_SETTINGS_KEY) {
       _save = this.get_boolean (SAVE_SETTINGS_KEY);
-      this.emit ("update");
+    } else if (key == DARK_THEME_KEY) {
+      _dark = this.get_boolean (DARK_THEME_KEY);
     }
   },
 
   load: function () {
     _save = this.get_boolean (SAVE_SETTINGS_KEY);
+    _dark = this.get_boolean (DARK_THEME_KEY);
     _guid = this.get_string (PROFILE_ID_KEY);
     this.load_profiles ();
     let s = this.get_string (USER_PROFILE_KEY);
@@ -78,6 +77,8 @@ var Settings = new Lang.Class({
     _save = val;
     this.set_boolean (SAVE_SETTINGS_KEY, _save);
   },
+
+  get dark () { return _dark; },
 
   get user_profile () { return current; },
   set user_profile (val) {
