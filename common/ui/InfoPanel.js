@@ -39,6 +39,9 @@ var InfoPanel = new Lang.Class({
     this._cpuname.margin_top = 12;
     this.add (this._cpuname);
 
+    this._board = new BoardInfo ();
+    this.add (this._board);
+
     this._linux = new Gtk.Label ({label:this.linux_kernel, use_markup:true, xalign:0, margin:8});
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
@@ -75,6 +78,8 @@ var InfoPanel = new Lang.Class({
       this.update ();
       return true;
     }));
+
+    //this.show_all ();
   },
 
   get cpu_name () {
@@ -231,37 +236,79 @@ var InfoPanel = new Lang.Class({
   }
 });
 
-var WarningInfo = new Lang.Class({
-  Name: "WarningInfo",
+var InfoLabel = new Lang.Class({
+  Name: "InfoLabel",
   Extends: Gtk.Box,
 
+  _init: function (props={}) {
+    props.orientation = props.orientation || Gtk.Orientation.HORIZONTAL;
+    this.parent (props);
+    this.no_show_all = true;
+
+    this.label = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
+    this.label.no_show_all = false;
+    this.add (this.label);
+
+    this.info = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
+    this.pack_start (this.info, true, true, 8);
+    this.label.connect ("notify::label", this.on_label.bind (this));
+    this.info.connect ("notify::label", this.on_label.bind (this));
+  },
+
+  on_label: function (o) {
+    this.visible = o.visible = !!o.label;
+  },
+
+  update: function (info) {
+    info = info || "";
+    if (this.info.label != info) this.info.set_text (info);
+  }
+});
+
+var WarningInfo = new Lang.Class({
+  Name: "WarningInfo",
+  Extends: InfoLabel,
+
   _init: function () {
-    this.parent ({orientation:Gtk.Orientation.HORIZONTAL, margin:1});
+    this.parent ({margin:2});
     this.get_style_context ().add_class ("status");
     this.margin_top = 24;
-
-    this.icon = new Gtk.Label ({label:"☺", xalign:0.0, margin_left:8});
-    this.add (this.icon);
-
-    this.label = new Gtk.Label ({label:"SYSTEM STATUS OK", xalign:0.0});
-    this.pack_start (this.label, true, true, 8);
+    this.update (0, "SYSTEM STATUS OK");
   },
 
   update: function (level, message) {
+    this.parent (message || "SYSTEM STATUS OK");
     var style = this.get_style_context ();
-    this.label.set_text (message);
     style.remove_class ("warning");
     style.remove_class ("critical");
     if (level > 1) {
-      this.icon.set_text ("☹");
+      this.label.set_text ("☹");
       style.add_class ("critical");
     } else if (level > 0) {
-      this.icon.set_text ("");
+      this.label.set_text ("");
       style.add_class ("warning");
     } else {
-      this.icon.set_text ("☺");
-      this.label.set_text ("SYSTEM STATUS OK");
+      this.label.set_text ("☺");
     }
+  }
+});
+
+var BoardInfo = new Lang.Class({
+  Name: "BoardInfo",
+  Extends: InfoLabel,
+
+  _init: function () {
+    this.parent ({});
+    this.margin_top = 0;
+    //this.update (0, "SYSTEM STATUS OK");
+    Helper.get_content_async ("/sys/class/dmi/id/board_vendor", (res, text) => {
+      if (!res) return;
+      this.label.set_text (text.split ("\n")[0]);
+    });
+    Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
+      if (!res) return;
+      this.info.set_text (text.split ("\n")[0]);
+    });
   }
 });
 

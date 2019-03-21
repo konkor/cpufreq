@@ -733,6 +733,23 @@ function get_cpufreq_info (params, user) {
   return s;
 }
 
+function get_content_async (path, callback) {
+  let success = false, contents = null;
+  if (!callback) return;
+  if (!path) {
+    callback (success, contents);
+    return;
+  }
+  let file = Gio.file_new_for_path (path);
+  file.load_contents_async (null, (o, res) => {
+    [success, contents] = o.load_contents_finish (res);
+    if (success) try {
+      contents = byteArrayToString (contents).toString ().trim ();
+    } catch (e) {}
+    if (callback) callback (success, contents);
+  });
+}
+
 function debug (msg) {
   Logger.debug ("cpu helper", msg);
 }
