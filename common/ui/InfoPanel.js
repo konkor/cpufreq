@@ -17,6 +17,9 @@ const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 const Helper = imports.common.HelperCPUFreq;
 
+const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
+const _ = Gettext.gettext;
+
 let cpucount = Convenience.get_cpu_number ();
 let info_event = 0;
 
@@ -39,14 +42,27 @@ var InfoPanel = new Lang.Class({
     this._cpuname.margin_top = 12;
     this.add (this._cpuname);
 
-    this._board = new BoardInfo ();
-    this.add (this._board);
+    this._board_vendor = new InfoLabel ();
+    Helper.get_content_async ("/sys/class/dmi/id/board_vendor", (res, text) => {
+      if (!res) return;
+      this._board_vendor.label.set_text (text.split ("\n")[0]);
+    });
+    this.add (this._board_vendor);
+
+    this._board_model = new InfoLabel ();
+    Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
+      if (!res) return;
+      this._board_model.label.set_text ("Model");
+      this._board_model.info.set_text (text.split ("\n")[0]);
+    });
+    this.add (this._board_model);
 
     this._linux = new Gtk.Label ({label:this.linux_kernel, use_markup:true, xalign:0, margin:8});
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
     this._load = new Gtk.Label ({label:"System Loading \u25cb 0%", use_markup:true, xalign:0, margin:8});
+    this._load.tooltip_text = _("Current relative system loading to online cores");
     this.add (this._load);
 
     this.corebox = new  Gtk.FlowBox ({
@@ -166,11 +182,11 @@ var InfoPanel = new Lang.Class({
   },
 
   get loadavg () {
-    let s = "System Loading ", i = 0 , j, cc = GLib.get_num_processors ();
+    let s = "System Loading ", i = 0 , j = 0, cc = GLib.get_num_processors () || 1;
     let load = Helper.get_info_string ("cat /proc/loadavg");
     if (load) {
       load = load.split(" ")[0];
-      j = i = Math.round (parseFloat (load * 100));
+      j = i = parseFloat (load * 100);
       /*while (i > 100) {
         s += "\u25cf";
         i -= 100;
@@ -180,8 +196,8 @@ var InfoPanel = new Lang.Class({
       else if (i < 75) s += "◑ ";
       else if (i < 100) s += "◕ ";
       else s += "\u25cf ";*/
-      s += j.toString () + "%";
     }
+    s += Math.round (j / cc).toString () + "%";
     if (j > cc * 100) {
       this.warnmsg = "SYSTEM OVERLOAD";
       this.warn_lvl = 2;
