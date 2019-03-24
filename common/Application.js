@@ -139,8 +139,10 @@ var CPUFreqApplication = new Lang.Class ({
         Logger.info ("realize");
       });
     } else {
-      if (this.extension) this.quit ();
-      else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
+      if (this.extension) {
+        if (this.active_window) this.active_window.save_geometry ();
+        this.quit ();
+      } else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
         this.active_window.update ();
       });
     }

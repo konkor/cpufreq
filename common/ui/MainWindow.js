@@ -112,13 +112,16 @@ var MainWindow = new Lang.Class ({
     this.cpanel.set_size_request (320, 160);
     this.sidebar.set_size_request (360, 160);
 
-    if (this.application.extension) this.connect ("focus-out-event", ()=>{ this.application.quit();});
+    if (this.application.extension) this.connect ("focus-out-event", () => {
+      this.save_geometry ();
+      this.application.quit();
+    });
     this.prefs_button.connect ("clicked", () => {
       GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
     });
     this.settings.connect ("changed", this.on_settings.bind (this));
 
-    this.connect ('unmap', Lang.bind (this, this.save_geometry));
+    this.connect ('unmap', this.save_geometry.bind (this));
     if (this.settings.window_x != -1) this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
   },
