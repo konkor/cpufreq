@@ -277,11 +277,8 @@ var Settings = new Lang.Class({
     if (Gdk.WindowState.MAXIMIZED & ws) {
       maximized = true;
     } else if ((Gdk.WindowState.TILED & ws) == 0) {
-      [x, y, w, h] = window.get_geometry ();
-      [, x, y] = window.get_origin ();
-      /*if (x > 0 && y > 0) {
-        window_x = x; window_y = y;
-      }*/
+      [x, y] = o.get_position ();
+      [w, h] = o.get_size ();
     }
 
     this.set_int ("window-height", h);
