@@ -19,31 +19,31 @@ then
 fi
 if [ $1 = "gov" ]
 then
-    i=0
-    ag=''
-	if [ $# = 1 ]
-	then
-	    while [ $i -ne $cpucount ]
-	    do
-	        if [ $i = 0 ]
-	        then
-	            ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
-		    else
-		        ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
-		    fi
-		    i=`expr $i + 1`
-	    done
-		echo $ag
-		exit
-	fi
-	while [ $i -ne $cpucount ]
-	do
-		FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
-		echo "Setting $FLNM to " $2
-		echo $2 > $FLNM
-		i=`expr $i + 1`
-	done
-	exit
+  i=0
+  ag=''
+  if [ $# = 1 ]
+  then
+    while [ $i -ne $cpucount ]
+    do
+      if [ $i = 0 ]
+      then
+        ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+      else
+        ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
+      fi
+      i=`expr $i + 1`
+    done
+    echo $ag
+    exit
+  fi
+  while [ $i -ne $cpucount ]
+  do
+    FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
+    echo "Setting $FLNM to " $2
+    echo $2 > $FLNM
+    i=`expr $i + 1`
+  done
+  exit
 fi
 if [ $1 = "list" ]
 then

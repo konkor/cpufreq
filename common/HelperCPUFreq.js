@@ -18,6 +18,8 @@ const Logger = imports.common.Logger;
 const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 
+const CPUROOT = "/sys/devices/system/cpu/";
+
 var governors = [];
 var governoractual = [];
 let util_present = false;
@@ -45,8 +47,8 @@ function init (prefs) {
   settings = prefs;
   cpucount = get_cpu_number ();
 
-  let res = get_info_string (APPDIR + "/cpufreqctl driver");
-  if (res && GLib.file_test ("/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver", GLib.FileTest.EXISTS)) {
+  let res = get_content (CPUROOT + "cpu0/cpufreq/scaling_driver");
+  if (res) {
     util_present = true;
     if (res == "intel_pstate") pstate_present = true;
   }
@@ -79,8 +81,8 @@ function check_install () {
   if (!pkexec_path) installed = false;
   if (installed) {
     let localctl = null, globalctl = null;
-    globalctl = get_info_string ("/usr/bin/cpufreqctl version");
-    localctl = get_info_string (APPDIR + "/cpufreqctl version");
+    globalctl = get_command_line_string ("/usr/bin/cpufreqctl version");
+    localctl = get_command_line_string (APPDIR + "/cpufreqctl version");
     debug ("Versions local:%s global:%s".format (localctl, globalctl));
     updated = localctl == globalctl;
     //if (!updated) cpufreqctl_path = APPDIR + "/cpufreqctl";
@@ -368,8 +370,8 @@ function load_stage (prf) {
 function get_turbo () {
   if (!util_present) return false;
   var res = null;
-  if (pstate_present) res = get_info_string (cpufreqctl_path + " turbo");
-  else res = get_info_string (cpufreqctl_path + " boost");
+  if (pstate_present) res = get_cpufreq_info ("turbo");
+  else res = get_cpufreq_info ("boost");
   if (res) {
     if (pstate_present && res == '0') return true;
     if (!pstate_present && res == '1') return true;
@@ -393,19 +395,18 @@ function set_turbo (state) {
 }
 
 function get_governors () {
-  let governorslist = [], governorsactive = [], gc = [], idx = 0, res = "";
+  let governorslist = [], governorsactive = [], gc = [], idx = 0, res;
   governors = [];
   governoractual = [];
   if (!util_present) return governors;
 
-  res = get_info_string (this.cpufreqctl_path + " gov");
-  if (res) governorslist = res.toString().split(" ");
-  governorslist.forEach ((governor)=> {
-    if (governor.length == 0) return;
-    governoractual.push (governor);
-  });
+  let cc = GLib.get_num_processors ();
+  for (let i = 0; i < cc; i++) {
+    let s = get_content_string (CPUROOT + "cpu" + i + "/cpufreq/scaling_governor");
+    if (s) governoractual.push (s);
+  }
 
-  res = get_info_string (this.cpufreqctl_path + " list");
+  let res = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_available_governors");
   if (res) governorslist = res.toString().split(" ");
   governorslist.forEach ((governor)=> {
     if (governor.length == 0) return;
@@ -440,7 +441,7 @@ function get_governor (core) {
   let g = pstate_present?"powersave":"ondemand";
   core = core || 0;
   if (!util_present) return g;
-  let res = get_info_string (cpufreqctl_path + " coreg " + core);
+  let res = get_content_string (CPUROOT + "cpu" + core + "/cpufreq/scaling_governor");
   if (res) g = res;
   return g;
 }
@@ -475,7 +476,7 @@ function get_frequencies () {
     minfreq = get_min ();
     maxfreq = get_max ();
   }
-  frequencieslist = get_info_string (this.cpufreqctl_path + " freq");
+  frequencieslist = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_available_frequencies");
   if (!frequencieslist) return;
   frequencieslist = frequencieslist.split (" ");
   frequencieslist.forEach ((freq)=> {
@@ -523,7 +524,7 @@ function set_frequencies () {
 
 function get_coremin (core) {
   if (!util_present) return 0;
-  var res = get_info_string (cpufreqctl_path + " coremin " + core);
+  var res = get_content_string (CPUROOT + "cpu" + core + "/cpufreq/scaling_min_freq");
   if (res) return parseInt (res);
   return 0;
 }
@@ -541,7 +542,7 @@ function set_coremin (core, state) {
 
 function get_coremax (core) {
   if (!util_present) return 0;
-  var res = get_info_string (cpufreqctl_path + " coremax " + core);
+  var res = get_content_string (CPUROOT + "cpu" + core + "/cpufreq/scaling_max_freq");
   if (res) return parseInt (res);
   return 0;
 }
@@ -559,7 +560,7 @@ function set_coremax (core, state) {
 
 function get_min () {
   if (!util_present) return minimum_freq;
-  var res = get_info_string (cpufreqctl_path + " minf");
+  var res = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_min_freq");
   if (res) return parseInt (res);
   return minimum_freq;
 }
@@ -574,7 +575,7 @@ function set_min (minimum) {
 
 function get_max () {
   if (!util_present) return maximum_freq;
-  var res = get_info_string (cpufreqctl_path + " maxf");
+  var res = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_max_freq");
   if (res) return parseInt (res);
   return maximum_freq;
 }
@@ -589,7 +590,7 @@ function set_max (maximum) {
 
 function get_min_pstate () {
   if (!util_present) return 0;
-  var res = get_info_string (cpufreqctl_path + " min");
+  var res = get_content_string (CPUROOT + "intel_pstate/min_perf_pct");
   if (res) return parseInt (res);
   return 0;
 }
@@ -603,7 +604,7 @@ function set_min_pstate (minimum) {
 
 function get_max_pstate () {
   if (!util_present) return 0;
-  var res = get_info_string (cpufreqctl_path + " max");
+  var res = get_content_string (CPUROOT + "intel_pstate/max_perf_pct");
   if (res) return parseInt (res);
   return 0;
 }
@@ -674,10 +675,10 @@ function get_frequency_async (num, callback) {
   });
 }
 
-function get_frequency (num) {
+function get_frequency (core) {
   let n = 0;
-  num = num || 0;
-  let file = Gio.File.new_for_path ("/sys/devices/system/cpu/cpu" + num + "/cpufreq/scaling_cur_freq");
+  core = core || 0;
+  let file = Gio.File.new_for_path ("/sys/devices/system/cpu/cpu" + core + "/cpufreq/scaling_cur_freq");
   try {
     let [success, contents, etag] = file.load_contents (null);
     if (!success) return 0;
@@ -687,7 +688,7 @@ function get_frequency (num) {
   } catch (e) {
     n = 0;
   }
-  debug ("Core %d frequency is %d".format (num, n));
+  debug ("Core %d frequency is %d".format (core, n));
   return n;
 }
 
@@ -712,25 +713,57 @@ function get_cpu_number () {
   let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
   if (ret[0]) cpulist = byteArrayToString (ret[1]).toString().split("\n", 1)[0].split("-");
   cpulist.forEach ((f)=> {
-  if (parseInt (f) > 0) c = parseInt (f);
+    if (parseInt (f) > 0) c = parseInt (f);
   });
   return c + 1;
 }
 
+function get_throttle () {
+  let tc = 0, cc = GLib.get_num_processors (), s;
+  for (let i = 0; i < cc; i++) {
+    s = get_content (CPUROOT + "cpu" + i + "/thermal_throttle/core_throttle_count");
+    if (s) tc += parseInt (s);
+  }
+  return tc;
+}
+
 let cmd_out, info_out;
-function get_info_string (cmd) {
+function get_command_line_string (cmd) {
   cmd_out = GLib.spawn_command_line_sync (cmd);
   if (cmd_out[0]) info_out = byteArrayToString (cmd_out[1]).toString().split("\n")[0];
   if (info_out) return info_out;
   return "";
 }
 
-function get_cpufreq_info (params, user) {
-  if (!cpufreqctl_path || !params) return "";
-  let s = cpufreqctl_path + " " + params;
-  if (!user) s = pkexec_path + " " + s;
-  s = get_info_string (s);
+function get_cpufreq_info (params) {
+  let s = null;
+  if (!params) return s;
+
+  if (params == "turbo") s = get_content_string (CPUROOT + "intel_pstate/no_turbo");
+  else if (params == "boost") s = get_content_string (CPUROOT + "cpufreq/boost");
+  else if (params == "throttle") s = get_throttle ();
+  else s = get_command_line_string (pkexec_path + " " + cpufreqctl_path + " " + params);
   return s;
+}
+
+function get_content_string (path) {
+  let contents = get_content (path);
+  if (contents) contents = contents.split ("\n")[0].trim ();
+  return contents;
+}
+
+function get_content (path) {
+  let success = false, contents = "";
+  if (!path) return contents;
+
+  let file = Gio.file_new_for_path (path);
+  try {
+    [success, contents, ] = file.load_contents (null);
+    if (success) contents = byteArrayToString (contents).toString ().trim ();
+  } catch (e) {
+    error (e.message);
+  }
+  return contents;
 }
 
 function get_content_async (path, callback) {

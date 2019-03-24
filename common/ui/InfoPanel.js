@@ -13,6 +13,7 @@ const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
+const Logger = imports.common.Logger;
 const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 const Helper = imports.common.HelperCPUFreq;
@@ -28,6 +29,7 @@ var InfoPanel = new Lang.Class({
   Extends: Gtk.Box,
 
   _init: function () {
+    Logger.info ("InfoPanel", "initialization");
     this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:20});
     this.margin_top = 0;
     this.border = 8;
@@ -90,12 +92,15 @@ var InfoPanel = new Lang.Class({
       this.balance = "IRQBALANCE DETECTED";
 
     //TODO: handle dispose event
-    info_event = GLib.timeout_add_seconds (0, 1, Lang.bind (this, function () {
-      this.update ();
-      return true;
-    }));
 
-    //this.show_all ();
+    this.connect ("realize", () => {
+      Logger.info ("InfoPanel", "realize");
+      info_event = GLib.timeout_add_seconds (100, 2, Lang.bind (this, function () {
+        this.update ();
+        return true;
+      }));
+    });;
+    Logger.info ("InfoPanel", "done");
   },
 
   get cpu_name () {
@@ -168,7 +173,7 @@ var InfoPanel = new Lang.Class({
         print ("Get Release Error:", e.message);
       }
     }
-    let kernel_version = Helper.get_info_string ("uname -r");
+    let kernel_version = Helper.get_command_line_string ("uname -r");
     if (kernel_version) {
       distro += "\nKernel " + kernel_version;
     }
@@ -183,7 +188,7 @@ var InfoPanel = new Lang.Class({
 
   get loadavg () {
     let s = "System Loading ", i = 0 , j = 0, cc = GLib.get_num_processors () || 1;
-    let load = Helper.get_info_string ("cat /proc/loadavg");
+    let load = Helper.get_content_string ("/proc/loadavg");
     if (load) {
       load = load.split(" ")[0];
       j = i = parseFloat (load * 100);
@@ -213,7 +218,7 @@ var InfoPanel = new Lang.Class({
 
   get_throttle: function () {
     let s = "", i = 0;
-    let throttle = Helper.get_cpufreq_info ("throttle", true);
+    let throttle = Helper.get_cpufreq_info ("throttle");
 
     if (throttle) {
       i = parseInt (throttle);
@@ -239,6 +244,7 @@ var InfoPanel = new Lang.Class({
   },
 
   update: function () {
+    Logger.info ("InfoPanel", "update");
     Helper.get_governors ();
     this.cores.forEach (core => {
       core.update ();

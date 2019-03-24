@@ -10,6 +10,10 @@
 
 imports.gi.versions.Gtk = '3.0';
 
+let d = new Date ();
+print ("\x1b[00;32m[" + d.toString().substring (0, d.toString().indexOf (" GMT")) + "." + (d.getMilliseconds() / 1000).toFixed(3).slice(2, 5) +
+  "](DD) [cpufreq][application]\x1b[0m Starting application");
+
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
@@ -97,6 +101,7 @@ var CPUFreqApplication = new Lang.Class ({
   },
 
   vfunc_startup: function () {
+    Logger.info ("startup");
     this.parent();
     this.initialize ();
 
@@ -107,22 +112,32 @@ var CPUFreqApplication = new Lang.Class ({
 
   initialize: function () {
     if (this.settings) return;
+    Logger.info ("initialization ...");
     this.settings = new Settings.Settings ();
+    Logger.info ("Settings creatad.");
     cpu.init (this.settings);
+    Logger.info ("CPUFreq initialized.");
   },
 
   vfunc_activate: function () {
+    Logger.info ("activating ... " + !this.finishing);
     if (this.finishing) return;
     if (!this.active_window) {
       window = new MainWindow.MainWindow ({ application:this });
+      Logger.info ("created MainWindow");
       window.connect ("destroy", () => {
         return true;
       });
       window.show_all ();
       cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
+      Logger.info ("restoring saved " + this.settings.save);
       if (this.settings.save) cpu.restore_saved ();
+      Logger.info ("post_init " + !!window.cpanel);
       if (window.cpanel) window.cpanel.post_init ();
       else this.quit ();
+      window.connect ("realize", () => {
+        Logger.info ("realize");
+      });
     } else {
       if (this.extension) this.quit ();
       else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {

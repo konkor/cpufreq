@@ -48,13 +48,12 @@ function error (source, msg) {
 }
 
 function print_msg (domain, source, output) {
-  let ds = new Date().toString ();
+  let d = new Date();
+  let ds = d.toString ();
   let i = ds.indexOf (" GMT");
   if (i > 0) ds = ds.substring (0, i);
 
-  if (domain == 2) print ("\x1b[%sm[%s](%s) [cpufreq][%s]\x1b[0m %s".format (
-    domain_color[domain],ds,domain_name[domain],source,output));
-  else {
-    log ("(%s) [cpufreq][%s] %s".format (domain_name[domain], source, output));
-  }
+  print ("\x1b[%sm[%s.%s](%s) [cpufreq][%s]\x1b[0m %s".format (
+    domain_color[domain],ds,(d.getMilliseconds() / 1000).toFixed(3).slice(2, 5),domain_name[domain],source,output));
+  //log ("(%s) [cpufreq][%s] %s".format (domain_name[domain], source, output));
 }
