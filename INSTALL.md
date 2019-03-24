@@ -5,24 +5,6 @@ You can find more on [the project's documentation pages](http://konkor.github.io
 * Gnome Shell 3.14+;
 * supported cpufreq modules.
 
-Optional you can install cpufrequtils or cpupower package:
-
-* Debian/Ubuntu
-```
-sudo apt-get install cpufrequtils
-```
-or for modern kernels:
-```
-sudo apt-get install linux-cpupower
-```
-* Arch Linux
-```
-sudo pacman -S cpupower
-```
-* Fedora
-```
-yum install kernel-tools
-```
 
 ## Official Gnome Extension repository [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
@@ -74,16 +56,23 @@ cpufreq extension => ⚠ Install...
 ```
 
 ### From git source
-```
+```sh
 git clone https://github.com/konkor/cpufreq
 cd cpufreq
 
+make && make install
+```
+
+or just copy (old method)
+
+```sh
 mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
 cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
 chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
 
-The following command requires super user/Administrator/Root access. Using the same Terminal window, run the following command will allow you to change the governors from the _Cpufreq_ applet.
+#### Optionally, you can install/update global system components in a terminal
+_This step is already handled in the main application UI._ The following command requires super user/Administrator/Root access. Using the same Terminal window, run the following command will allow you to change the governors from the _Cpufreq_ applet.
 1. `sudo ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl install`
 1. You will be prompt to enter your password
 1. _Cpufreq_ applet is now installed and its menu is now displayed in GNOME top toolbar
@@ -118,8 +107,7 @@ It can be useful if you have saved broken settings values or to clean up previou
 You can check this values in the **dconf-editor** at `/org/gnome/shell/extensions/cpufreq/`
 ```
 dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
-sudo rm /usr/share/polkit-1/actions/konkor.cpufreq.policy
-sudo rm /usr/bin/cpufreqctl
+sudo cpufreqctl uninstall
 ```
 If you want reset the extension's values to defaults just run it and restart gnome-shell.
 ```
