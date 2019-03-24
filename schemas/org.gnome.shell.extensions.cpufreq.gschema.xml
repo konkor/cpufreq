@@ -111,5 +111,35 @@
       <description>Power Events Profiles</description>
     </key>
 
+    <key type="i" name="window-height">
+      <default>720</default>
+      <summary>Window Height</summary>
+      <description>Window Height To Save</description>
+    </key>
+
+    <key type="i" name="window-width">
+      <default>480</default>
+      <summary>Window Width</summary>
+      <description>Window Width To Save</description>
+    </key>
+
+    <key type="i" name="window-x">
+      <default>-1</default>
+      <summary>Window x</summary>
+      <description>Window x coordinate</description>
+    </key>
+
+    <key type="i" name="window-y">
+      <default>0</default>
+      <summary>Window y</summary>
+      <description>Window y coordinate</description>
+    </key>
+
+    <key type="b" name="window-maximized">
+      <default>false</default>
+      <summary>Window maximized</summary>
+      <description>Window maximized</description>
+    </key>
+
   </schema>
 </schemalist>

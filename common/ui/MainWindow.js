@@ -83,7 +83,7 @@ var MainWindow = new Lang.Class ({
     let box;
     this.window_position = Gtk.WindowPosition.MOUSE;
     Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
-    this.set_default_size (480, 720);
+    this.set_default_size (this.settings.window_width, this.settings.window_height);
     cssp = get_css_provider ();
     if (cssp) {
       Gtk.StyleContext.add_provider_for_screen (
@@ -119,7 +119,7 @@ var MainWindow = new Lang.Class ({
     this.settings.connect ("changed", this.on_settings.bind (this));
 
     this.connect ('unmap', Lang.bind (this, this.save_geometry));
-    //this.restore_position ();
+    if (this.settings.window_x != -1) this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
   },
 
@@ -145,8 +145,7 @@ var MainWindow = new Lang.Class ({
   },
 
   save_geometry: function () {
-    //TODO:
-    //this.settings.save_geometry (this);
+    this.settings.save_geometry (this);
   },
 
   restore_position: function () {

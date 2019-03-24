@@ -10,6 +10,7 @@
 
 const Lang = imports.lang;
 const Gio = imports.gi.Gio;
+const Gdk = imports.gi.Gdk;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const DARK_THEME_KEY = 'dark-theme';
@@ -259,6 +260,35 @@ var Settings = new Lang.Class({
       current.core[i].f = frequency;
     }
     if (!equal) this.update_user_profile ();
+  },
+
+  get window_height () { return this.get_int ("window-height"); },
+  get window_width () { return this.get_int ("window-width"); },
+  get window_x () { return this.get_int ("window-x"); },
+  get window_y () { return this.get_int ("window-y"); },
+  get window_maximized () { return this.get_boolean ("window-maximized"); },
+
+  save_geometry: function (o) {
+    let window = o.get_window ();
+    if (!window) return;
+    let ws = window.get_state();
+    let x = 0, y = 0, w = 480, h = 720, maximized = false;
+
+    if (Gdk.WindowState.MAXIMIZED & ws) {
+      maximized = true;
+    } else if ((Gdk.WindowState.TILED & ws) == 0) {
+      [x, y, w, h] = window.get_geometry ();
+      [, x, y] = window.get_origin ();
+      /*if (x > 0 && y > 0) {
+        window_x = x; window_y = y;
+      }*/
+    }
+
+    this.set_int ("window-height", h);
+    this.set_int ("window-width", w);
+    this.set_int ("window-x", x);
+    this.set_int ("window-y", y);
+    this.set_boolean ("window-maximized", maximized);
   }
 });
 
