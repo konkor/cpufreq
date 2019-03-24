@@ -16,10 +16,10 @@ Please, consider to support the project and make it better!
 
 <p align="center">
   <big>
-    <a href="https://github.com/terencode">Térence Clastres</a>
+    <a href="{{ "/sponsors" | relative_url }}">Steffen W. (Germany)</a><br>
+    <a href="{{ "/sponsors" | relative_url }}">Yoann Deferi (France)</a><br>
+    <a href="https://github.com/terencode">Térence Clastres (France)</a><br>
     <br>
-    <a href="{{ "/sponsors" | relative_url }}">Yoann Deferi (France)</a>
-    <br><br>
     <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
   </big>
   <br><i>Top sponsors will be updated in the beginning of every month.</i>

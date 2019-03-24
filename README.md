@@ -26,6 +26,7 @@ Please, consider to support the project and make it better!
   <big>
     Top supporters:<br><br>
     <a href="https://github.com/terencode">Térence Clastres (France)</a><br>
+    <a href="http://konkor.github.io/cpufreq/sponsors/">Steffen W. (Germany)</a><br>
     <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
     <br>
     <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference</i>
