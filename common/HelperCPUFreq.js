@@ -395,7 +395,7 @@ function set_turbo (state) {
 }
 
 function get_governors () {
-  let governorslist = [], governorsactive = [], gc = [], idx = 0, res;
+  let governorslist = [], res;
   governors = [];
   governoractual = [];
   if (!util_present) return governors;
@@ -406,7 +406,7 @@ function get_governors () {
     if (s) governoractual.push (s);
   }
 
-  let res = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_available_governors");
+  res = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_available_governors");
   if (res) governorslist = res.toString().split(" ");
   governorslist.forEach ((governor)=> {
     if (governor.length == 0) return;
