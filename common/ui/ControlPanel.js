@@ -127,9 +127,9 @@ var ControlPanel = new Lang.Class({
     mi.margin_top = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, (o) => {
-      print ("New Item", o.text);
       settings.add_profile (cpu.get_profile (o.text));
       this.add_profile (settings.profiles.length - 1);
+      this.profmenu.section.reorder_child (o, -1);
     }));
   },
 
