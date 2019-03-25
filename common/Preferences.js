@@ -34,6 +34,7 @@ var Preferences = new Lang.Class ({
 
   _onStartup: function () {
     this._window = new Gtk.Window ();
+    this._window.window_position = Gtk.WindowPosition.MOUSE;
     this._window.title = "CPUFreq Preferences";
     this._window.set_icon_name ('io.konkor.cpufreq');
     if (!this._window.icon) try {
