@@ -277,7 +277,7 @@ var Settings = new Lang.Class({
     if (Gdk.WindowState.MAXIMIZED & ws) {
       maximized = true;
     } else if ((Gdk.WindowState.TILED & ws) == 0) {
-      [x, y] = o.get_position ();
+      [, x, y] = window.get_origin ();
       [w, h] = o.get_size ();
     }
 
