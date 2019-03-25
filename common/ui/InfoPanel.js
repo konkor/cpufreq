@@ -76,6 +76,7 @@ var InfoPanel = new Lang.Class({
       selection_mode: Gtk.SelectionMode.NONE
     });
     if (cpucount < 4) this.corebox.max_children_per_line = cpucount;
+    else if ((cpucount % 3 == 0) && (cpucount % 4 > 0)) this.corebox.max_children_per_line = 3;
     this.pack_start (this.corebox, false, true, 0);
 
     this.cores = [];
@@ -286,7 +287,7 @@ var WarningInfo = new Lang.Class({
   _init: function () {
     this.parent ({margin:2});
     this.get_style_context ().add_class ("status");
-    this.margin_top = 24;
+    this.margin_top = 28;
     this.update (0, "SYSTEM STATUS OK");
   },
 

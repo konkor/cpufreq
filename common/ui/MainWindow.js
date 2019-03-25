@@ -106,11 +106,18 @@ var MainWindow = new Lang.Class ({
     box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
     this.add (box);
 
+    this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:0});
+    this.statebar.margin_left = 16;
+    this.statebar.margin_bottom = 22;
+    this.statebar.set_size_request (8, 160);
+    this.statebar.get_style_context ().add_class ("status-bar");
+    box.add (this.statebar);
+
     this.sidebar = new InfoPanel.InfoPanel ();
     box.add (this.sidebar);
     box.pack_end (this.cpanel, true, true, 8);
     this.cpanel.set_size_request (320, 160);
-    this.sidebar.set_size_request (360, 160);
+    this.sidebar.set_size_request (320, 160);
 
     if (this.application.extension) this.connect ("focus-out-event", () => {
       this.save_geometry ();

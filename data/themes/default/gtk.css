@@ -1,3 +1,9 @@
+@define-color ospower_fg_color #fcfcfc;
+@define-color ospower_bg_color #215d9c;
+@define-color ospower_normal @theme_fg_color;
+@define-color ospower_warning #f0c61c;
+@define-color ospower_critical red;
+
 .hb, .hb GtkLabel, .hb label {
   border-width: 0;
   border-style:none;
@@ -50,15 +56,12 @@
   color: @theme_fg_color;
 }
 .sideitem:hover, .sidesubmenu:hover, .slider-item:hover, .submenu *:hover {
-  color: #fff;
-  background-color: #215d9c;
+  color: @ospower_fg_color;
+  background-color: @ospower_bg_color;
 }
 .sidesection {
   /*box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);*/
   /*background-color: shade (@theme_bg_color, 0.9);*/
-}
-.slider-item {
-
 }
 .warn {
   color: orange;
@@ -68,26 +71,39 @@
   background-color: shade (red, 0.8);
 }
 .status {
-  /*background-color: green;*/
+  color: @ospower_normal;
   font-weight: bold;
+  font-size: 1.1em;
+  text-shadow: none;
 }
 .warning {
-  background-color: orange;
+  color: @ospower_warning;
 }
 .critical {
-  background-color: red;
+  color: @ospower_critical;
 }
-.info-widget {
+.status-bar {
+  border-radius: 4px;
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
-  color: #fff;
-  background-color: #215d9c;
+  background-color: @ospower_normal;
+}
+.warning-bar {
+  background-color: @ospower_warning;
+}
+.critical-bar {
+  background-color: @ospower_critical;
+}
+
+.info-widget {
+  /*box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
+  color: @ospower_fg_color;
+  background-color: @ospower_bg_color;*/
+  /*border-left: 12px solid alpha(white, 0.47);*/
   margin: 0;
   padding: 2px;
-  /*border: 8px;
-  color: #215d9c;*/
   font-family: cpufreq, sans;
   font-weight: bold;
-  font-size: 95%;
+  font-size: 92%;
 }
 .amd {
   background-color: #bb0a1b;
