@@ -93,26 +93,30 @@ var ControlPanel = new Lang.Class({
     this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Profiles Menu"));
     this.add_submenu (this.profmenu);
 
-    mi = new SideMenu.SideItem (_("Balanced"), _("Optimal settings for the daily usage"));
+    mi = new SideMenu.SideItem (_("Balanced"), _("Optimal settings for the daily usage\n") +
+      this.profile_tooltip (cpu.get_balanced_profile ()));
     mi.margin_top = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.power_profile ("balanced");
     }));
 
-    mi = new SideMenu.SideItem (_("High Performance"), _("High responsive settings for high performance"));
+    mi = new SideMenu.SideItem (_("High Performance"), _("High responsive settings for high performance\n") +
+      this.profile_tooltip (cpu.get_performance_profile ()));
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.power_profile ("performance");
     }));
 
-    mi = new SideMenu.SideItem (_("Power Saving"), _("ECO Battery life and power saver"));
+    mi = new SideMenu.SideItem (_("Power Saving"), _("Eco-power saver and long battery life\n") +
+      this.profile_tooltip (cpu.get_battery_profile ()));
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.power_profile ("battery");
     }));
 
-    mi = new SideMenu.SideItem (cpu.default_profile.name, _("Reset to default system settings"));
+    mi = new SideMenu.SideItem (cpu.default_profile.name, _("Reset to default system settings\n") +
+      this.profile_tooltip (cpu.default_profile));
     mi.margin_top = mi.margin_bottom = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
@@ -135,7 +139,7 @@ var ControlPanel = new Lang.Class({
 
   add_profile: function (index) {
     let prf = new ProfileItems.ProfileItem (settings.profiles[index].name);
-    prf.tooltip_text = this.profile_tooltip (index);
+    prf.tooltip_text = this.profile_tooltip (settings.profiles[index]);
     prf.ID = parseInt (index);
     this.profmenu.add_item (prf);
 
@@ -164,8 +168,8 @@ var ControlPanel = new Lang.Class({
     prf.show_all ();
   },
 
-  profile_tooltip: function (index) {
-    let s = "", g, a = 0, b = 100, f, p = settings.profiles[index];
+  profile_tooltip: function (p) {
+    let s = "", g, a = 0, b = 100, f;
     if (!p) return s;
     if (p.cpu) s += p.cpu + " cores ";
     g = p.core[0].g;
