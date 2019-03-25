@@ -135,6 +135,7 @@ var ControlPanel = new Lang.Class({
 
   add_profile: function (index) {
     let prf = new ProfileItems.ProfileItem (settings.profiles[index].name);
+    prf.tooltip_text = this.profile_tooltip (index);
     prf.ID = parseInt (index);
     this.profmenu.add_item (prf);
 
@@ -161,6 +162,33 @@ var ControlPanel = new Lang.Class({
     }));
 
     prf.show_all ();
+  },
+
+  profile_tooltip: function (index) {
+    let s = "", g, a = 0, b = 100, f, p = settings.profiles[index];
+    if (!p) return s;
+    if (p.cpu) s += p.cpu + " cores ";
+    g = p.core[0].g;
+    if (p.acpi) {
+      a = p.core[0].a; b = p.core[0].b;
+    } else {
+      a = p.minf; b = p.maxf;
+    }
+    for (let i = 1; i < p.cpu; i++) {
+      if (p.core[i].g != g) g = "mix";
+      if (!p.acpi) continue;
+      if (p.core[i].a < a) a = p.core[i].a;
+      if (p.core[i].b > b) b = p.core[i].b;
+      if (p.core[i].f) f = p.core[i].f;
+    }
+    if (g == "userspace" && f) s += "userspace " + get_label (f) + " ";
+    else {
+      if (g == "mix") s += "mixed governors ";
+      else s += g + " governor ";
+       s += get_label (a, 1) + " / " + get_label (b, 1) + " ";
+    }
+    if (p.turbo) s += "turbo";
+    return s.trim ();
   },
 
   add_governors: function () {
