@@ -192,16 +192,8 @@ var InfoPanel = new Lang.Class({
     if (load) {
       load = load.split(" ")[0];
       j = i = parseFloat (load * 100);
-      /*while (i > 100) {
-        s += "\u25cf";
-        i -= 100;
-      }
-      if (i < 25) s += "\u25cb ";
-      else if (i < 50) s += "◔ ";
-      else if (i < 75) s += "◑ ";
-      else if (i < 100) s += "◕ ";
-      else s += "\u25cf ";*/
     }
+    //TODO: Make some custom widget for loading
     s += Math.round (j / cc).toString () + "%";
     if (j > cc * 100) {
       this.warnmsg = "SYSTEM OVERLOAD";
@@ -362,7 +354,10 @@ var CoreInfo = new Lang.Class({
     this.get_governor ();
     this.sensitive = this.core < cpu_online;
     if (this.sensitive) this.opacity = 1;
-    else  this.opacity = 0.5;
+    else {
+      this.opacity = 0.5;
+      this.tooltip_text = "offline";
+    }
   },
 
   get_frequency: function () {
@@ -374,6 +369,7 @@ var CoreInfo = new Lang.Class({
   get_governor: function () {
     var g = Helper.governoractual[this.core];
     if (!g) return;
+    this.tooltip_text = g;
     if (g == "powersave") g = "\uf06c";
     else if (g == "performance") g = "\uf197";
     else if (g == "ondemand") g = "\uf0e7";
