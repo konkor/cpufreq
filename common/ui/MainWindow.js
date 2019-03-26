@@ -129,7 +129,8 @@ var MainWindow = new Lang.Class ({
 
     this.connect ('unmap', this.save_geometry.bind (this));
     this.infobar.connect ("warn_level", this.on_warn_level.bind (this));
-    if (this.settings.window_x != -1) this.restore_position ();
+    if (this.settings.window_x != -1 && !this.application.extension)
+      this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
   },
 
