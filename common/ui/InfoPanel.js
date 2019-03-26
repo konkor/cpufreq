@@ -27,6 +27,9 @@ let info_event = 0;
 var InfoPanel = new Lang.Class({
   Name: "InfoPanel",
   Extends: Gtk.Box,
+  Signals: {
+    'warn_level': {},
+  },
 
   _init: function () {
     Logger.info ("InfoPanel", "initialization");
@@ -35,7 +38,7 @@ var InfoPanel = new Lang.Class({
     this.border = 8;
     this.get_style_context ().add_class ("info-widget");
 
-    this.warn_lvl = 0;
+    this.warn_lvl = this.wlold = 0;
     this.tt = 0;
     this.tt_time = 0;
     this.balance = "";
@@ -256,6 +259,10 @@ var InfoPanel = new Lang.Class({
     this.get_throttle ();
     this.get_balance ();
     this._warn.update (this.warn_lvl, this.warnmsg);
+    if (this.wlold != this.warn_lvl) {
+      this.wlold = this.warn_lvl;
+      this.emit ("warn_level");
+    }
   }
 });
 

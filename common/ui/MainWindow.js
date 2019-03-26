@@ -108,15 +108,15 @@ var MainWindow = new Lang.Class ({
     this.add (box);
 
     this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:16});
-    this.statebar.set_size_request (8, 160);
+    this.statebar.set_size_request (12, 160);
     this.statebar.get_style_context ().add_class ("status-bar");
     box.add (this.statebar);
 
-    this.sidebar = new InfoPanel.InfoPanel ();
-    box.add (this.sidebar);
+    this.infobar = new InfoPanel.InfoPanel ();
+    box.add (this.infobar);
     box.pack_end (this.cpanel, true, true, 8);
     this.cpanel.set_size_request (320, 160);
-    this.sidebar.set_size_request (320, 160);
+    this.infobar.set_size_request (320, 160);
 
     if (this.application.extension) this.connect ("focus-out-event", () => {
       this.save_geometry ();
@@ -128,6 +128,7 @@ var MainWindow = new Lang.Class ({
     this.settings.connect ("changed", this.on_settings.bind (this));
 
     this.connect ('unmap', this.save_geometry.bind (this));
+    this.infobar.connect ("warn_level", this.on_warn_level.bind (this));
     if (this.settings.window_x != -1) this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
   },
@@ -137,6 +138,17 @@ var MainWindow = new Lang.Class ({
       this.update ();
     } else if (key == "dark-theme") {
       Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
+    }
+  },
+
+  on_warn_level: function (o) {
+    var style = this.statebar.get_style_context ();
+    style.remove_class ("warning-bar");
+    style.remove_class ("critical-bar");
+    if (o.warn_lvl > 1) {
+      style.add_class ("critical-bar");
+    } else if (o.warn_lvl > 0) {
+      style.add_class ("warning-bar");
     }
   },
 
