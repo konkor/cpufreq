@@ -2,7 +2,7 @@
 @define-color ospower_bg_color #215d9c;
 @define-color ospower_normal @theme_fg_color;
 @define-color ospower_warning #f0c61c;
-@define-color ospower_critical red;
+@define-color ospower_critical orange;
 
 .hb, .hb GtkLabel, .hb label {
   border-width: 0;
@@ -84,7 +84,7 @@
 }
 .status-bar {
   border-radius: 4px;
-  box-shadow: inset 0px 2px 4px rgba(0,0,0,0.6);
+  box-shadow: inset 0px 2px 3px rgba(0,0,0,0.6);
   background-color: @ospower_normal;
 }
 .warning-bar {
@@ -92,6 +92,37 @@
 }
 .critical-bar {
   background-color: @ospower_critical;
+}
+
+GtkLevelBar, levelbar {
+  -GtkLevelBar-min-block-width: 34;
+  -GtkLevelBar-min-block-height: 4;
+  border-color: alpha(@theme_fg_color, 0.2);
+  border-radius: 4px;
+  background: none;
+  background-image: none;
+}
+
+.level-bar.fill-block, .level-bar.fill-block.level-low {
+  border: 0;
+  background-color: @ospower_normal;
+}
+
+.level-bar.fill-block.level-high {
+  /*border-color: shade(@ospower_critical, 0.2);*/
+  border: 0;
+  background-color: alpha(@ospower_critical, 0.8);
+}
+
+.level-bar.fill-block.empty-fill-block {
+  background: none;
+  background-image: none;
+  border-color: alpha(@theme_fg_color, 0.1);
+}
+
+.level-bar.fill-block.empty-fill-block:backdrop {
+  border-color: transparent;
+  background: none;
 }
 
 .info-widget {

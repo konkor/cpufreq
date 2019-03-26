@@ -63,9 +63,17 @@ var InfoPanel = new Lang.Class({
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
-    this._load = new Gtk.Label ({label:"System Loading \u25cb 0%", use_markup:true, xalign:0, margin:8});
-    this._load.tooltip_text = _("Current relative system loading to online cores");
+    this._load = new InfoLabel ();
+    this._load.info.xalign = 1;
+    this._load.label.set_text (_("System Loading"));
+    this._load.info.set_text ("0%");
+    this._load.tooltip_text = _("Average value of system loading relative to online cores for the last minute");
     this.add (this._load);
+    this._loadbar = Gtk.LevelBar.new_for_interval (0, 1);
+    //this._loadbar.mode = Gtk.LevelBarMode.DISCRETE;
+    this._loadbar.margin = 8;
+    this._loadbar.get_style_context ().add_class ("level-bar");
+    this.add (this._loadbar);
 
     this.corebox = new  Gtk.FlowBox ({
       homogeneous: true,
@@ -188,25 +196,23 @@ var InfoPanel = new Lang.Class({
   },
 
   get loadavg () {
-    let s = "System Loading ", i = 0 , j = 0, cc = GLib.get_num_processors () || 1;
+    let j = 0, cc = GLib.get_num_processors () || 1;
     let load = Helper.get_content_string ("/proc/loadavg");
     if (load) {
       load = load.split(" ")[0];
-      j = i = parseFloat (load * 100);
+      j = parseFloat (load)  / cc;
     }
-    //TODO: Make some custom widget for loading
-    s += Math.round (j / cc).toString () + "%";
-    if (j > cc * 100) {
+    if (j > cc) {
       this.warnmsg = "SYSTEM OVERLOAD";
       this.warn_lvl = 2;
-    } else if (j > cc * 75) {
+    } else if (j > 0.75 * cc) {
       this.warnmsg = "SYSTEM BUSY";
       this.warn_lvl = 1;
     } else {
       this.warnmsg = "";
       this.warn_lvl = 0;
     }
-    return s;
+    return j;
   },
 
   get_throttle: function () {
@@ -244,7 +250,8 @@ var InfoPanel = new Lang.Class({
     });
     this.warnmsg = "";
     this.warn_lvl = 0;
-    this._load.set_text (this.loadavg);
+    this._loadbar.value = this.loadavg;
+    this._load.info.set_text (Math.round (this._loadbar.value * 100).toString () + "%");
     this.get_throttle ();
     this.get_balance ();
     this._warn.update (this.warn_lvl, this.warnmsg);
@@ -305,25 +312,6 @@ var WarningInfo = new Lang.Class({
     } else {
       this.label.set_text ("☺");
     }
-  }
-});
-
-var BoardInfo = new Lang.Class({
-  Name: "BoardInfo",
-  Extends: InfoLabel,
-
-  _init: function () {
-    this.parent ({});
-    this.margin_top = 0;
-    //this.update (0, "SYSTEM STATUS OK");
-    Helper.get_content_async ("/sys/class/dmi/id/board_vendor", (res, text) => {
-      if (!res) return;
-      this.label.set_text (text.split ("\n")[0]);
-    });
-    Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
-      if (!res) return;
-      this.info.set_text (text.split ("\n")[0]);
-    });
   }
 });
 
