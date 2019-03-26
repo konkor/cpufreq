@@ -68,7 +68,7 @@ var InfoPanel = new Lang.Class({
     this._load.info.xalign = 1;
     this._load.label.set_text (_("System Loading"));
     this._load.info.set_text ("0%");
-    this._load.tooltip_text = _("Average value of system loading relative to online cores for the last minute");
+    this._load.tooltip_text = _("Average value of system loading relative to\nonline cores for the last minute");
     this.add (this._load);
     this._loadbar = Gtk.LevelBar.new_for_interval (0, 1);
     //this._loadbar.mode = Gtk.LevelBarMode.DISCRETE;
