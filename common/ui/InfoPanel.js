@@ -64,6 +64,7 @@ var InfoPanel = new Lang.Class({
     this.add (this._linux);
 
     this._load = new InfoLabel ();
+    this._load.margin_top = 16;
     this._load.info.xalign = 1;
     this._load.label.set_text (_("System Loading"));
     this._load.info.set_text ("0%");

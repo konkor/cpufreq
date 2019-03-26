@@ -108,6 +108,7 @@ var MainWindow = new Lang.Class ({
 
     this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:0});
     this.statebar.margin_left = 16;
+    this.statebar.margin_top = 16;
     this.statebar.margin_bottom = 22;
     this.statebar.set_size_request (8, 160);
     this.statebar.get_style_context ().add_class ("status-bar");
