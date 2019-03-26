@@ -30,8 +30,8 @@ var InfoPanel = new Lang.Class({
 
   _init: function () {
     Logger.info ("InfoPanel", "initialization");
-    this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:20});
-    this.margin_top = 0;
+    this.parent ({orientation:Gtk.Orientation.VERTICAL,margin:0});
+    this.margin_bottom = this.margin_right = 16;
     this.border = 8;
     this.get_style_context ().add_class ("info-widget");
 
@@ -203,10 +203,10 @@ var InfoPanel = new Lang.Class({
       load = load.split(" ")[0];
       j = parseFloat (load)  / cc;
     }
-    if (j > cc) {
+    if (j > 1) {
       this.warnmsg = "SYSTEM OVERLOAD";
       this.warn_lvl = 2;
-    } else if (j > 0.75 * cc) {
+    } else if (j > 0.75) {
       this.warnmsg = "SYSTEM BUSY";
       this.warn_lvl = 1;
     } else {
@@ -296,20 +296,20 @@ var WarningInfo = new Lang.Class({
     this.parent ({margin:2});
     this.get_style_context ().add_class ("status");
     this.margin_top = 28;
-    this.update (0, "SYSTEM STATUS OK");
+    this.update (0);
   },
 
   update: function (level, message) {
     this.parent (message || "SYSTEM STATUS OK");
     var style = this.get_style_context ();
-    style.remove_class ("warning");
-    style.remove_class ("critical");
+    style.remove_class ("status-warning");
+    style.remove_class ("status-critical");
     if (level > 1) {
       this.label.set_text ("☹");
-      style.add_class ("critical");
+      style.add_class ("status-critical");
     } else if (level > 0) {
       this.label.set_text ("");
-      style.add_class ("warning");
+      style.add_class ("status-warning");
     } else {
       this.label.set_text ("☺");
     }

@@ -103,13 +103,11 @@ var MainWindow = new Lang.Class ({
 
     this.cpanel = new ControlPanel.ControlPanel (this.application);
 
-    box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:8});
+    box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
+    box.margin_bottom = 12;
     this.add (box);
 
-    this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:0});
-    this.statebar.margin_left = 16;
-    this.statebar.margin_top = 16;
-    this.statebar.margin_bottom = 22;
+    this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:16});
     this.statebar.set_size_request (8, 160);
     this.statebar.get_style_context ().add_class ("status-bar");
     box.add (this.statebar);

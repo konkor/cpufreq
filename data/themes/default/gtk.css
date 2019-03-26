@@ -76,10 +76,10 @@
   font-size: 1.1em;
   text-shadow: none;
 }
-.warning {
+.status-warning {
   color: @ospower_warning;
 }
-.critical {
+.status-critical {
   color: @ospower_critical;
 }
 .status-bar {
