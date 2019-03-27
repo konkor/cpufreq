@@ -4,6 +4,10 @@
 @define-color ospower_warning #f0c61c;
 @define-color ospower_critical red;
 
+* {
+  font-family: cpufreq;
+  font-stretch: condensed;
+}
 .hb, .hb GtkLabel, .hb label {
   border-width: 0;
   border-style:none;
@@ -137,7 +141,7 @@ levelbar block.low, levelbar block.high {
   padding: 2px;
   font-family: cpufreq, sans;
   font-weight: bold;
-  font-size: 92%;
+  /*font-size: 92%;*/
 }
 .amd {
   /*background-color: #bb0a1b;*/
