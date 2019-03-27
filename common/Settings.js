@@ -253,7 +253,7 @@ var Settings = new Lang.Class({
   set_userspace: function (frequency) {
     if (!current) return;
     var equal = true;
-    for (let i = 0; i < current.core; i++) {
+    for (let i = 0; i < current.cpu; i++) {
       if (current.core[i].g != "userspace") equal = false;
       if (current.core[i].f != frequency) equal = false;
       current.core[i].g = "userspace";
