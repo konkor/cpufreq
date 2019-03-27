@@ -57,8 +57,9 @@ var InfoPanel = new Lang.Class({
     this._board_model = new InfoLabel ();
     Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
       if (!res) return;
-      this._board_model.label.set_text ("Model");
-      this._board_model.info.set_text (text.split ("\n")[0]);
+      let s = text.split ("\n")[0];
+      if (s.length < 22) this._board_model.label.set_text ("Model");
+      this._board_model.info.set_text (s);
     });
     this.add (this._board_model);
 
@@ -193,9 +194,6 @@ var InfoPanel = new Lang.Class({
     distro += "\nDriver ";
     if (Helper.pstate_present) distro += "Intel PState";
     else distro += "ACPI";
-    distro += "\nTurbo Boost ";
-    if (!Helper.boost_present) distro += "not ";
-    distro += "supported";
     return distro;
   },
 
