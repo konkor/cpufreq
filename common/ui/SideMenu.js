@@ -63,6 +63,7 @@ var SideSubmenu = new Lang.Class({
     this.add (this.button);
 
     this.section = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:0, spacing:0});
+    this.section.margin_top = this.section.margin_bottom = 6;
     this.section.no_show_all = true;
     this.section.get_style_context ().add_class ("sidesection");
     this.add (this.section);

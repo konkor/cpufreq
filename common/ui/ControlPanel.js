@@ -90,12 +90,11 @@ var ControlPanel = new Lang.Class({
 
   add_profiles: function () {
     let mi;
-    this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Profiles Menu"));
+    this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Power Profiles"));
     this.add_submenu (this.profmenu);
 
     mi = new SideMenu.SideItem (_("Balanced"), _("Optimal settings for the daily usage\n") +
       this.profile_tooltip (cpu.get_balanced_profile ()));
-    mi.margin_top = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
       cpu.power_profile ("balanced");
@@ -108,7 +107,7 @@ var ControlPanel = new Lang.Class({
       cpu.power_profile ("performance");
     }));
 
-    mi = new SideMenu.SideItem (_("Power Saving"), _("Eco-power saver and long battery life\n") +
+    mi = new SideMenu.SideItem (_("Power Saving"), _("Power saver and long battery life\n") +
       this.profile_tooltip (cpu.get_battery_profile ()));
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, () => {
@@ -196,13 +195,13 @@ var ControlPanel = new Lang.Class({
   },
 
   add_governors: function () {
-    this.activeg = new SideMenu.SideSubmenu ("Governors", "Active Governor");
+    this.activeg = new SideMenu.SideSubmenu ("Governors", "Active governor");
     var mixed = cpu.is_mixed_governors ();
-    if (mixed) this.activeg.label = "mixed";
+    if (mixed) this.activeg.label = "Mixed";
     cpu.governors.forEach (g => {
-      if ((g[1] == true) && !mixed) this.activeg.label = g[0];
+      if ((g[1] == true) && !mixed) this.activeg.label = g[0][0].toUpperCase() + g[0].substring(1);
       if (g[0] == "userspace") {
-        this.userspace = new SideMenu.SideSubmenu ("userspace", "Userspace Governor");
+        this.userspace = new SideMenu.SideSubmenu ("Userspace", "Userspace governor");
         cpu.frequencies.forEach ((freq)=>{
           var s = "";
           if (freq.length > 6) {
@@ -216,13 +215,13 @@ var ControlPanel = new Lang.Class({
             if (!cpu.installed || this.locked) return;
             this._changed ();
             cpu.set_userspace (freq);
-            this.activeg.label = "userspace";
+            this.activeg.label = "Userspace";
             this.userspace.expanded = false;
             this.check_sliders ();
           }));
         });
       } else {
-        let gi = new SideMenu.SideItem (g[0], g[0] + " governor");
+        let gi = new SideMenu.SideItem (g[0][0].toUpperCase() + g[0].substring(1), g[0] + " governor");
         this.activeg.add_item (gi);
         gi.connect ('clicked', Lang.bind (this, this.on_governor));
       }
@@ -254,9 +253,9 @@ var ControlPanel = new Lang.Class({
     } else if (this.slider_min) {
       this.slider_min.sensitive = true;
       this.slider_max.sensitive = true;
-      if (this.activeg.label.indexOf ("powersave") > -1) {
+      if (this.activeg.label.indexOf ("Powersave") > -1) {
         this.slider_max.sensitive = false;
-      } else if (this.activeg.label.indexOf ("performance") > -1) {
+      } else if (this.activeg.label.indexOf ("Performance") > -1) {
         this.slider_min.sensitive = false;
       }
     }
@@ -265,10 +264,10 @@ var ControlPanel = new Lang.Class({
   acpi_build: function () {
     if (cpu.frequencies.length > 1) {
       this.sliders_build ();
-      if (this.activeg.label.indexOf ("powersave") > -1) {
+      if (this.activeg.label.indexOf ("Powersave") > -1) {
         this.slider_max.sensitive = false;
         //debug (this.activeg.label);
-      } else if (this.activeg.label.indexOf ("performance") > -1) {
+      } else if (this.activeg.label.indexOf ("Performance") > -1) {
         this.slider_min.sensitive = false;
       }
     }
@@ -276,9 +275,9 @@ var ControlPanel = new Lang.Class({
 
   sliders_build: function () {
     this.add_item (new Gtk.Separator ());
-    this.slider_min = new Slider.Slider ("Minimum", get_min_label (), "Minimum Frequency");
+    this.slider_min = new Slider.Slider ("Minimum", get_min_label (), "Minimum frequency");
     this.add_item (this.slider_min);
-    this.slider_max = new Slider.Slider ("Maximum", get_max_label (), "Maximum Frequency");
+    this.slider_max = new Slider.Slider ("Maximum", get_max_label (), "Maximum frequency");
     this.add_item (this.slider_max);
     if (cpu.pstate_present) {
       this.slider_min.slider.set_value (cpu.minfreq/100);
@@ -329,10 +328,10 @@ var ControlPanel = new Lang.Class({
 
   add_cores: function () {
     this.slider_core = new Slider.Slider ("Cores Online",
-      GLib.get_num_processors (), "Number Of Active Core Threads");
+      GLib.get_num_processors (), "Number of active processor cores");
     this.add_item (this.slider_core);
     this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
-    this.corewarn = new SideMenu.SideItem ("⚠ Single Core Thread","Single Core Thread Is Not Recommended");
+    this.corewarn = new SideMenu.SideItem ("⚠ Single Core Thread","Single core is not recommended");
     this.corewarn.get_style_context ().add_class ("warn");
     this.corewarn.xalign = 0.5;
     this.add_item (this.corewarn);
@@ -346,8 +345,8 @@ var ControlPanel = new Lang.Class({
       var cc = Math.floor ((cpu.cpucount - 1) * item.get_value() + 1);
       cpu.set_cores (cc, () => {
         cpu.get_governors ();
-        if (cpu.is_mixed_governors ()) this.activeg.label = "mixed";
-        else this.activeg.label = cpu.governoractual[0];
+        if (cpu.is_mixed_governors ()) this.activeg.label = "Mixed";
+        else this.activeg.label = cpu.governoractual[0][0].toUpperCase() + cpu.governoractual[0].substring(1);
       });
       this.slider_core.update_info (cc);
       this.corewarn.visible = cc == 1;
@@ -355,7 +354,7 @@ var ControlPanel = new Lang.Class({
   },
 
   add_boost: function () {
-    this.boost = new Switch.Switch ("Turbo Boost", cpu.get_turbo(), "Enable/Disable Processor Boost");
+    this.boost = new Switch.Switch ("Turbo Boost", cpu.get_turbo(), "Enable processor boost");
     this.add_item (this.boost);
     this.boost.sw.connect ('state_set', Lang.bind (this, function () {
       if (!cpu.installed || this.locked) return;
@@ -373,8 +372,8 @@ var ControlPanel = new Lang.Class({
     this.locked = true;
     cpu.get_governors ();
     cpu.get_frequencies ();
-    if (cpu.is_mixed_governors ()) this.activeg.label = "mixed";
-    else this.activeg.label = cpu.governoractual[0];
+    if (cpu.is_mixed_governors ()) this.activeg.label = "Mixed";
+    else this.activeg.label = cpu.governoractual[0][0].toUpperCase() + cpu.governoractual[0].substring(1);
     this.check_sliders ();
     if (this.slider_min) {
       if (cpu.pstate_present) {
