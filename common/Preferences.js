@@ -21,7 +21,9 @@ var Preferences = new Lang.Class ({
   Name: 'Preferences',
 
   _init: function () {
-    this.application = new Gtk.Application ();
+    this.application = new Gtk.Application ({
+      application_id: "org.konkor.cpufreq.preferences"
+    });
     GLib.set_application_name ("CPUFreq Preferences");
     GLib.set_prgname ("CPUFreq Preferences");
     this.application.connect ('activate', Lang.bind (this, this._onActivate));
@@ -29,7 +31,7 @@ var Preferences = new Lang.Class ({
   },
 
   _onActivate: function (){
-    this._window.show_all ();
+    this._window.present ();
   },
 
   _onStartup: function () {
@@ -47,6 +49,7 @@ var Preferences = new Lang.Class ({
     this.w = Prefs.buildPrefsWidget ();
     this._window.add (this.w);
     this.application.add_window (this._window);
+    this._window.show_all ();
   }
 });
 

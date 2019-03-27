@@ -81,7 +81,8 @@ var MainWindow = new Lang.Class ({
 
   build: function() {
     let box;
-    this.window_position = Gtk.WindowPosition.MOUSE;
+    if (this.application.extension) this.window_position = Gtk.WindowPosition.MOUSE;
+    else this.window_position = Gtk.WindowPosition.CENTER;
     Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
     this.set_default_size (this.settings.window_width, this.settings.window_height);
     cssp = get_css_provider ();
@@ -129,7 +130,7 @@ var MainWindow = new Lang.Class ({
 
     this.connect ('unmap', this.save_geometry.bind (this));
     this.infobar.connect ("warn_level", this.on_warn_level.bind (this));
-    if (this.settings.window_x != -1 && !this.application.extension)
+    if (!this.application.extension)
       this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
   },
@@ -171,7 +172,8 @@ var MainWindow = new Lang.Class ({
   },
 
   restore_position: function () {
-    if (!this.is_maximized)
+    if (this.is_maximized) return;
+    if ((this.settings.window_x >= 0) && (this.settings.window_y >= 0))
       this.move (this.settings.window_x, this.settings.window_y);
   }
 });
