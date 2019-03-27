@@ -34,7 +34,8 @@ var MainWindow = new Lang.Class ({
   _init: function (params) {
     this.parent (params);
     this.settings = this.application.settings;
-    this.set_icon_name ("org.konkor.cpufreq");
+    Gtk.IconTheme.get_default().append_search_path (APPDIR + "/data/icons");
+    this.set_icon_name ("cpufreq");
     if (!this.icon) try {
       this.icon = Gtk.Image.new_from_file (APPDIR + "/data/icons/cpufreq.svg").pixbuf;
     } catch (e) {
@@ -97,8 +98,10 @@ var MainWindow = new Lang.Class ({
     this.set_titlebar (this.hb);
 
     this.prefs_button = new Gtk.Button ({always_show_image: true, tooltip_text:"Preferences"});
-    this.prefs_button.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/application-menu-symbolic.svg");
-    this.prefs_button.get_style_context ().add_class ("hb-button");
+    this.prefs_button.image = Gtk.Image.new_from_icon_name ("application-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
+    //this.prefs_button.image = Gtk.Image.new_from_gicon (new Gio.ThemedIcon({name: "cpufreq"}), Gtk.IconSize.SMALL_TOOLBAR);
+    //Gtk.Image.new_from_file (APPDIR + "/data/icons/application-menu-symbolic.svg");
+    //this.prefs_button.get_style_context ().add_class ("hb-button");
     this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
     this.hb.pack_end (this.prefs_button);
 
