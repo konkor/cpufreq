@@ -81,6 +81,19 @@ var InfoPanel = new Lang.Class({
     this._loadbar.get_style_context ().add_class ("level-bar");
     this.add (this._loadbar);
 
+    this.mem_total = this.mem_free = 0;
+    this._memory = new InfoLabel ();
+    this._memory.margin_top = 16;
+    this._memory.info.xalign = 1;
+    this._memory.label.set_text (_("Memory"));
+    this._memory.info.set_text ("0%");
+    this._memory.tooltip_text = _("Used system memory");
+    this.add (this._memory);
+    this._memorybar = Gtk.LevelBar.new_for_interval (0, 1);
+    this._memorybar.margin = 8;
+    this._memorybar.get_style_context ().add_class ("level-bar");
+    this.add (this._memorybar);
+
     this.corebox = new  Gtk.FlowBox ({
       homogeneous: true,
       activate_on_single_click: false,
@@ -105,6 +118,7 @@ var InfoPanel = new Lang.Class({
 
     if (Helper.get_cpufreq_info ("irqbalance"))
       this.balance = "IRQBALANCE DETECTED";
+    this.get_memory ();
 
     //TODO: handle dispose event
 
@@ -237,6 +251,30 @@ var InfoPanel = new Lang.Class({
     }
   },
 
+  get_memory: function () {
+    Helper.get_content_async ("/proc/meminfo", (res, text) => {
+      if (!res) return;
+      let content = text.split ("\n"), num;
+      content.forEach (s => {
+        if (s.indexOf ("MemTotal:") > -1) {
+          s.split (" ").forEach (w => {
+            if (w) {
+              num = parseInt (w);
+              if (num) this.mem_total = num * 1024;
+            }
+          });
+        } else if (s.indexOf ("MemFree:") > -1) {
+          s.split (" ").forEach (w => {
+            if (w) {
+              num = parseInt (w);
+              if (num) this.mem_free = num * 1024;
+            }
+          });
+        }
+      });
+    });
+  },
+
   get_balance: function () {
     if (this.balance) {
       if (this.warn_lvl == 0) this.warn_lvl = 1;
@@ -247,6 +285,7 @@ var InfoPanel = new Lang.Class({
 
   update: function () {
     Logger.info ("InfoPanel", "update");
+    this.get_memory ();
     Helper.get_governors ();
     this.cores.forEach (core => {
       core.update ();
@@ -257,6 +296,13 @@ var InfoPanel = new Lang.Class({
     this._load.info.set_text (Math.round (this._loadbar.value * 100).toString () + "%");
     this.get_throttle ();
     this.get_balance ();
+    if (this.mem_total) {
+      this._memorybar.value = (this.mem_total - this.mem_free) / this.mem_total;
+      this._memory.info.set_text (Math.round (this._memorybar.value * 100).toString () + "%");
+      this._memory.tooltip_text = "%s / %s (%s free)".format (
+        GLib.format_size (this.mem_total - this.mem_free), GLib.format_size (this.mem_total), GLib.format_size (this.mem_free)
+      );
+    }
     this._warn.update (this.warn_lvl, this.warnmsg);
     if (this.wlold != this.warn_lvl) {
       this.wlold = this.warn_lvl;

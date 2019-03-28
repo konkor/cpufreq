@@ -40,7 +40,7 @@ Gnome is a lightweight CPU scaling monitor and powerful CPU management tool. The
 
 https://extensions.gnome.org/extension/1082/cpufreq/
 
-![SCREENSHOT](https://i.imgur.com/yFxDBlU.png)
+![SCREENSHOT](https://i.imgur.com/Qgvx7W0.png)
 
 ## Features
 * Compatible with many hardware architectures (x86, x64, arm ...);
