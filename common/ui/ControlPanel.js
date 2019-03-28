@@ -274,7 +274,7 @@ var ControlPanel = new Lang.Class({
   },
 
   sliders_build: function () {
-    this.add_item (new Gtk.Separator ());
+    this.add_item (new Gtk.Separator ({margin:10}));
     this.slider_min = new Slider.Slider ("Minimum", get_min_label (), "Minimum frequency");
     this.add_item (this.slider_min);
     this.slider_max = new Slider.Slider ("Maximum", get_max_label (), "Maximum frequency");
