@@ -412,10 +412,10 @@ function set_turbo (state) {
 }
 
 function get_governors () {
+  if (!util_present) return governors;
   let governorslist = [], res;
   governors = [];
   governoractual = [];
-  if (!util_present) return governors;
 
   let cc = GLib.get_num_processors ();
   for (let i = 0; i < cc; i++) {
@@ -427,8 +427,7 @@ function get_governors () {
   if (res) governorslist = res.toString().split(" ");
   else governorslist = [];
   governorslist.forEach ((governor) => {
-    if (governor.length == 0) return;
-    governors.push (governor);
+    if (governor) governors.push (governor);
   });
 
   return governors;
