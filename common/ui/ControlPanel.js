@@ -204,9 +204,10 @@ var ControlPanel = new Lang.Class({
     this.activeg = new SideMenu.SideSubmenu ("Governors", "Active governor");
     var mixed = cpu.is_mixed_governors ();
     if (mixed) this.activeg.label = "Mixed";
+    else if (cpu.governoractual.length)
+      this.activeg.label = cpu.governoractual[0][0].toUpperCase() + cpu.governoractual[0].substring(1);
     cpu.governors.forEach (g => {
-      if ((g[1] == true) && !mixed) this.activeg.label = g[0][0].toUpperCase() + g[0].substring(1);
-      if (g[0] == "userspace") {
+      if (g == "userspace") {
         this.userspace = new SideMenu.SideSubmenu ("Userspace", "Userspace governor");
         cpu.frequencies.forEach ((freq)=>{
           var s = "";
@@ -227,7 +228,7 @@ var ControlPanel = new Lang.Class({
           }));
         });
       } else {
-        let gi = new SideMenu.SideItem (g[0][0].toUpperCase() + g[0].substring(1), g[0] + " governor");
+        let gi = new SideMenu.SideItem (g[0].toUpperCase() + g.substring(1), g + " governor");
         this.activeg.add_item (gi);
         gi.connect ('clicked', Lang.bind (this, this.on_governor));
       }

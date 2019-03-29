@@ -163,31 +163,49 @@ function get_default_profile () {
   return p;
 }
 
-// "balance" - turbo:OFF
+// "balance" - turbo:OFF, governors: ondemand|performance
 function get_balanced_profile () {
   let p = get_default_profile ();
   p.guid = "balanced";
   p.name = "Balanced";
   p.turbo = false;
+  if (pstate_present) p.core.forEach (p => {
+    p.g = "performance";
+  });
   debug (JSON.stringify (p));
   return p;
 }
 
-// "battery" - turbo:OFF, cores:50%, max frequency:50%, governor:powersave
-// TODO: ACPI governor for battery pp I would preffer schedutil or conservative
+// "battery" - turbo:OFF, cores:2/3, max frequency:2Ghz, governor:powersave
 function get_battery_profile () {
-  let p = get_default_profile ();
+  let p = get_default_profile (), g = "", f = 0;
+  //Detect suitable governor and frequency about 2Ghz
+  if (!pstate_present) {
+    if (governors.indexOf ("schedutil") > -1) g = "schedutil";
+    else if (governors.indexOf ("conservative") > -1) g = "conservative";
+    else if (governors.indexOf ("ondemand") > -1) g = "ondemand";
+    else if (governors.indexOf ("powersave") > -1) g = "powersave";
+    else g = p.core[0].g;
+    frequencies.forEach (a => {
+      if (!f && a >= 2000000) f = a;
+    });
+    if (!f) f = maximum_freq;
+  }
   //TODO: Is it too aggressive?
-  /*let cores = Math.floor (p.cpu / 2);
+  let cores = Math.floor (p.cpu * 2 / 3);
+  if (cores % 2) cores++;
   if (cores < 2) cores = 2;
   if (cores > cpucount) cores = cpucount;
-  p.cpu = cores;*/
+  p.cpu = cores;
   p.guid = "battery";
   p.name = "Powersave";
   p.turbo = false;
-  p.maxf = 50;
   p.core.forEach (p => {
-    p.g = "powersave";
+    if (pstate_present) p.g = "powersave";
+    else {
+      p.g = g;
+      p.b = f;
+    }
   });
   debug (JSON.stringify (p));
   return p;
@@ -264,7 +282,6 @@ function settings_equal (a, b) {
   return true;
 }
 
-//TODO: Profile applying porting
 let stage = 0;
 let install_event = 0;
 
@@ -408,14 +425,10 @@ function get_governors () {
 
   res = get_content_string (CPUROOT + "cpu0/cpufreq/scaling_available_governors");
   if (res) governorslist = res.toString().split(" ");
-  governorslist.forEach ((governor)=> {
+  else governorslist = [];
+  governorslist.forEach ((governor) => {
     if (governor.length == 0) return;
-    let governortemp;
-    if (governoractual.indexOf (governor) > -1)
-      governortemp = [governor, true];
-    else
-      governortemp = [governor, false];
-    governors.push (governortemp);
+    governors.push (governor);
   });
 
   return governors;
