@@ -17,6 +17,7 @@ const SideMenu = imports.common.ui.SideMenu;
 const ProfileItems = imports.common.ui.ProfileItems;
 const Slider = imports.common.ui.Slider;
 const Switch = imports.common.ui.Switch;
+const MainWindow = imports.common.ui.MainWindow;
 
 const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
@@ -86,6 +87,11 @@ var ControlPanel = new Lang.Class({
     this.save.connect ('toggled', Lang.bind (this, ()=>{
       if (!this.locked) settings.save = this.save.active;
     }));
+
+    this.sponsor = new Gtk.Label ({label:"<a href=\"file://" + MainWindow.APPDIR +
+      "/BACKERS.md\" title=\"&lt;i&gt;" + _("Feed the project's 🐱") +
+      "&lt;/i&gt;\">" + _("Support the Project") + "</a>", use_markup:true, xalign:0.5});
+    this.content.pack_end (this.sponsor, false, false, 8);
   },
 
   add_profiles: function () {

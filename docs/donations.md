@@ -11,13 +11,13 @@ CPUFREQ Power Manager is an GPLv3-licensed open source project focused on deskto
 
 Please, consider to support the project and make it better!
 
-<h3 align="center">Special Sponsors</h3>
+<h3 align="center">Sponsors of the project</h3>
 <!--special start-->
 
 <p align="center">
   <big>
-    <a href="{{ "/sponsors" | relative_url }}">Steffen W. (Germany)</a><br>
-    <a href="{{ "/sponsors" | relative_url }}">Yoann Deferi (France)</a><br>
+    <a href="{{ "/supporters" | relative_url }}">Steffen W. (Germany)</a><br>
+    <a href="{{ "/supporters" | relative_url }}">Yoann Deferi (France)</a><br>
     <a href="https://github.com/terencode">Térence Clastres (France)</a><br>
     <br>
     <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
@@ -34,7 +34,7 @@ Please, consider to support the project and make it better!
 - [Become a backer or sponsor on Patreon](https://www.patreon.com/konkor)
 - One-time donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JGFPHFHXMER6L) or [Patreon](https://www.patreon.com/konkor) where you can choose a custom pledge
 
-<h3 align="center"><a href="{{ "/sponsors" | relative_url }}" align="center">Our Sponsors!</a></h3>
+<h3 align="center"><a href="{{ "/supporters" | relative_url }}" align="center">Our Sponsors!</a></h3>
 -
 
 **Thank You for your supporting!**
