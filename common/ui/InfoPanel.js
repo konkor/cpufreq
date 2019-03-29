@@ -68,8 +68,27 @@ var InfoPanel = new Lang.Class({
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
+    this.corebox = new  Gtk.FlowBox ({
+      homogeneous: true,
+      activate_on_single_click: false,
+      max_children_per_line: 4,
+      valign: Gtk.Align.START,
+      margin_top: 10,
+      selection_mode: Gtk.SelectionMode.NONE
+    });
+    if (cpucount < 4) this.corebox.max_children_per_line = cpucount;
+    else if ((cpucount % 3 == 0) && (cpucount % 4 > 0)) this.corebox.max_children_per_line = 3;
+    this.pack_start (this.corebox, false, true, 0);
+
+    this.cores = [];
+    for (let i=0; i < cpucount; i++) {
+      let core = new CoreInfo (i);
+      this.corebox.add (core);
+      this.cores.push (core);
+    }
+
     this._load = new InfoLabel ();
-    this._load.margin_top = 16;
+    this._load.margin_top = 24;
     this._load.info.xalign = 1;
     this._load.label.set_text (_("System Loading"));
     this._load.info.set_text ("0%");
@@ -83,7 +102,7 @@ var InfoPanel = new Lang.Class({
 
     this.mem_total = this.mem_free = 0;
     this._memory = new InfoLabel ();
-    this._memory.margin_top = 16;
+    this._memory.margin_top = 12;
     this._memory.info.xalign = 1;
     this._memory.label.set_text (_("Memory"));
     this._memory.info.set_text ("0%");
@@ -94,24 +113,20 @@ var InfoPanel = new Lang.Class({
     this._memorybar.get_style_context ().add_class ("level-bar");
     this.add (this._memorybar);
 
-    this.corebox = new  Gtk.FlowBox ({
-      homogeneous: true,
-      activate_on_single_click: false,
-      max_children_per_line: 4,
-      valign: Gtk.Align.START,
-      margin_top: 16,
-      selection_mode: Gtk.SelectionMode.NONE
-    });
-    if (cpucount < 4) this.corebox.max_children_per_line = cpucount;
-    else if ((cpucount % 3 == 0) && (cpucount % 4 > 0)) this.corebox.max_children_per_line = 3;
-    this.pack_start (this.corebox, false, true, 0);
-
-    this.cores = [];
-    for (let i=0; i < cpucount; i++) {
-      let core = new CoreInfo (i);
-      this.corebox.add (core);
-      this.cores.push (core);
-    }
+    this.swap_total = this.swap_free = 0;
+    this._swap = new InfoLabel ();
+    this._swap.margin_top = 12;
+    this._swap.info.xalign = 1;
+    this._swap.label.set_text (_("Swap"));
+    this._swap.info.set_text ("0%");
+    this._swap.tooltip_text = _("Used system swap");
+    this.add (this._swap);
+    this._swapbar = Gtk.LevelBar.new_for_interval (0, 1);
+    this._swapbar.margin = 8;
+    this._swapbar.get_style_context ().add_class ("level-bar");
+    this.add (this._swapbar);
+    this._swap.visible = false;
+    this._swapbar.no_show_all = true;
 
     this._warn = new WarningInfo ();
     this.add (this._warn);
@@ -270,6 +285,20 @@ var InfoPanel = new Lang.Class({
               if (num) this.mem_free = num * 1024;
             }
           });
+        } else if (s.indexOf ("SwapTotal:") > -1) {
+          s.split (" ").forEach (w => {
+            if (w) {
+              num = parseInt (w);
+              if (num) this.swap_total = num * 1024;
+            }
+          });
+        } else if (s.indexOf ("SwapFree:") > -1) {
+          s.split (" ").forEach (w => {
+            if (w) {
+              num = parseInt (w);
+              if (num) this.swap_free = num * 1024;
+            }
+          });
         }
       });
     });
@@ -302,6 +331,14 @@ var InfoPanel = new Lang.Class({
       this._memory.tooltip_text = "%s / %s (%s free)".format (
         GLib.format_size (this.mem_total - this.mem_free), GLib.format_size (this.mem_total), GLib.format_size (this.mem_free)
       );
+    }
+    if (this.swap_total) {
+      this._swapbar.value = (this.swap_total - this.swap_free) / this.swap_total;
+      this._swap.info.set_text (Math.round (this._swapbar.value * 100).toString () + "%");
+      this._swap.tooltip_text = "%s / %s (%s free)".format (
+        GLib.format_size (this.swap_total - this.swap_free), GLib.format_size (this.swap_total), GLib.format_size (this.swap_free)
+      );
+      this._swap.visible = this._swapbar.visible = !!this._swapbar.value;
     }
     this._warn.update (this.warn_lvl, this.warnmsg);
     if (this.wlold != this.warn_lvl) {
