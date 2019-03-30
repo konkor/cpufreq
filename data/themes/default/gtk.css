@@ -51,10 +51,13 @@
   /*color: #7f7f7f;*/
   font-weight: normal;
 }
+.infolabel {
+  font-weight: normal;
+  font-style: italic;
+}
 .sidesubmenu {
   font-weight: bold;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding: 8px;
 }
 .sidesubmenu:checked {
   color: @theme_fg_color;

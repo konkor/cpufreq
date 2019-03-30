@@ -106,7 +106,7 @@ var MainWindow = new Lang.Class ({
     this.hb.pack_end (this.prefs_button);
 
     this.cpanel = new ControlPanel.ControlPanel (this.application);
-    this.cpanel.margin_right = 16;
+    this.cpanel.margin_right = 20;
 
     box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:2});
     box.margin_bottom = 12;

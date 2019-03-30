@@ -71,12 +71,12 @@ var ControlPanel = new Lang.Class({
   },
 
   build: function () {
+    if (cpu.default_profile) this.add_profiles ();
     this.add_governors ();
     if (cpu.pstate_present) this.pstate_build ();
     else this.acpi_build ();
     if (cpu.cpucount > 1) this.add_cores ();
     if (cpu.boost_present) this.add_boost ();
-    if (cpu.default_profile) this.add_profiles ();
 
     this.save = Gtk.CheckButton.new_with_label (_("Remember settings"));
     this.save.tooltip_text = _("Check to restore settings on the startup");
@@ -96,7 +96,7 @@ var ControlPanel = new Lang.Class({
 
   add_profiles: function () {
     let mi;
-    this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Power Profiles"));
+    this.profmenu =  new SideMenu.SideSubmenu (cpu.default_profile.name, _("Power Profile"), "");
     this.add_submenu (this.profmenu);
 
     mi = new SideMenu.SideItem (_("Balanced"), _("Optimal settings for the daily usage\n") +
@@ -132,7 +132,7 @@ var ControlPanel = new Lang.Class({
       this.add_profile (p);
     }
 
-    mi = new ProfileItems.NewProfileItem (_("New..."), _("Create a profile from current settings"), _("Profile Name"));
+    mi = new ProfileItems.NewProfileItem (_("New Profile..."), _("Create a profile from current settings"), _("Profile Name"));
     mi.margin_top = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', Lang.bind (this, (o) => {
@@ -201,14 +201,14 @@ var ControlPanel = new Lang.Class({
   },
 
   add_governors: function () {
-    this.activeg = new SideMenu.SideSubmenu ("Governors", "Active governor");
+    this.activeg = new SideMenu.SideSubmenu ("Governors", "Processor Governor", "");
     var mixed = cpu.is_mixed_governors ();
     if (mixed) this.activeg.label = "Mixed";
     else if (cpu.governoractual.length)
       this.activeg.label = cpu.governoractual[0][0].toUpperCase() + cpu.governoractual[0].substring(1);
     cpu.governors.forEach (g => {
       if (g == "userspace") {
-        this.userspace = new SideMenu.SideSubmenu ("Userspace", "Userspace governor");
+        this.userspace = new SideMenu.SideSubmenu ("Userspace", "Frequency", "Fixed Frequency");
         cpu.frequencies.forEach ((freq)=>{
           var s = "";
           if (freq.length > 6) {

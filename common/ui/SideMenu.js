@@ -11,6 +11,8 @@
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
+const InfoPanel = imports.common.ui.InfoPanel;
+
 var SideMenu = new Lang.Class({
   Name: "SideMenu",
   Extends: Gtk.ScrolledWindow,
@@ -53,13 +55,19 @@ var SideSubmenu = new Lang.Class({
     'activate': {},
   },
 
-  _init: function (text, tooltip) {
+  _init: function (text, info, tooltip) {
     this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:0, spacing:0});
     this.id = 0;
 
-    this.button = new Gtk.ToggleButton ({label:text, tooltip_text:tooltip, xalign:0});
+    this.info = new InfoPanel.InfoLabel ({no_show_all:false});
+    this.info.label.set_text (text);
+    this.info.info.set_text (info);
+    this.info.info.xalign = 1;
+    this.button = new Gtk.ToggleButton ({tooltip_text:tooltip, xalign:0});
     this.button.get_style_context ().add_class ("sidesubmenu");
     this.button.set_relief (Gtk.ReliefStyle.NONE);
+    this.info.info.get_style_context ().add_class ("infolabel");
+    this.button.add (this.info);
     this.add (this.button);
 
     this.section = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:0, spacing:0});
@@ -79,10 +87,10 @@ var SideSubmenu = new Lang.Class({
   get expanded () { return this.button.active; },
   set expanded (val) { this.button.active = val; },
 
-  get label () { return this.button.label; },
+  get label () { return this.info.label.label; },
   set label (val) {
     val = val || "";
-    this.button.label = val; //"\u26A1 " + text;
+    this.info.label.set_text (val); //"\u26A1 " + text;
   },
 
   add_item: function (item) {
