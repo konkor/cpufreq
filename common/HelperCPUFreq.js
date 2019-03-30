@@ -24,6 +24,7 @@ var governors = [];
 var governoractual = [];
 let util_present = false;
 var pstate_present = false;
+var thermal_throttle = false;
 var cpufreqctl_path = null;
 let pkexec_path = null;
 var installed = false;
@@ -103,6 +104,7 @@ function check_extensions () {
     }
   } else boost_present = true;
   settings.save = save_state;
+  thermal_throttle = Gio.File.new_for_path (CPUROOT + "cpu0/thermal_throttle/core_throttle_count").query_exists (null);
 }
 
 function install_components (update) {
@@ -731,6 +733,7 @@ function get_cpu_number () {
 }
 
 function get_throttle () {
+  if (!thermal_throttle) return 0;
   let tc = 0, cc = GLib.get_num_processors (), s;
   for (let i = 0; i < cc; i++) {
     s = get_content (CPUROOT + "cpu" + i + "/thermal_throttle/core_throttle_count");
