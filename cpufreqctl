@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='17'
+VERSION='18'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -303,6 +303,12 @@ then
 	    i=`expr $i + 1`
 	done
 	echo "$M"
+	exit
+fi
+if [ $1 = "throttle_events" ]
+then
+	M=$(journalctl |grep "cpu clock throttled" | wc -l)
+  echo "$M"
 	exit
 fi
 if [ $1 = "irqbalance" ]

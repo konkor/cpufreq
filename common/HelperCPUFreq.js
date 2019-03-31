@@ -742,12 +742,23 @@ function get_throttle () {
   return tc;
 }
 
+function get_throttle_events () {
+  if (!updated) return 0;
+  let tc = parseInt (get_command_line_string (pkexec_path + " " + cpufreqctl_path + " throttle_events"));
+  if (!Number.isInteger (tc)) tc = 0;
+  return tc;
+}
+
 let cmd_out, info_out;
-function get_command_line_string (cmd) {
+function get_command_line (cmd) {
   cmd_out = GLib.spawn_command_line_sync (cmd);
-  if (cmd_out[0]) info_out = byteArrayToString (cmd_out[1]).toString().split("\n")[0];
+  if (cmd_out[0]) info_out = byteArrayToString (cmd_out[1]).toString ();
   if (info_out) return info_out;
   return "";
+}
+
+function get_command_line_string (cmd) {
+  return get_command_line (cmd).split ("\n")[0];
 }
 
 function get_cpufreq_info (params) {

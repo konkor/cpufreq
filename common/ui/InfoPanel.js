@@ -23,6 +23,7 @@ const _ = Gettext.gettext;
 
 let cpucount = Convenience.get_cpu_number ();
 let info_event = 0;
+let throttle_event = 0;
 
 var InfoPanel = new Lang.Class({
   Name: "InfoPanel",
@@ -131,20 +132,31 @@ var InfoPanel = new Lang.Class({
     this._warn = new WarningInfo ();
     this.add (this._warn);
 
+    //TODO: handle dispose event
+
+    this.connect ("realize", this.on_realized.bind (this));
+    Logger.info ("InfoPanel", "done");
+  },
+
+  on_realized: function () {
+    Logger.info ("InfoPanel", "realize");
     if (Helper.get_cpufreq_info ("irqbalance"))
       this.balance = "IRQBALANCE DETECTED";
     this.get_memory ();
-
-    //TODO: handle dispose event
-
-    this.connect ("realize", () => {
-      Logger.info ("InfoPanel", "realize");
-      info_event = GLib.timeout_add_seconds (100, 2, Lang.bind (this, function () {
-        this.update ();
+    info_event = GLib.timeout_add (100, 1000, Lang.bind (this, function () {
+      this.update ();
+      return true;
+    }));
+    if (!Helper.thermal_throttle) {
+      GLib.timeout_add (100, 500, Lang.bind (this, function () {
+        this.tt = Helper.get_throttle_events ();
+        return false;
+      }));
+      throttle_event = GLib.timeout_add_seconds (100, 12, Lang.bind (this, function () {
+        this.tt = Helper.get_throttle_events ();
         return true;
       }));
-    });;
-    Logger.info ("InfoPanel", "done");
+    }
   },
 
   get cpu_name () {
@@ -247,20 +259,18 @@ var InfoPanel = new Lang.Class({
     return j;
   },
 
-  get_throttle: function () {
-    let s = "", i = 0;
-    let throttle = Helper.get_cpufreq_info ("throttle");
+  get_throttle: function (throttle) {
+    let s = "";
+    if (typeof throttle === 'undefined') throttle = Helper.get_throttle ();
 
     if (throttle) {
-      i = parseInt (throttle);
-      if (!i) return;
-      s = "CPU THROTTLE: " + i;
-      if (i != this.tt) {
+      s = "CPU THROTTLED: " + throttle;
+      if (throttle != this.tt) {
         this.warn_lvl = 2;
-        s += "\nTHROTTLE SPEED: " + Math.round ((i-this.tt)/2, 1);
+        s += "\nTHROTTLE SPEED: " + Math.round ((throttle-this.tt)/2, 1);
         this.tt_time = Date.now ();
       } else if ((this.warn_lvl == 0) && ((Date.now() - this.tt_time) < 600000)) this.warn_lvl = 1;
-      this.tt = i;
+      this.tt = throttle;
       if (this.warnmsg.length > 0) this.warnmsg += "\n" + s;
       else this.warnmsg = s;
     }
@@ -278,7 +288,7 @@ var InfoPanel = new Lang.Class({
               if (num) this.mem_total = num * 1024;
             }
           });
-        } else if (s.indexOf ("MemFree:") > -1) {
+        } else if (s.indexOf ("MemAvailable:") > -1) {
           s.split (" ").forEach (w => {
             if (w) {
               num = parseInt (w);
@@ -323,7 +333,8 @@ var InfoPanel = new Lang.Class({
     this.warn_lvl = 0;
     this._loadbar.value = this.loadavg;
     this._load.info.set_text (Math.round (this._loadbar.value * 100).toString () + "%");
-    this.get_throttle ();
+    if (Helper.thermal_throttle) this.get_throttle ();
+    else this.get_throttle (this.tt);
     this.get_balance ();
     if (this.mem_total) {
       this._memorybar.value = (this.mem_total - this.mem_free) / this.mem_total;
@@ -345,6 +356,7 @@ var InfoPanel = new Lang.Class({
       this.wlold = this.warn_lvl;
       this.emit ("warn_level");
     }
+    Logger.info ("InfoPanel", "updated");
   }
 });
 
