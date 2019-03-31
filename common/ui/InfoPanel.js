@@ -133,9 +133,8 @@ var InfoPanel = new Lang.Class({
     this._warn = new WarningInfo ();
     this.add (this._warn);
 
-    //TODO: handle dispose event
-
     this.connect ("realize", this.on_realized.bind (this));
+    this.connect ("delete_event", this.on_delete.bind (this));
     Logger.info ("InfoPanel", "done");
   },
 
@@ -158,6 +157,12 @@ var InfoPanel = new Lang.Class({
         return true;
       }));
     }
+  },
+
+  on_delete: function () {
+    if (info_event) GLib.source_remove (info_event);
+    if (throttle_event) GLib.source_remove (throttle_event);
+    throttle_event = info_event = 0;
   },
 
   get cpu_name () {
@@ -263,7 +268,6 @@ var InfoPanel = new Lang.Class({
   get_throttle: function (throttle) {
     let s = "";
     if (typeof throttle === 'undefined') throttle = Helper.get_throttle ();
-
     if (throttle) {
       s = "CPU THROTTLED: " + throttle;
       if (throttle != this.tt) {
@@ -340,7 +344,7 @@ var InfoPanel = new Lang.Class({
     if (this.mem_total) {
       this._memorybar.value = (this.mem_total - this.mem_free) / this.mem_total;
       this._memory.info.set_text (Math.round (this._memorybar.value * 100).toString () + "%");
-      this._memory.tooltip_text = "%s / %s (%s free)".format (
+      this._memory.tooltip_text = "%s / %s (%s available)".format (
         GLib.format_size (this.mem_total - this.mem_free), GLib.format_size (this.mem_total), GLib.format_size (this.mem_free)
       );
     }
@@ -437,6 +441,7 @@ var CoreInfo = new Lang.Class({
     this.add (this.govlabel);
 
     this.update ();
+    this.connect ("delete_event", () => {this.destroing = true;});
   },
 
   update: function () {
@@ -454,6 +459,7 @@ var CoreInfo = new Lang.Class({
 
   get_frequency: function () {
     Helper.get_frequency_async (this.core, Lang.bind (this, (label) => {
+      if (this.destroing) return;
       if (this.freqlabel) this.freqlabel.set_text (label);
     }));
   },
