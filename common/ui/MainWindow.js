@@ -15,7 +15,7 @@ const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Lang = imports.lang;
 
-const APPDIR = getCurrentFile ()[1];
+var APPDIR = getCurrentFile ()[1];
 
 const cpu = imports.common.HelperCPUFreq;
 const InfoPanel = imports.common.ui.InfoPanel;
