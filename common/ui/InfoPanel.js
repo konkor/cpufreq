@@ -440,8 +440,9 @@ var CoreInfo = new Lang.Class({
     this.govlabel = new Gtk.Label ({label:"\uf06c", xalign:0.5, margin_top:0, opacity:0.8});
     this.add (this.govlabel);
 
+    this.frequency_callback = this.frequency_cb;
     this.update ();
-    this.connect ("delete_event", () => {this.destroing = true;});
+    this.connect ("destroy", () => {this.frequency_callback = null;});
   },
 
   update: function () {
@@ -458,10 +459,11 @@ var CoreInfo = new Lang.Class({
   },
 
   get_frequency: function () {
-    Helper.get_frequency_async (this.core, Lang.bind (this, (label) => {
-      if (this.destroing) return;
-      if (this.freqlabel) this.freqlabel.set_text (label);
-    }));
+    Helper.get_frequency_async (this.core, this.frequency_callback.bind (this));
+  },
+
+  frequency_cb: function (label) {
+    if (this.freqlabel) this.freqlabel.set_text (label);
   },
 
   get_governor: function () {
