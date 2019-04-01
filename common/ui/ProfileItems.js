@@ -27,6 +27,7 @@ var NewProfileItem = new Lang.Class({
     this.edit_mode = false;
 
     this.button = new Gtk.Button ({label:text, xalign:0});
+    this.button.set_relief (Gtk.ReliefStyle.NONE);
     this.button.get_style_context ().add_class ("sideitem");
     this.pack_start (this.button, true, true, 0);
 

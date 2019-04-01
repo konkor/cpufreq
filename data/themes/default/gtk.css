@@ -4,10 +4,6 @@
 @define-color ospower_warning #f0c61c;
 @define-color ospower_critical red;
 
-* {
-  font-family: cpufreq;
-  font-stretch: condensed;
-}
 .hb, .hb GtkLabel, .hb label {
   border-width: 0;
   border-style:none;
@@ -24,15 +20,10 @@
   background-color: @theme_bg_color;
 }
 .hb-button {
-  border-width: 0;
-  background-image: none;
-  background-color: @theme_bg_color;
+  /*border-color: transparent;*/
 }
-.hb-button:hover {
-  background-color: shade (@theme_bg_color, 0.4);
-}
-.titlebar {
-
+.hb-button:active {
+  border-color: transparent;
 }
 .sideitem, .sidesubmenu {
   border-radius: 0;
@@ -79,6 +70,7 @@
 }
 .status {
   color: @ospower_normal;
+  font-family: cpufreq;
   font-weight: bold;
   font-size: 1.1em;
   text-shadow: none;
@@ -142,7 +134,6 @@ levelbar block.low, levelbar block.high {
   /*border-left: 12px solid alpha(white, 0.47);*/
   margin: 0;
   padding: 2px;
-  font-family: cpufreq;
   /*font-weight: bold;
   font-size: 92%;*/
 }
@@ -150,7 +141,9 @@ levelbar block.low, levelbar block.high {
   /*background-color: #bb0a1b;*/
 }
 .coreinfo {
-  font-weight:normal;
+  font-family: cpufreq;
+  font-weight: normal;
+  font-size: 10px;
 }
 
 .edit-button, .delete-button {

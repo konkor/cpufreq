@@ -101,7 +101,7 @@ var MainWindow = new Lang.Class ({
     this.prefs_button.image = Gtk.Image.new_from_icon_name ("application-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
     //this.prefs_button.image = Gtk.Image.new_from_gicon (new Gio.ThemedIcon({name: "cpufreq"}), Gtk.IconSize.SMALL_TOOLBAR);
     //Gtk.Image.new_from_file (APPDIR + "/data/icons/application-menu-symbolic.svg");
-    //this.prefs_button.get_style_context ().add_class ("hb-button");
+    this.prefs_button.get_style_context ().add_class ("hb-button");
     this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
     this.hb.pack_end (this.prefs_button);
 

@@ -434,7 +434,7 @@ var CoreInfo = new Lang.Class({
     this.parent ({orientation:Gtk.Orientation.VERTICAL});
     this.get_style_context ().add_class ("coreinfo");
 
-    this.cpulabel = new Gtk.Label ({label:"CPU" + this.core, xalign:0.5, margin_top:0});
+    this.cpulabel = new Gtk.Label ({label:"CPU" + this.core, xalign:0.5, margin:0});
     this.add (this.cpulabel);
 
     this.freqlabel = new Gtk.Label ({label:"---", xalign:0.5, margin_top:0, opacity:0.8});
