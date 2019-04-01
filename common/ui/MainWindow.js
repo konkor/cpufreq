@@ -123,7 +123,7 @@ var MainWindow = new Lang.Class ({
     box.add (this.infobar);
     box.pack_end (this.cpanel, true, true, 8);
     this.cpanel.set_size_request (320, 160);
-    this.infobar.set_size_request (320, 160);
+    this.infobar.set_size_request (300, 160);
 
     if (this.application.extension) this.connect ("focus-out-event", () => {
       this.save_geometry ();
