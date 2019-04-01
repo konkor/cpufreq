@@ -144,9 +144,9 @@ var CPUFreqApplication = new Lang.Class ({
         this.quit ();
       } else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
         this.active_window.update ();
+        this.active_window.present ();
       });
     }
-    this.active_window.present ();
   },
 
   on_profile_changed: function (profile) {
