@@ -100,6 +100,7 @@ var InfoPanel = new Lang.Class({
     //this._loadbar.mode = Gtk.LevelBarMode.DISCRETE;
     this._loadbar.margin = 8;
     this._loadbar.get_style_context ().add_class ("level-bar");
+    this._loadbar.set_size_request (8, 11);
     this.add (this._loadbar);
 
     this.mem_total = this.mem_free = 0;
@@ -113,6 +114,7 @@ var InfoPanel = new Lang.Class({
     this._memorybar = Gtk.LevelBar.new_for_interval (0, 1);
     this._memorybar.margin = 8;
     this._memorybar.get_style_context ().add_class ("level-bar");
+    this._memorybar.set_size_request (8, 11);
     this.add (this._memorybar);
 
     this.swap_total = this.swap_free = 0;
@@ -126,6 +128,7 @@ var InfoPanel = new Lang.Class({
     this._swapbar = Gtk.LevelBar.new_for_interval (0, 1);
     this._swapbar.margin = 8;
     this._swapbar.get_style_context ().add_class ("level-bar");
+    this._swapbar.set_size_request (8, 11);
     this.add (this._swapbar);
     this._swap.visible = false;
     this._swapbar.no_show_all = true;
