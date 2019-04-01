@@ -134,7 +134,7 @@ var InfoPanel = new Lang.Class({
     this.add (this._warn);
 
     this.connect ("realize", this.on_realized.bind (this));
-    this.connect ("delete_event", this.on_delete.bind (this));
+    this.connect ("destroy", this.on_delete.bind (this));
     Logger.info ("InfoPanel", "done");
   },
 
