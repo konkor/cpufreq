@@ -463,7 +463,7 @@ var CoreInfo = new Lang.Class({
   },
 
   frequency_cb: function (label) {
-    if (this.freqlabel) this.freqlabel.set_text (label);
+    if (this.frequency_callback) this.freqlabel.set_text (label);
   },
 
   get_governor: function () {
