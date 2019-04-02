@@ -374,7 +374,6 @@ var InfoLabel = new Lang.Class({
 
   _init: function (props={}) {
     props.orientation = props.orientation || Gtk.Orientation.HORIZONTAL;
-    this.no_show_all = true;
     this.parent (props);
 
     this.label = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
