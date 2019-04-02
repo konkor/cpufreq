@@ -141,10 +141,10 @@ levelbar block.low, levelbar block.high {
   /*background-color: #bb0a1b;*/
 }
 .coreinfo {
-  font: cpufreq;
+  font-family: cpufreq;
   font-weight: normal;
   font-stretch: condensed;
-  font-size: 93%;
+  font-size: 90%;
 }
 
 .edit-button, .delete-button {
