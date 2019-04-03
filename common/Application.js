@@ -10,9 +10,9 @@
 
 imports.gi.versions.Gtk = '3.0';
 
-let d = new Date ();
+/*let d = new Date ();
 print ("\x1b[00;32m[" + d.toString().substring (0, d.toString().indexOf (" GMT")) + "." + (d.getMilliseconds() / 1000).toFixed(3).slice(2, 5) +
-  "](DD) [cpufreq][application]\x1b[0m Starting application");
+  "](DD) [cpufreq][application]\x1b[0m Starting application");*/
 
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
@@ -20,10 +20,10 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 
+const Logger = imports.common.Logger;
 const Convenience = imports.convenience;
 const cpu = imports.common.HelperCPUFreq;
 const Settings = imports.common.Settings;
-const Logger = imports.common.Logger;
 const MainWindow = imports.common.ui.MainWindow;
 
 var DEBUG_LVL = 0;
@@ -91,52 +91,39 @@ var CPUFreqApplication = new Lang.Class ({
       let v = options.lookup_value ("profile", null);
       if (v) [v, ] = v.get_string ();
       this.process_profile (v);
-      Logger.debug ("finishing loading profile: \`%s\`".format (v));
       //TODO: fix https://gitlab.gnome.org/GNOME/gjs/issues/232
       return 0;
     }
 
-    Logger.debug ("verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
+    //Logger.debug ("verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
     return -1;
   },
 
   vfunc_startup: function () {
-    Logger.info ("startup");
     this.parent();
     this.initialize ();
-
-    /*this.connect ('open', Lang.bind (this, (files) => {
-      print ("open", files.map(function(f) { return f.get_uri(); }));
-    }));*/
   },
 
   initialize: function () {
     if (this.settings) return;
-    Logger.info ("initialization ...");
     this.settings = new Settings.Settings ();
-    Logger.info ("Settings creatad.");
     cpu.init (this.settings);
-    Logger.info ("CPUFreq initialized.");
   },
 
   vfunc_activate: function () {
-    Logger.info ("activating ... " + !this.finishing);
     if (this.finishing) return;
     if (!this.active_window) {
       window = new MainWindow.MainWindow ({ application:this });
-      Logger.info ("created MainWindow");
       window.connect ("destroy", () => {
         return true;
       });
       window.show_all ();
       cpu.profile_changed_callback = Lang.bind (this, this.on_profile_changed);
-      Logger.info ("restoring saved " + this.settings.save);
       if (this.settings.save) cpu.restore_saved ();
-      Logger.info ("post_init " + !!window.cpanel);
       if (window.cpanel) window.cpanel.post_init ();
       else this.quit ();
       window.connect ("realize", () => {
-        Logger.info ("realize");
+        Logger.debug ("realize");
       });
     } else {
       if (this.extension) {

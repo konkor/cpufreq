@@ -187,7 +187,6 @@ var InfoPanel = new Lang.Class({
         dis.close (null);
         if (model) {
           model = model.substring (model.indexOf (":") + 1).trim ();
-          //if (model.lastIndexOf ("@") > -1) model = model.substring (0, model.lastIndexOf ("@")).trim ();
           if (model.toLowerCase().lastIndexOf ("amd") > -1) this.amd = true;
           model = model.replace ("(R)", "®");
           model = model.replace ("(TM)", "™");
@@ -199,7 +198,7 @@ var InfoPanel = new Lang.Class({
           return model.trim ().toString ();
         }
       } catch (e) {
-        print ("Get CPU Error:", e.message);
+        Logger.error ("cpu_name", e.message);
       }
     }
     return "unknown processor";
@@ -235,7 +234,7 @@ var InfoPanel = new Lang.Class({
           distro = model;
         }
       } catch (e) {
-        print ("Get Release Error:", e.message);
+        Logger.error ("linux_kernel", e.message);
       }
     }
     let kernel_version = Helper.get_command_line_string ("uname -r");

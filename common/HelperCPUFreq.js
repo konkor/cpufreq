@@ -63,8 +63,6 @@ function init (prefs) {
   get_governors ();
   get_frequencies ();
   default_profile = get_default_profile ();
-
-  //get_profile ("Testing Profile");
 }
 
 function check_install () {
@@ -86,7 +84,6 @@ function check_install () {
     localctl = get_command_line_string (APPDIR + "/cpufreqctl version");
     debug ("Versions local:%s global:%s".format (localctl, globalctl));
     updated = localctl == globalctl;
-    //if (!updated) cpufreqctl_path = APPDIR + "/cpufreqctl";
   }
 }
 
@@ -354,7 +351,6 @@ function load_stage (prf) {
   } else if (stage == 3) {
     set_turbo (prf.turbo);
   } else if (stage == 4) {
-    //TODO: Test applying per core frequencies on pstate
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min " + prf.minf);
     } else {

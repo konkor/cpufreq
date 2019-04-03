@@ -234,9 +234,7 @@ var ControlPanel = new Lang.Class({
       }
     });
     this.add_submenu (this.activeg);
-    //this.pack_start (this.activeg, true, true, 0);
     if (this.userspace  && (cpu.frequencies.length > 0)) this.add_submenu (this.userspace);
-    //  this.pack_start (this.userspace, true, true, 0);
   },
 
   on_governor: function (o) {
@@ -273,7 +271,6 @@ var ControlPanel = new Lang.Class({
       this.sliders_build ();
       if (this.activeg.label.indexOf ("Powersave") > -1) {
         this.slider_max.sensitive = false;
-        //debug (this.activeg.label);
       } else if (this.activeg.label.indexOf ("Performance") > -1) {
         this.slider_min.sensitive = false;
       }

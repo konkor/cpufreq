@@ -272,7 +272,6 @@ var PageMonitorCPUFreq = new Lang.Class({
         this.pack_start (hbox, false, false, 0);
         this.cb_color = Gtk.CheckButton.new_with_label (_("Use color"));
         this.cb_color.tooltip_text = _("Colorful Monitor's title depending on warning state");
-        //this.cb_color.margin = 6;
         this.cb_color.active = color_show;
         hbox.pack_start (this.cb_color, true, true, 0);
         this.cb_color.connect ('toggled', Lang.bind (this, (o)=>{

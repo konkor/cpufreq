@@ -91,7 +91,6 @@ var Settings = new Lang.Class({
   update_user_profile: function () {
     let s = JSON.stringify (current);
     this.set_string (USER_PROFILE_KEY, s);
-    print ("Updating settings");
   },
 
   get monitor () { return this.get_int (MONITOR_KEY); },
@@ -101,7 +100,6 @@ var Settings = new Lang.Class({
     return _guid;
   },
   set guid (val) {
-    print ("set guid:", val, _guid);
     if (_guid == val) return;
     _guid = val;
     this.set_string (PROFILE_ID_KEY, _guid);
@@ -162,7 +160,6 @@ var Settings = new Lang.Class({
     return true;
   },
   set turbo (val) {
-    print ("set turbo");
     if (!current || (current.turbo == val)) return;
     current.turbo = val;
     this.update_user_profile ();
@@ -173,7 +170,6 @@ var Settings = new Lang.Class({
     return 1;
   },
   set cpu_cores (val) {
-    print ("set cores online");
     if (!current || (current.cpu == val)) return;
     current.cpu = val;
     this.update_user_profile ();
@@ -185,7 +181,6 @@ var Settings = new Lang.Class({
     return 0;
   },
   set min_freq (val) {
-    print ("set min_freq");
     if (!current) return;
     var equal = true;
     for (let i = 0; i < current.cpu; i++) {
@@ -201,7 +196,6 @@ var Settings = new Lang.Class({
     return 0;
   },
   set max_freq (val) {
-    print ("set max_freq");
     if (!current) return;
     var equal = true;
     for (let i = 0; i < current.cpu; i++) {
@@ -212,13 +206,11 @@ var Settings = new Lang.Class({
   },
 
   get governor () {
-    print ("get governor");
     if (current && current.core[0])
       return current.core[0].g;
     return "";
   },
   set governor (val) {
-    print ("set governor");
     if (!current) return;
     var equal = true;
     for (let i = 0; i < current.cpu; i++) {

@@ -17,6 +17,7 @@ const Lang = imports.lang;
 
 var APPDIR = getCurrentFile ()[1];
 
+const Logger = imports.common.Logger;
 const cpu = imports.common.HelperCPUFreq;
 const InfoPanel = imports.common.ui.InfoPanel;
 const ControlPanel = imports.common.ui.ControlPanel;
@@ -39,7 +40,7 @@ var MainWindow = new Lang.Class ({
     if (!this.icon) try {
       this.icon = Gtk.Image.new_from_file (APPDIR + "/data/icons/cpufreq.svg").pixbuf;
     } catch (e) {
-      error (e.message);
+      Logger.error (e.message);
     }
     if (!cpu.installed) this.install ();
     else if (!cpu.updated) this.install (true);
@@ -99,8 +100,6 @@ var MainWindow = new Lang.Class ({
 
     this.prefs_button = new Gtk.Button ({always_show_image: true, tooltip_text:"Preferences"});
     this.prefs_button.image = Gtk.Image.new_from_icon_name ("application-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
-    //this.prefs_button.image = Gtk.Image.new_from_gicon (new Gio.ThemedIcon({name: "cpufreq"}), Gtk.IconSize.SMALL_TOOLBAR);
-    //Gtk.Image.new_from_file (APPDIR + "/data/icons/application-menu-symbolic.svg");
     this.prefs_button.get_style_context ().add_class ("hb-button");
     this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
     this.hb.pack_end (this.prefs_button);
@@ -190,7 +189,7 @@ function get_css_provider () {
   try {
     cssp.load_from_file (css_file);
   } catch (e) {
-    print (e);
+    Logger.error (e);
     cssp = null;
   }
   return cssp;
