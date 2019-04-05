@@ -125,7 +125,6 @@ var CpufreqService = new Lang.Class ({
         cpu_present = Convenience.get_cpu_number ();
         this.max0 = 0;
         this.title = "-- \u3393";
-        this.old = this.title;
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
@@ -225,7 +224,8 @@ var CpufreqService = new Lang.Class ({
             if (freqs[i] && freqs[i] > m) m = freqs[i];
         if (governor_show) g = this.governor;
         if (load_show) l = this.loadavg;
-        if ((m > 0 && m != this.max0) || g != this.gov0) {
+        if ((m != this.max0) || (g != this.gov0)) {
+            if (m == 0) m = this.max0;
             if (frequency_show)
               if (m >= 1000000) {
                 this.title = (m / 1000000).toFixed(2).toString ();
@@ -243,7 +243,6 @@ var CpufreqService = new Lang.Class ({
             if (load_show) this.title += " " + l;
             if (label_show) this.title += " " + label_text;
             this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [this.title]));
-            this.old = this.title;
             this.max0 = m;
         }
         if (color_show) {
