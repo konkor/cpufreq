@@ -307,8 +307,8 @@ then
 fi
 if [ $1 = "throttle_events" ]
 then
-	M=$(journalctl |grep "cpu clock throttled" | wc -l)
-  echo "$M"
+	M=$(journalctl --system --reverse --boot --since=yesterday --lines=10000 | grep "cpu clock throttled" | wc -l)
+	echo "$M"
 	exit
 fi
 if [ $1 = "irqbalance" ]
