@@ -114,7 +114,9 @@ const FrequencyIndicator = new Lang.Class({
       this.on_power_state ();
       if (save && first_boot && !!guid_battery) this.load_saved_settings ();
       first_boot = false;
-      powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
+      GLib.timeout_add (0, 8000, () => {
+        powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
+      });
     }));
   },
 
