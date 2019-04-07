@@ -44,6 +44,7 @@ let eprofiles = [
   {percent:100, event:1, guid:""}
 ];
 let first_boot = true;
+let guid_battery = "";
 
 const UP_BUS_NAME = 'org.freedesktop.UPower';
 const UP_OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
@@ -157,19 +158,19 @@ const FrequencyIndicator = new Lang.Class({
 
   on_power_state: function () {
     let id = eprofiles[1].guid;
-    if (!id || id == this.guid_battery) return;
+    if (!id || id == guid_battery) return;
     //print ("on_power_state", this.power.State, this.power.Percentage);
     if (this.power.State == 1 || this.power.State == 4) {
       if (this.power.Percentage >= eprofiles[1].percent) {
         //restoring prev state
         GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=user');
-        this.guid_battery = this.guid;
+        guid_battery = this.guid;
       }
     } else if (this.power.State == 2) {
       if (this.power.Percentage < eprofiles[1].percent) {
         //on battery
         GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --no-save --profile=' + id);
-        this.guid_battery = id;
+        guid_battery = id;
       }
     }
   },
