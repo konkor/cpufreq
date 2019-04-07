@@ -83,6 +83,7 @@ var ProfileItem = new Lang.Class({
   Signals: {
     'delete': {},
     'edited': {},
+    'edit': {},
   },
 
   _init: function (name) {
@@ -102,7 +103,10 @@ var ProfileItem = new Lang.Class({
     }));
     this.edit_button.connect ('clicked', Lang.bind (this, (o) => {
       this.toggle ();
-      if (this.edit_mode) this.entry.text = this.button.label;
+      if (this.edit_mode) {
+        this.entry.text = this.button.label;
+        this.emit ('edit');
+      }
     }));
   },
 

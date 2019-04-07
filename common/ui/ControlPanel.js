@@ -151,7 +151,10 @@ var ControlPanel = new Lang.Class({
     prf.connect ('clicked', Lang.bind (this, function (o) {
       cpu.set_power_profile (settings.profiles[o.ID]);
     }));
-
+    prf.connect ('edit', Lang.bind (this, function (o) {
+      if (this.edit_item && this.edit_item.edit_mode && this.edit_item.ID != o.ID) this.edit_item.toggle ();
+      this.edit_item = o;
+    }));
     prf.connect ('edited', Lang.bind (this, function (o) {
       settings.update_profile (o.ID, cpu.get_profile (o.text));
     }));
