@@ -113,8 +113,10 @@ const FrequencyIndicator = new Lang.Class({
         log(e.message);
         return;
       }
-      powerID = this.power.connect ('g-properties-changed', Lang.bind (this, this.on_power_state));
-      this.on_power_state ();
+      GLib.timeout_add (0, 3000, () => {
+        powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
+        this.on_power_state ();
+      });
     }));
   },
 
