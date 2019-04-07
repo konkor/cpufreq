@@ -355,9 +355,9 @@ var PagePowerCPUFreq = new Lang.Class({
 
         this.unplug = new PowerProfile (eprofiles[EventType.DISCHARGING],
           _("On Battery"),
-          _("You can set less then 100% of the battery level. ") +
-          _("It will do not apply \'Powersaving Profile\' immidiatly on the event. ") +
-          _("It could be helpful on temporary disconections, issues with a power connector etc.")
+          _("You can set less than 100% of the battery level. ") +
+          _("It will do not apply \"Powersaving Profile\" immediately on the event. ") +
+          _("It could be helpful on temporary disconnections, issues with a power connector, etc.")
         );
         this.add (this.unplug);
         this.unplug.combo.connect ('changed', Lang.bind (this, (o)=>{
