@@ -96,9 +96,6 @@ const FrequencyIndicator = new Lang.Class({
     this.load_settings (null, null);
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
-    if (save && first_boot) this.load_saved_settings ();
-    first_boot = false;
-
     this._add_event ();
 
     //TODO: Workaround updating title
@@ -113,10 +110,11 @@ const FrequencyIndicator = new Lang.Class({
         log(e.message);
         return;
       }
-      GLib.timeout_add (0, 3000, () => {
-        powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
-        this.on_power_state ();
-      });
+      //print ("PowerManagerProxy connected");
+      this.on_power_state ();
+      if (save && first_boot && !!guid_battery) this.load_saved_settings ();
+      first_boot = false;
+      powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
     }));
   },
 
