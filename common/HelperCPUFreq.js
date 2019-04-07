@@ -191,7 +191,7 @@ function get_battery_profile () {
     if (!f) f = maximum_freq;
   }
   //TODO: Is it too aggressive?
-  let cores = Math.floor (p.cpu * 2 / 3);
+  let cores = Math.round (p.cpu * 2 / 3);
   if (cores % 2) cores++;
   if (cores < 2) cores = 2;
   if (cores > cpucount) cores = cpucount;

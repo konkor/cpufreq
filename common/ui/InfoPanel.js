@@ -274,7 +274,7 @@ var InfoPanel = new Lang.Class({
       s = "CPU THROTTLED: " + throttle;
       if (throttle != this.tt) {
         this.warn_lvl = 2;
-        s += "\nTHROTTLE SPEED: " + Math.round ((throttle-this.tt)/2, 1);
+        s += "\nTHROTTLE SPEED: " + Math.round ((throttle - this.tt) / 2);
         this.tt_time = Date.now ();
       } else if ((this.warn_lvl == 0) && ((Date.now() - this.tt_time) < 600000)) this.warn_lvl = 1;
       this.tt = throttle;
