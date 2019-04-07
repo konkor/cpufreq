@@ -28,6 +28,7 @@ const MainWindow = imports.common.ui.MainWindow;
 
 var DEBUG_LVL = 0;
 
+let started = Date.now ();
 let window = null;
 
 var CPUFreqApplication = new Lang.Class ({
@@ -128,7 +129,7 @@ var CPUFreqApplication = new Lang.Class ({
     } else {
       if (this.extension) {
         if (this.active_window) this.active_window.save_geometry ();
-        this.quit ();
+        if (Date.now () - started > 1000) this.quit ();
       } else if (this.active_window.cpanel) GLib.timeout_add_seconds (0, 2, () => {
         this.active_window.update ();
         this.active_window.present ();
