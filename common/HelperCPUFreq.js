@@ -482,6 +482,8 @@ function get_frequencies () {
   if (pstate_present) {
     minfreq = get_min_pstate ();
     maxfreq = get_max_pstate ();
+    minimum_freq = get_coremin (0);
+    maximum_freq = get_coremax (0);
     return;
   } else {
     minfreq = get_min ();
