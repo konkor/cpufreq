@@ -154,8 +154,8 @@ const FrequencyIndicator = new Lang.Class({
 
   on_power_state: function () {
     let id = eprofiles[1].guid;
+    debug ("on_power_state: %d %.2f%%".format (this.power.State, this.power.Percentage));
     if (!id || id == guid_battery) return;
-    debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
     if (this.power.State == 2) {
       //on battery
       if (this.power.Percentage < eprofiles[1].percent) {

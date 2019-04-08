@@ -307,7 +307,7 @@ then
 fi
 if [ $1 = "throttle_events" ]
 then
-	M=$(journalctl --system --reverse --boot --since=yesterday --lines=10000 | grep "cpu clock throttled" | wc -l)
+	M=$(journalctl --dmesg --boot --since=yesterday | grep "cpu clock throttled" | wc -l)
 	echo "$M"
 	exit
 fi
