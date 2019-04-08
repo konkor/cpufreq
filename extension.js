@@ -86,11 +86,11 @@ const FrequencyIndicator = new Lang.Class({
     this.statusLabel = new St.Label ({text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'});
     this.statusLabel.style = title_style;
     let _box = new St.BoxLayout();
-    _box.add_actor(this.statusLabel);
-    this.actor.add_actor(_box);
-    this.actor.connect('button-press-event', Lang.bind(this, function () {
+    _box.add_actor (this.statusLabel);
+    this.actor.add_actor (_box);
+    this.actor.connect ('button-press-event', () => {
       GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --extension');
-    }));
+    });
 
     this.load_settings (null, null);
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
@@ -102,21 +102,20 @@ const FrequencyIndicator = new Lang.Class({
     this._settings.set_boolean (SAVE_SETTINGS_KEY, save);
 
     if (settingsID) this._settings.disconnect (settingsID);
-    settingsID = this._settings.connect ("changed", Lang.bind (this, this.load_settings));
+    settingsID = this._settings.connect ("changed", this.load_settings.bind (this));
 
-    this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, Lang.bind (this, function (proxy, e) {
+    this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, (proxy, e) => {
       if (e) {
-        log(e.message);
+        log (e.message);
         return;
       }
-      //print ("PowerManagerProxy connected");
       this.on_power_state ();
       if (save && first_boot && !!guid_battery) this.load_saved_settings ();
       first_boot = false;
       GLib.timeout_add (0, 8000, () => {
         powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
       });
-    }));
+    });
   },
 
   load_settings: function (o, key) {
@@ -138,7 +137,7 @@ const FrequencyIndicator = new Lang.Class({
         GLib.source_remove (monitor_event);
         monitor_event = 0;
       }
-      monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
+      monitor_event = GLib.timeout_add (100, 1000, this._add_event.bind (this));
     } else if (key == PROFILE_ID_KEY) {
       this.guid =  o.get_string (PROFILE_ID_KEY);
     } else if (key == LABEL_KEY) {
@@ -187,24 +186,24 @@ const FrequencyIndicator = new Lang.Class({
     }
     if (monitor_timeout > 0) {
       if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
-        log ("Unable to start cpufreq service...");
+        //log ("Unable to start cpufreq service...");
         return;
       }
-      this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, Lang.bind (this, function (proxy, e) {
+      this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, (proxy, e) => {
         if (e) {
           log (e.message);
           return;
         }
-        event = this.proxy.connectSignal ('FrequencyChanged', Lang.bind(this, function (o, s, title) {
+        event = this.proxy.connectSignal ('FrequencyChanged', (o, s, title) => {
           if (title) this.statusLabel.set_text (this.get_title (title.toString ()));
-        }));
-        event_style = this.proxy.connectSignal ('StyleChanged', Lang.bind(this, function (o, s, style) {
+        });
+        event_style = this.proxy.connectSignal ('StyleChanged', (o, s, style) => {
           if (style) {
             title_style = style.toString ();
             this.statusLabel.style = title_style;
           }
-        }));
-      }));
+        });
+      });
     }
     monitor_event = 0;
     // cpufreq-service should stop auto on disabled monitors
