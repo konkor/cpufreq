@@ -18,6 +18,7 @@ const PanelMenu = imports.ui.panelMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension ();
+const Logger       = Me.imports.common.Logger;
 const Convenience  = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path ();
 const APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
@@ -107,7 +108,7 @@ const FrequencyIndicator = new Lang.Class({
 
     this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, (proxy, e) => {
       if (e) {
-        log (e.message);
+        error (e.message);
         return;
       }
       this.on_power_state ();
@@ -154,11 +155,10 @@ const FrequencyIndicator = new Lang.Class({
   on_power_state: function () {
     let id = eprofiles[1].guid;
     if (!id || id == guid_battery) return;
-    //print ("on_power_state", this.power.State, this.power.Percentage);
+    debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
     if (this.power.State == 2) {
       //on battery
       if (this.power.Percentage < eprofiles[1].percent) {
-        //GLib.spawn_command_line_async (APP_PATH + ' --no-save --profile=' + id);
         this.schedule_profile ('--no-save --profile=' + id);
         guid_battery = id;
       }
@@ -166,7 +166,6 @@ const FrequencyIndicator = new Lang.Class({
       //restoring prev state
       if (guid_battery == this.guid) return;
       if (this.power.Percentage >= eprofiles[1].percent) {
-        //GLib.spawn_command_line_async (APP_PATH + ' --profile=user');
         this.schedule_profile ('--profile=user');
         guid_battery = this.guid;
       }
@@ -187,9 +186,12 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   launch_app: function (options) {
-    print ("launch_app", options);
+    let extra = "";
+    if (Logger.debug_lvl == 2) extra = " --debug";
+    else if (Logger.debug_lvl == 1) extra = " --verbose";
     options = options || "--extension";
-    GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options));
+    info ("launch_app " + options + extra);
+    GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
   },
 
   get_title: function (text) {
@@ -209,12 +211,12 @@ const FrequencyIndicator = new Lang.Class({
     }
     if (monitor_timeout > 0) {
       if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
-        //log ("Unable to start cpufreq service...");
+        //error ("Unable to start cpufreq service...");
         return;
       }
       this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, (proxy, e) => {
         if (e) {
-          log (e.message);
+          error (e.message);
           return;
         }
         event = this.proxy.connectSignal ('FrequencyChanged', (o, s, title) => {
@@ -250,6 +252,19 @@ const FrequencyIndicator = new Lang.Class({
 });
 
 let monitor;
+Logger.init (Logger.LEVEL.DEBUG, true);
+
+function info (msg) {
+  Logger.info ("extension", msg);
+}
+
+function debug (msg) {
+  Logger.debug ("extension", msg);
+}
+
+function error (msg) {
+  Logger.error ("extension", msg);
+}
 
 function init () {
 }
