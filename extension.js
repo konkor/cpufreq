@@ -32,7 +32,7 @@ const LABEL_KEY         = 'label'
 let event = 0;
 let event_style = 0;
 let monitor_event = 0;
-let settingsID, powerID;
+let settingsID, powerID, scheduleID;
 
 let save = false;
 let label_text = "";
@@ -84,14 +84,14 @@ const FrequencyIndicator = new Lang.Class({
     this.parent (0.0, "CPU Frequency Indicator", false);
     this._settings = Convenience.getSettings();
 
-    this.statusLabel = new St.Label ({text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'});
+    this.statusLabel = new St.Label ({
+      text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'
+    });
     this.statusLabel.style = title_style;
     let _box = new St.BoxLayout();
     _box.add_actor (this.statusLabel);
     this.actor.add_actor (_box);
-    this.actor.connect ('button-press-event', () => {
-      GLib.spawn_command_line_async (APP_PATH + ' --extension');
-    });
+    this.actor.connect ('button-press-event', () => {this.launch_app ();});
 
     this.load_settings (null, null);
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
@@ -111,7 +111,7 @@ const FrequencyIndicator = new Lang.Class({
         return;
       }
       this.on_power_state ();
-      if (save && first_boot && !!guid_battery) this.load_saved_settings ();
+      if (save && first_boot && !guid_battery) this.launch_app ("--profile=user");
       first_boot = false;
       GLib.timeout_add (0, 8000, () => {
         powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
@@ -158,17 +158,38 @@ const FrequencyIndicator = new Lang.Class({
     if (this.power.State == 2) {
       //on battery
       if (this.power.Percentage < eprofiles[1].percent) {
-        GLib.spawn_command_line_async (APP_PATH + ' --no-save --profile=' + id);
+        //GLib.spawn_command_line_async (APP_PATH + ' --no-save --profile=' + id);
+        this.schedule_profile ('--no-save --profile=' + id);
         guid_battery = id;
       }
     } else {
       //restoring prev state
       if (guid_battery == this.guid) return;
       if (this.power.Percentage >= eprofiles[1].percent) {
-        GLib.spawn_command_line_async (APP_PATH + ' --profile=user');
+        //GLib.spawn_command_line_async (APP_PATH + ' --profile=user');
+        this.schedule_profile ('--profile=user');
         guid_battery = this.guid;
       }
     }
+  },
+
+  unschedule_profile: function () {
+    GLib.source_remove (scheduleID);
+    scheduleID = 0;
+  },
+
+  schedule_profile: function (options) {
+    if (scheduleID) this.unschedule_profile ();
+    scheduleID = GLib.timeout_add (0, 4000, () => {
+      this.launch_app (options);
+      scheduleID = 0;
+    });
+  },
+
+  launch_app: function (options) {
+    print ("launch_app", options);
+    options = options || "--extension";
+    GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options));
   },
 
   get_title: function (text) {
@@ -210,10 +231,6 @@ const FrequencyIndicator = new Lang.Class({
     monitor_event = 0;
     // cpufreq-service should stop auto on disabled monitors
     //else GLib.spawn_command_line_async ("killall cpufreq-service");
-  },
-
-  load_saved_settings: function () {
-    GLib.spawn_command_line_async (APP_PATH + ' --profile=user');
   },
 
   remove_events: function () {
