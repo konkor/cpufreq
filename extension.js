@@ -118,8 +118,8 @@ const FrequencyIndicator = new Lang.Class({
       if (save && first_boot && !guid_battery) this.launch_app ("--profile=user");
       first_boot = false;
       GLib.timeout_add (0, 8000, () => {
-        powerID = this.power.connect ('g-properties-changed', (o,a,b) => {
-          debug ("power g-properties-changed: %s:%s:%s".format (o,a,b));
+        powerID = this.power.connect ('g-properties-changed', (o,a) => {
+          //a = a{sv}
           this.on_power_state (this.power.State, this.power.Percentage);
         });
       });
@@ -157,10 +157,10 @@ const FrequencyIndicator = new Lang.Class({
 
     if ((key == LABEL_KEY) && !monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
-    if ((key == "power-state") || (key == "power-percentage")) {
+    /*if ((key == "power-state") || (key == "power-percentage")) {
       debug ("power-state changed...");
       this.on_power_state (o.get_uint ("power-state"), o.get_double ("power-percentage"));
-    }
+    }*/
   },
 
   on_power_state: function (state, percentage) {
@@ -265,7 +265,7 @@ const FrequencyIndicator = new Lang.Class({
 });
 
 let monitor;
-Logger.init (Logger.LEVEL.DEBUG, true);
+Logger.init (Logger.LEVEL.ERROR, true);
 
 function info (msg) {
   Logger.info ("extension", msg);
