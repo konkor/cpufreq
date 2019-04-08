@@ -8,70 +8,70 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Gettext = imports.gettext;
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
+const Gettext   = imports.gettext;
 const ByteArray = imports.byteArray;
+
+const GLib = imports.gi.GLib;
+const Gio  = imports.gi.Gio;
 
 var Format = imports.format;
 String.prototype.format = Format.format;
 
 function initTranslations (domain) {
-    domain = domain || 'org-konkor-cpufreq';
+  domain = domain || 'org-konkor-cpufreq';
 
-    let localeDir = Gio.File.new_for_path (getCurrentFile()[1] + '/locale');
-    if (localeDir.query_exists (null))
-        Gettext.bindtextdomain (domain, localeDir.get_path());
-    else
-        Gettext.bindtextdomain (domain, '/usr/share/locale');
+  let localeDir = Gio.File.new_for_path (getCurrentFile()[1] + '/locale');
+  if (localeDir.query_exists (null))
+    Gettext.bindtextdomain (domain, localeDir.get_path());
+  else
+    Gettext.bindtextdomain (domain, '/usr/share/locale');
 }
 
 function getSettings (schema) {
-    schema = schema || 'org.gnome.shell.extensions.cpufreq';
+  schema = schema || 'org.gnome.shell.extensions.cpufreq';
+  const GioSSS = Gio.SettingsSchemaSource;
+  let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
+  let schemaSource;
 
-    const GioSSS = Gio.SettingsSchemaSource;
+  if (schemaDir.query_exists (null))
+    schemaSource = GioSSS.new_from_directory (
+      schemaDir.get_path (), GioSSS.get_default (), false
+    );
+  else
+    schemaSource = GioSSS.get_default ();
 
-    let schemaDir = Gio.File.new_for_path (getCurrentFile()[1] + '/schemas');
-    let schemaSource;
-    if (schemaDir.query_exists(null))
-        schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
-                                                 GioSSS.get_default(),
-                                                 false);
-    else
-        schemaSource = GioSSS.get_default();
+  let schemaObj = schemaSource.lookup (schema, true);
+  if (!schemaObj)
+    throw new Error ('Schema ' + schema + ' could not be found for extension ' +
+      'cpufreq@konkor. Please check your installation.');
 
-    let schemaObj = schemaSource.lookup(schema, true);
-    if (!schemaObj)
-        throw new Error('Schema ' + schema + ' could not be found for extension '
-                        + 'cpufreq@konkor. Please check your installation.');
-
-    return new Gio.Settings({ settings_schema: schemaObj });
+  return new Gio.Settings ({ settings_schema: schemaObj });
 }
 
 function getCurrentFile () {
-    let stack = (new Error()).stack;
-    let stackLine = stack.split('\n')[1];
-    if (!stackLine)
-        throw new Error ('Could not find current file');
-    let match = new RegExp ('@(.+):\\d+').exec(stackLine);
-    if (!match)
-        throw new Error ('Could not find current file');
-    let path = match[1];
-    let file = Gio.File.new_for_path (path);
-    return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
+  let stack = (new Error()).stack;
+  let stackLine = stack.split('\n')[1];
+  if (!stackLine)
+    throw new Error ('Could not find current file');
+  let match = new RegExp ('@(.+):\\d+').exec(stackLine);
+  if (!match)
+    throw new Error ('Could not find current file');
+  let path = match[1];
+  let file = Gio.File.new_for_path (path);
+  return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
 }
 
 function byteArrayToString (array) {
-    return array instanceof Uint8Array ? ByteArray.toString (array):array;
+  return array instanceof Uint8Array ? ByteArray.toString (array):array;
 }
 
 function get_cpu_number () {
-    let c = 0;
-    let cpulist = null;
-    let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
-    if (ret[0]) cpulist = byteArrayToString(ret[1]).toString().split("\n", 1)[0].split("-");
-    cpulist.forEach ((f)=> {
-        if (parseInt (f) > 0) c = parseInt (f);
-    });
-    return c + 1;
+  let c = 0;
+  let cpulist = null;
+  let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
+  if (ret[0]) cpulist = byteArrayToString(ret[1]).toString().split("\n", 1)[0].split("-");
+  cpulist.forEach ((f) => {
+    if (parseInt (f) > 0) c = parseInt (f);
+  });
+  return c + 1;
 }

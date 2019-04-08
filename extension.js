@@ -8,25 +8,25 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const St = imports.gi.St;
-const Main = imports.ui.main;
-const Lang = imports.lang;
+const Lang      = imports.lang;
+const GLib      = imports.gi.GLib;
+const Gio       = imports.gi.Gio;
+const St        = imports.gi.St;
+const Main      = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
-
-const SAVE_SETTINGS_KEY = 'save-settings';
-const PROFILES_KEY = 'profiles';
-const PROFILE_ID_KEY = 'profile-id';
-const MONITOR_KEY = 'monitor';
-const EPROFILES_KEY = 'event-profiles';
-const LABEL_KEY = 'label'
-const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 
 const ExtensionUtils = imports.misc.extensionUtils;
+
 const Me = ExtensionUtils.getCurrentExtension ();
+const Convenience  = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path ();
-const Convenience = Me.imports.convenience;
+
+const SAVE_SETTINGS_KEY = 'save-settings';
+const PROFILE_ID_KEY    = 'profile-id';
+const MONITOR_KEY       = 'monitor';
+const EPROFILES_KEY     = 'event-profiles';
+const LABEL_KEY         = 'label'
+//const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 
 let event = 0;
 let event_style = 0;
@@ -34,7 +34,6 @@ let monitor_event = 0;
 let settingsID, powerID;
 
 let save = false;
-let profiles = [];
 let label_text = "";
 let title_text = "\u26A0";
 let title_style = "";
@@ -121,14 +120,11 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   load_settings: function (o, key) {
-    //TODO: Clean unused settings
     let s;
     o = o || this._settings;
 
     if (!key) {
       this.guid =  o.get_string (PROFILE_ID_KEY);
-      s =  o.get_string (PROFILES_KEY);
-      if (s.length > 0) profiles = JSON.parse (s);
       monitor_timeout =  o.get_int (MONITOR_KEY);
       save = o.get_boolean (SAVE_SETTINGS_KEY);
       label_text = o.get_string (LABEL_KEY);
@@ -143,14 +139,11 @@ const FrequencyIndicator = new Lang.Class({
         monitor_event = 0;
       }
       monitor_event = GLib.timeout_add (100, 1000, Lang.bind (this, this._add_event));
-    }
-    if (key == PROFILE_ID_KEY) {
+    } else if (key == PROFILE_ID_KEY) {
       this.guid =  o.get_string (PROFILE_ID_KEY);
-    }
-    if (key == LABEL_KEY) {
+    } else if (key == LABEL_KEY) {
       label_text = o.get_string (LABEL_KEY);
-    }
-    if (key == EPROFILES_KEY) {
+    } else if (key == EPROFILES_KEY) {
       s = o.get_string (EPROFILES_KEY);
       if (s) eprofiles = JSON.parse (s);
     }
