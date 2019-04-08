@@ -92,7 +92,10 @@ const FrequencyIndicator = new Lang.Class({
     let _box = new St.BoxLayout();
     _box.add_actor (this.statusLabel);
     this.actor.add_actor (_box);
-    this.actor.connect ('button-press-event', () => {this.launch_app ();});
+    this.actor.connect ('button-press-event', () => {
+      if (!guid_battery || (guid_battery == this.guid)) this.launch_app ();
+      else this.launch_app ("--extension --no-save");
+    });
 
     this.load_settings (null, null);
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
