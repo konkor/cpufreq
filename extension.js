@@ -20,6 +20,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension ();
 const Convenience  = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path ();
+const APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const PROFILE_ID_KEY    = 'profile-id';
@@ -89,7 +90,7 @@ const FrequencyIndicator = new Lang.Class({
     _box.add_actor (this.statusLabel);
     this.actor.add_actor (_box);
     this.actor.connect ('button-press-event', () => {
-      GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --extension');
+      GLib.spawn_command_line_async (APP_PATH + ' --extension');
     });
 
     this.load_settings (null, null);
@@ -154,17 +155,18 @@ const FrequencyIndicator = new Lang.Class({
     let id = eprofiles[1].guid;
     if (!id || id == guid_battery) return;
     //print ("on_power_state", this.power.State, this.power.Percentage);
-    if (this.power.State == 1 || this.power.State == 4) {
-      if (this.power.Percentage >= eprofiles[1].percent) {
-        //restoring prev state
-        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=user');
-        guid_battery = this.guid;
-      }
-    } else if (this.power.State == 2) {
+    if (this.power.State == 2) {
+      //on battery
       if (this.power.Percentage < eprofiles[1].percent) {
-        //on battery
-        GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --no-save --profile=' + id);
+        GLib.spawn_command_line_async (APP_PATH + ' --no-save --profile=' + id);
         guid_battery = id;
+      }
+    } else {
+      //restoring prev state
+      if (guid_battery == this.guid) return;
+      if (this.power.Percentage >= eprofiles[1].percent) {
+        GLib.spawn_command_line_async (APP_PATH + ' --profile=user');
+        guid_battery = this.guid;
       }
     }
   },
@@ -211,7 +213,7 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   load_saved_settings: function () {
-    GLib.spawn_command_line_async (EXTENSIONDIR + '/cpufreq-application --profile=user');
+    GLib.spawn_command_line_async (APP_PATH + ' --profile=user');
   },
 
   remove_events: function () {
