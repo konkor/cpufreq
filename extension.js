@@ -111,11 +111,14 @@ const FrequencyIndicator = new Lang.Class({
         error (e.message);
         return;
       }
-      this.on_power_state ();
+      this.on_power_state (proxy.State, proxy.Percentage);
       if (save && first_boot && !guid_battery) this.launch_app ("--profile=user");
       first_boot = false;
       GLib.timeout_add (0, 8000, () => {
-        powerID = this.power.connect ('g-properties-changed', this.on_power_state.bind (this));
+        powerID = this.power.connect ('g-properties-changed', (o,a,b) => {
+          debug ("power g-properties-changed: %s:%s:%s".format (o,a,b));
+          this.on_power_state (this.power.State, this.power.Percentage);
+        });
       });
     });
   },
@@ -150,22 +153,29 @@ const FrequencyIndicator = new Lang.Class({
     }
 
     if ((key == LABEL_KEY) && !monitor_timeout) this.statusLabel.set_text (this.get_title ());
+
+    if ((key == "power-state") || (key == "power-percentage")) {
+      debug ("power-state changed...");
+      this.on_power_state (o.get_uint ("power-state"), o.get_double ("power-percentage"));
+    }
   },
 
-  on_power_state: function () {
+  on_power_state: function (state, percentage) {
     let id = eprofiles[1].guid;
-    debug ("on_power_state: %d %.2f%%".format (this.power.State, this.power.Percentage));
-    if (!id || id == guid_battery) return;
-    if (this.power.State == 2) {
+    //debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
+    debug ("on_power_state: %s %s%%".format (state, percentage));
+    if (!id) return;
+    if (state == 2) {
       //on battery
-      if (this.power.Percentage < eprofiles[1].percent) {
+      if (id == guid_battery) return;
+      if (percentage < eprofiles[1].percent) {
         this.schedule_profile ('--no-save --profile=' + id);
         guid_battery = id;
       }
     } else {
       //restoring prev state
       if (guid_battery == this.guid) return;
-      if (this.power.Percentage >= eprofiles[1].percent) {
+      if (percentage >= eprofiles[1].percent) {
         this.schedule_profile ('--profile=user');
         guid_battery = this.guid;
       }
@@ -179,7 +189,7 @@ const FrequencyIndicator = new Lang.Class({
 
   schedule_profile: function (options) {
     if (scheduleID) this.unschedule_profile ();
-    scheduleID = GLib.timeout_add (0, 4000, () => {
+    scheduleID = GLib.timeout_add (0, 5000, () => {
       this.launch_app (options);
       scheduleID = 0;
     });
@@ -187,8 +197,8 @@ const FrequencyIndicator = new Lang.Class({
 
   launch_app: function (options) {
     let extra = "";
-    if (Logger.debug_lvl == 2) extra = " --debug";
-    else if (Logger.debug_lvl == 1) extra = " --verbose";
+    /*if (Logger.debug_lvl == 2) extra = " --debug";
+    else if (Logger.debug_lvl == 1) extra = " --verbose";*/
     options = options || "--extension";
     info ("launch_app " + options + extra);
     GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));

@@ -141,5 +141,17 @@
       <description>Window maximized</description>
     </key>
 
+    <key type="u" name="power-state">
+      <default>0</default>
+      <summary>Debug Power State</summary>
+      <description>Emulate Power State</description>
+    </key>
+
+    <key type="d" name="power-percentage">
+      <default>0.0</default>
+      <summary>Debug Power Percentage</summary>
+      <description>Emulate Power Percentage</description>
+    </key>
+
   </schema>
 </schemalist>
