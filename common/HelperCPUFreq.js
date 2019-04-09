@@ -92,14 +92,16 @@ function check_extensions () {
   let save_state = settings.save;
   let default_boost = get_turbo ();
   settings.save = false;
-  if (default_boost == false) {
-    set_turbo (true);
-    let new_state = get_turbo ();
-    if (default_boost != new_state) {
-      boost_present = true;
-      set_turbo (false);
-    }
-  } else boost_present = true;
+  try {
+    if (default_boost == false) {
+      set_turbo (true);
+      let new_state = get_turbo ();
+      if (default_boost != new_state) {
+        boost_present = true;
+        set_turbo (false);
+      }
+    } else boost_present = true;
+  } catch (e) {error (e.message);}
   settings.save = save_state;
   thermal_throttle = Gio.File.new_for_path (CPUROOT + "cpu0/thermal_throttle/core_throttle_count").query_exists (null);
 }
@@ -179,7 +181,7 @@ function get_balanced_profile () {
 // "battery" - turbo:OFF, cores:2/3, max frequency:2Ghz, governor:powersave
 function get_battery_profile () {
   let p = get_default_profile (), g = "", f = 0;
-  //Detect suitable governor and frequency about 2Ghz
+  //Detect suitable governor and frequency about 2.4Ghz
   if (!pstate_present) {
     if (governors.indexOf ("schedutil") > -1) g = "schedutil";
     else if (governors.indexOf ("conservative") > -1) g = "conservative";
@@ -187,7 +189,7 @@ function get_battery_profile () {
     else if (governors.indexOf ("powersave") > -1) g = "powersave";
     else g = p.core[0].g;
     frequencies.forEach (a => {
-      if (!f && a >= 2000000) f = a;
+      if (!f && a >= 2400000) f = a;
     });
     if (!f) f = maximum_freq;
   }
@@ -659,10 +661,11 @@ function set_cores (count, callback) {
   }));
 }
 
-function pause (msec) {
-  var t = Date.now ();
-  var i = 0;
-  while ((Date.now () - t) < msec) i++;
+function pause (ms) {
+  ms = ms || 0;
+  let context = GLib.MainContext.default ();
+  let d = Date.now ();
+  while ((Date.now() - d) < ms) context.iteration (false);
 }
 
 //TODO: move it to cpufreqctl?!
@@ -685,7 +688,7 @@ function get_frequency_async (num, callback) {
       }
       }
       callback (label);
-    } catch (e) {}
+    } catch (e) {debug (e.message);}
   });
 }
 
@@ -700,6 +703,7 @@ function get_frequency (core) {
     n = parseInt (contents);
     if (!Number.isInteger (n)) n = 0;
   } catch (e) {
+    debug (e.message);
     n = 0;
   }
   debug ("Core %d frequency is %d".format (core, n));
@@ -722,9 +726,10 @@ function get_pos (num) {
 }
 
 function get_cpu_number () {
-  let c = 0;
-  let cpulist = null;
-  let ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
+  let c = 0, cpulist = null, ret;
+  try {
+    ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
+  } catch (e) {debug (e.message);}
   if (ret[0]) cpulist = byteArrayToString (ret[1]).toString().split("\n", 1)[0].split("-");
   cpulist.forEach ((f)=> {
     if (parseInt (f) > 0) c = parseInt (f);
@@ -744,14 +749,19 @@ function get_throttle () {
 
 function get_throttle_events () {
   if (!updated) return 0;
-  let tc = parseInt (get_command_line_string (pkexec_path + " " + cpufreqctl_path + " throttle_events"));
+  let tc;
+  try {
+    tc = parseInt (get_command_line_string (pkexec_path + " " + cpufreqctl_path + " throttle_events"));
+  } catch (e) {debug (e.message);}
   if (!Number.isInteger (tc)) tc = 0;
   return tc;
 }
 
 let cmd_out, info_out;
 function get_command_line (cmd) {
-  cmd_out = GLib.spawn_command_line_sync (cmd);
+  try {
+    cmd_out = GLib.spawn_command_line_sync (cmd);
+  } catch (e) {debug (e.message);}
   if (cmd_out[0]) info_out = byteArrayToString (cmd_out[1]).toString ();
   if (info_out) return info_out;
   return "";
@@ -804,7 +814,7 @@ function get_content_async (path, callback) {
     [success, contents] = o.load_contents_finish (res);
     if (success) try {
       contents = byteArrayToString (contents).toString ().trim ();
-    } catch (e) {}
+    } catch (e) {error (e.message);}
     if (callback) callback (success, contents);
   });
 }
