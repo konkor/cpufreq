@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='19'
+VERSION='18'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 
@@ -194,12 +194,16 @@ then
     echo 'installing cpufreqctl...'
     cp $0 /usr/bin/
     echo 'installing policy...'
-	cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
-	echo 'installing fonts...'
-	mkdir -p /usr/share/fonts/truetype/cpufreq
-	cp $(dirname "$(readlink -f "$0")")/fonts/cpufreq.ttf /usr/share/fonts/truetype/cpufreq/
-	fc-cache -f
-	exit
+    cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
+    echo 'installing fonts...'
+    mkdir -p /usr/share/fonts/truetype/cpufreq
+    cp $(dirname "$(readlink -f "$0")")/fonts/cpufreq.ttf /usr/share/fonts/truetype/cpufreq/
+    exit
+fi
+if [ $1 = "update-fonts" ]
+then
+    fc-cache -f
+    exit
 fi
 if [ $1 = "uninstall" ]
 then

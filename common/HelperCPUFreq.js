@@ -109,6 +109,7 @@ function install_components (update) {
   debug (pkexec_path + " " + cpufreqctl_path);
   try {
     GLib.spawn_command_line_sync ("%s %s/cpufreqctl install".format (pkexec_path, APPDIR));
+    GLib.spawn_command_line_async ("%s %s/cpufreqctl update-fonts".format (pkexec_path, APPDIR));
   } catch (e) {
     error (e.message);
   }
