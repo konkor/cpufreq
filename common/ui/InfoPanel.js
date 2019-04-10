@@ -89,56 +89,25 @@ var InfoPanel = new Lang.Class({
       this.cores.push (core);
     }
 
-    this._load = new InfoLabel ();
-    this._load.margin_top = 24;
-    this._load.info.xalign = 1;
-    this._load.label.set_text (_("System Loading"));
-    this._load.info.set_text ("0%");
-    this._load.tooltip_text = _("Average value of system loading relative to\nonline cores for the last minute");
+    this._load = new InfoLevel (_("System Loading"), "0%", _("Average value of system loading relative to\nonline cores for the last minute"), {margin_top:24});
     this.add (this._load);
-    this._loadbar = Gtk.LevelBar.new_for_interval (0, 1);
-    //this._loadbar.mode = Gtk.LevelBarMode.DISCRETE;
-    this._loadbar.margin = 8;
-    this._loadbar.get_style_context ().add_class ("level-bar");
-    this._loadbar.set_size_request (8, 11);
-    this.add (this._loadbar);
 
-    this.mem_total = this.mem_free = 0;
-    this._memory = new InfoLabel ();
-    this._memory.margin_top = 12;
-    this._memory.info.xalign = 1;
-    this._memory.label.set_text (_("Memory"));
-    this._memory.info.set_text ("0%");
-    this._memory.tooltip_text = _("Used system memory");
+    this.mem_total = this.mem_free = this.mem_available = 0;
+    this._memory = new InfoLevel (_("Memory"), "0%", _("Used system memory"));
     this.add (this._memory);
-    this._memorybar = Gtk.LevelBar.new_for_interval (0, 1);
-    this._memorybar.margin = 8;
-    this._memorybar.get_style_context ().add_class ("level-bar");
-    this._memorybar.set_size_request (8, 11);
-    this.add (this._memorybar);
 
     this.swap_total = this.swap_free = 0;
-    this._swap = new InfoLabel ();
-    this._swap.margin_top = 12;
-    this._swap.info.xalign = 1;
-    this._swap.label.set_text (_("Swap"));
-    this._swap.info.set_text ("0%");
-    this._swap.tooltip_text = _("Used system swap");
+    this._swap = new InfoLevel (_("Swap"), "0%", _("Used swap memory"));
     this.add (this._swap);
-    this._swapbar = Gtk.LevelBar.new_for_interval (0, 1);
-    this._swapbar.margin = 8;
-    this._swapbar.get_style_context ().add_class ("level-bar");
-    this._swapbar.set_size_request (8, 11);
-    this.add (this._swapbar);
     this._swap.visible = false;
-    this._swapbar.no_show_all = true;
+    this._swap.levelbar.no_show_all = true;
 
     this._warn = new WarningInfo ();
     this.add (this._warn);
 
     this.connect ("realize", this.on_realized.bind (this));
     this.connect ("destroy", this.on_delete.bind (this));
-    Logger.info ("InfoPanel", "done");
+    Logger.debug ("InfoPanel", "done");
   },
 
   on_realized: function () {
@@ -295,11 +264,18 @@ var InfoPanel = new Lang.Class({
               if (num) this.mem_total = num * 1024;
             }
           });
-        } else if (s.indexOf ("MemAvailable:") > -1) {
+        } else if (s.indexOf ("MemFree:") > -1) {
           s.split (" ").forEach (w => {
             if (w) {
               num = parseInt (w);
               if (num) this.mem_free = num * 1024;
+            }
+          });
+        } else if (s.indexOf ("MemAvailable:") > -1) {
+          s.split (" ").forEach (w => {
+            if (w) {
+              num = parseInt (w);
+              if (num) this.mem_available = num * 1024;
             }
           });
         } else if (s.indexOf ("SwapTotal:") > -1) {
@@ -338,25 +314,25 @@ var InfoPanel = new Lang.Class({
     });
     this.warnmsg = "";
     this.warn_lvl = 0;
-    this._loadbar.value = this.loadavg;
-    this._load.info.set_text (Math.round (this._loadbar.value * 100).toString () + "%");
+    this._load.value = this.loadavg;
+    this._load.set_info (Math.round (this._load.value * 100).toString () + "%");
     if (Helper.thermal_throttle) this.get_throttle ();
     else this.get_throttle (this.tt);
     this.get_balance ();
     if (this.mem_total) {
-      this._memorybar.value = (this.mem_total - this.mem_free) / this.mem_total;
-      this._memory.info.set_text (Math.round (this._memorybar.value * 100).toString () + "%");
+      this._memory.value = (this.mem_total - this.mem_available) / this.mem_total;
+      this._memory.set_info (Math.round (this._memory.value * 100).toString () + "%");
       this._memory.tooltip_text = "%s / %s (%s available)".format (
-        GLib.format_size (this.mem_total - this.mem_free), GLib.format_size (this.mem_total), GLib.format_size (this.mem_free)
+        GLib.format_size (this.mem_total - this.mem_available), GLib.format_size (this.mem_total), GLib.format_size (this.mem_available)
       );
     }
     if (this.swap_total) {
-      this._swapbar.value = (this.swap_total - this.swap_free) / this.swap_total;
-      this._swap.info.set_text (Math.round (this._swapbar.value * 100).toString () + "%");
+      this._swap.value = (this.swap_total - this.swap_free) / this.swap_total;
+      this._swap.set_info (Math.round (this._swap.value * 100).toString () + "%");
       this._swap.tooltip_text = "%s / %s (%s free)".format (
         GLib.format_size (this.swap_total - this.swap_free), GLib.format_size (this.swap_total), GLib.format_size (this.swap_free)
       );
-      this._swap.visible = this._swapbar.visible = !!this._swapbar.value;
+      this._swap.visible = this._swap.levelbar.visible = !!this._swap.value;
     }
     this._warn.update (this.warn_lvl, this.warnmsg);
     if (this.wlold != this.warn_lvl) {
@@ -392,6 +368,40 @@ var InfoLabel = new Lang.Class({
   update: function (info) {
     info = info || "";
     if (this.info.label != info) this.info.set_text (info);
+  }
+});
+
+var InfoLevel = new Lang.Class({
+  Name: "InfoLevel",
+  Extends: Gtk.Box,
+
+  _init: function (title, info, tooltip, props={}) {
+    props.orientation = props.orientation || Gtk.Orientation.VERTICAL;
+    props.margin_top = props.margin_top || 12;
+    this.parent (props);
+    this.tooltip_text = tooltip || "";
+
+    this.infolabel = new InfoLabel ();
+    this.infolabel.label.set_text (title);
+    this.infolabel.info.xalign = 1;
+    this.infolabel.info.set_text (info);
+    this.add (this.infolabel);
+
+    this.levelbar = Gtk.LevelBar.new_for_interval (0, 1);
+    //this.levelbar.mode = Gtk.LevelBarMode.DISCRETE;
+    this.levelbar.margin = 8;
+    this.levelbar.get_style_context ().add_class ("level-bar");
+    this.levelbar.set_size_request (8, 11);
+    this.add (this.levelbar);
+  },
+
+  set_info: function (text) {
+    this.infolabel.info.set_text (text);
+  },
+
+  get value () { return this.levelbar.value; },
+  set value (val) {
+    this.levelbar.value = val || 0;
   }
 });
 
