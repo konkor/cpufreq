@@ -121,11 +121,11 @@ var InfoPanel = new Lang.Class({
     }));
     if (!Helper.thermal_throttle) {
       GLib.timeout_add (100, 500, Lang.bind (this, function () {
-        this.tt = Helper.get_throttle_events ();
+        Helper.get_throttle_events ((events) => {this.tt = events;});
         return false;
       }));
       throttle_event = GLib.timeout_add_seconds (100, 12, Lang.bind (this, function () {
-        this.tt = Helper.get_throttle_events ();
+        Helper.get_throttle_events ((events) => {this.tt = events;});
         return true;
       }));
     }

@@ -84,6 +84,7 @@ const FrequencyIndicator = new Lang.Class({
   _init: function () {
     this.parent (0.0, "CPU Frequency Indicator", false);
     this._settings = Convenience.getSettings();
+    this.load_settings (null, null);
 
     this.statusLabel = new St.Label ({
       text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'
@@ -96,8 +97,6 @@ const FrequencyIndicator = new Lang.Class({
       if (!guid_battery || (guid_battery == this.guid)) this.launch_app ();
       else this.launch_app ("--extension --no-save");
     });
-
-    this.load_settings (null, null);
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
     this._add_event ();

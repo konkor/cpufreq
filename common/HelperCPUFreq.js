@@ -747,14 +747,15 @@ function get_throttle () {
   return tc;
 }
 
-function get_throttle_events () {
-  if (!updated) return 0;
-  let tc;
-  try {
-    tc = parseInt (get_command_line_string (pkexec_path + " " + cpufreqctl_path + " throttle_events"));
-  } catch (e) {debug (e.message);}
-  if (!Number.isInteger (tc)) tc = 0;
-  return tc;
+function get_throttle_events (callback) {
+  if (!callback) return;
+  let pipe = new SpawnPipe ([pkexec_path,cpufreqctl_path,"throttle_events"], "/", (text, e) => {
+    let num = 0;
+    if (e) debug (e);
+    else if (text) num = parseInt (text[0]);
+    if (!Number.isInteger (num)) num = 0;
+    callback (num);
+  });
 }
 
 let cmd_out, info_out;
@@ -818,6 +819,62 @@ function get_content_async (path, callback) {
     if (callback) callback (success, contents);
   });
 }
+
+var SpawnPipe = new Lang.Class({
+  Name: 'SpawnPipe',
+
+  _init: function (args, dir, callback) {
+    debug (args);
+    dir = dir || "/";
+    let exit, pid, stdin_fd, stdout_fd, stderr_fd;
+    this.error = "";
+    this.stdout = [];
+    this.dest = "";
+
+    try {
+      [exit, pid, stdin_fd, stdout_fd, stderr_fd] =
+        GLib.spawn_async_with_pipes (dir,args,null,GLib.SpawnFlags.DO_NOT_REAP_CHILD,null);
+      GLib.close (stdin_fd);
+      let outchannel = GLib.IOChannel.unix_new (stdout_fd);
+      GLib.io_add_watch (outchannel,100,GLib.IOCondition.IN | GLib.IOCondition.HUP, (channel, condition) => {
+        return this.process_line (channel, condition, "stdout");
+      });
+      let errchannel = GLib.IOChannel.unix_new (stderr_fd);
+      GLib.io_add_watch (errchannel,100,GLib.IOCondition.IN | GLib.IOCondition.HUP, (channel, condition) => {
+        return this.process_line (channel, condition, "stderr");
+      });
+      let watch = GLib.child_watch_add (100, pid, Lang.bind (this, (pid, status, o) => {
+        debug ("watch handler " + pid + ":" + status + ":" + o);
+        GLib.source_remove (watch);
+        GLib.spawn_close_pid (pid);
+        if (callback) callback (this.stdout, this.error);
+      }));
+    } catch (e) {
+      error (e);
+    }
+  },
+
+  process_line: function (channel, condition, stream_name) {
+    if (condition == GLib.IOCondition.HUP) {
+      debug (stream_name, ": has been closed");
+      return false;
+    }
+    try {
+      var [,line,] = channel.read_line (), i = -1;
+      if (line) {
+        debug (stream_name, line);
+        if (stream_name == "stderr") {
+          this.error = line;
+        } else {
+          this.stdout.push (line);
+        }
+      }
+    } catch (e) {
+       return false;
+    }
+    return true;
+  }
+});
 
 function debug (msg) {
   Logger.debug ("cpu helper", msg);
