@@ -255,46 +255,32 @@ var InfoPanel = new Lang.Class({
   get_memory: function () {
     Helper.get_content_async ("/proc/meminfo", (res, text) => {
       if (!res) return;
-      let content = text.split ("\n"), num;
+      let content = text.split ("\n");
       content.forEach (s => {
         if (s.indexOf ("MemTotal:") > -1) {
-          s.split (" ").forEach (w => {
-            if (w) {
-              num = parseInt (w);
-              if (num) this.mem_total = num * 1024;
-            }
-          });
+          this.mem_total = this.parse_int (s) * 1024;
         } else if (s.indexOf ("MemFree:") > -1) {
-          s.split (" ").forEach (w => {
-            if (w) {
-              num = parseInt (w);
-              if (num) this.mem_free = num * 1024;
-            }
-          });
+          this.mem_free = this.parse_int (s) * 1024;
         } else if (s.indexOf ("MemAvailable:") > -1) {
-          s.split (" ").forEach (w => {
-            if (w) {
-              num = parseInt (w);
-              if (num) this.mem_available = num * 1024;
-            }
-          });
+          this.mem_available = this.parse_int (s) * 1024;
         } else if (s.indexOf ("SwapTotal:") > -1) {
-          s.split (" ").forEach (w => {
-            if (w) {
-              num = parseInt (w);
-              if (num) this.swap_total = num * 1024;
-            }
-          });
+          this.swap_total = this.parse_int (s) * 1024;
         } else if (s.indexOf ("SwapFree:") > -1) {
-          s.split (" ").forEach (w => {
-            if (w) {
-              num = parseInt (w);
-              if (num) this.swap_free = num * 1024;
-            }
-          });
+          this.swap_free = this.parse_int (s) * 1024;
         }
       });
     });
+  },
+
+  parse_int: function (row) {
+    let num, val = 0;
+    row.split(" ").forEach (w => {
+      if (w && !num) {
+        num = parseInt (w);
+        if (num) val = num;
+      }
+    });
+    return val;
   },
 
   get_balance: function () {
