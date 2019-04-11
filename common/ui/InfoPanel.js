@@ -115,20 +115,23 @@ var InfoPanel = new Lang.Class({
     if (Helper.get_cpufreq_info ("irqbalance"))
       this.balance = "IRQBALANCE DETECTED";
     this.get_memory ();
-    info_event = GLib.timeout_add (100, 1000, Lang.bind (this, function () {
+    info_event = GLib.timeout_add (100, 1000, () => {
       this.update ();
       return true;
-    }));
+    });
     if (!Helper.thermal_throttle) {
-      GLib.timeout_add (100, 500, Lang.bind (this, function () {
-        Helper.get_throttle_events ((events) => {this.tt = events;});
-        return false;
-      }));
-      throttle_event = GLib.timeout_add_seconds (100, 12, Lang.bind (this, function () {
-        Helper.get_throttle_events ((events) => {this.tt = events;});
+      GLib.timeout_add (20, 750, () => {
+        Helper.get_throttle_events (this.throttle_events_cb.bind (this));
+      });
+      throttle_event = GLib.timeout_add_seconds (100, 12, () => {
+        Helper.get_throttle_events (this.throttle_events_cb.bind (this));
         return true;
-      }));
+      });
     }
+  },
+
+  throttle_events_cb: function (events) {
+    if (events) this.tt = events;
   },
 
   on_delete: function () {

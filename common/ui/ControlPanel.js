@@ -84,9 +84,9 @@ var ControlPanel = new Lang.Class({
     this.save.margin = 18;
     this.save.opacity = 0.85;
     this.add_item (this.save);
-    this.save.connect ('toggled', Lang.bind (this, ()=>{
+    this.save.connect ('toggled', () => {
       if (!this.locked) settings.save = this.save.active;
-    }));
+    });
 
     this.sponsor = new Gtk.Label ({label:"<a href=\"file://" + MainWindow.APPDIR +
       "/BACKERS.md\" title=\"&lt;i&gt;" + _("Feed the project's 🐱") +
@@ -102,31 +102,31 @@ var ControlPanel = new Lang.Class({
     mi = new SideMenu.SideItem (_("Balanced"), _("Optimal settings for the daily usage\n") +
       this.profile_tooltip (cpu.get_balanced_profile ()));
     this.profmenu.add_item (mi);
-    mi.connect ('clicked', Lang.bind (this, () => {
+    mi.connect ('clicked', () => {
       cpu.power_profile ("balanced");
-    }));
+    });
 
     mi = new SideMenu.SideItem (_("High Performance"), _("High responsive settings for high performance\n") +
       this.profile_tooltip (cpu.get_performance_profile ()));
     this.profmenu.add_item (mi);
-    mi.connect ('clicked', Lang.bind (this, () => {
+    mi.connect ('clicked', () => {
       cpu.power_profile ("performance");
-    }));
+    });
 
     mi = new SideMenu.SideItem (_("Power Saving"), _("Power saver and long battery life\n") +
       this.profile_tooltip (cpu.get_battery_profile ()));
     this.profmenu.add_item (mi);
-    mi.connect ('clicked', Lang.bind (this, () => {
+    mi.connect ('clicked', () => {
       cpu.power_profile ("battery");
-    }));
+    });
 
     mi = new SideMenu.SideItem (cpu.default_profile.name, _("Reset to default system settings\n") +
       this.profile_tooltip (cpu.default_profile));
     mi.margin_top = mi.margin_bottom = 8;
     this.profmenu.add_item (mi);
-    mi.connect ('clicked', Lang.bind (this, () => {
+    mi.connect ('clicked', () => {
       cpu.power_profile ("system");
-    }));
+    });
 
     for (let p in settings.profiles) {
       this.add_profile (p);
@@ -135,11 +135,11 @@ var ControlPanel = new Lang.Class({
     mi = new ProfileItems.NewProfileItem (_("New Profile..."), _("Create a profile from current settings"), _("Profile Name"));
     mi.margin_top = 8;
     this.profmenu.add_item (mi);
-    mi.connect ('clicked', Lang.bind (this, (o) => {
+    mi.connect ('clicked', (o) => {
       settings.add_profile (cpu.get_profile (o.text));
       this.add_profile (settings.profiles.length - 1);
       this.profmenu.section.reorder_child (o, -1);
-    }));
+    });
   },
 
   add_profile: function (index) {
@@ -148,18 +148,18 @@ var ControlPanel = new Lang.Class({
     prf.ID = parseInt (index);
     this.profmenu.add_item (prf);
 
-    prf.connect ('clicked', Lang.bind (this, function (o) {
+    prf.connect ('clicked', (o) => {
       cpu.set_power_profile (settings.profiles[o.ID]);
-    }));
-    prf.connect ('edit', Lang.bind (this, function (o) {
+    });
+    prf.connect ('edit', (o) => {
       if (this.edit_item && this.edit_item.edit_mode && this.edit_item.ID != o.ID) this.edit_item.toggle ();
       this.edit_item = o;
-    }));
-    prf.connect ('edited', Lang.bind (this, function (o) {
+    });
+    prf.connect ('edited', (o) => {
       settings.update_profile (o.ID, cpu.get_profile (o.text));
-    }));
+    });
 
-    prf.connect ('delete', Lang.bind (this, function (o) {
+    prf.connect ('delete', (o) => {
       var id = parseInt (o.ID);
       settings.delete_profile (id);
       o.destroy ();
@@ -171,7 +171,7 @@ var ControlPanel = new Lang.Class({
         }
         i++;
       });
-    }));
+    });
 
     prf.show_all ();
   },
@@ -221,19 +221,19 @@ var ControlPanel = new Lang.Class({
           }
           let u_item = new SideMenu.SideItem (s);
           this.userspace.add_item (u_item);
-          u_item.connect ("clicked", Lang.bind (this, function () {
+          u_item.connect ("clicked", () => {
             if (!cpu.installed || this.locked) return;
             this._changed ();
             cpu.set_userspace (freq);
             this.activeg.label = "Userspace";
             this.userspace.expanded = false;
             this.check_sliders ();
-          }));
+          });
         });
       } else {
         let gi = new SideMenu.SideItem (g[0].toUpperCase() + g.substring(1), g + " governor");
         this.activeg.add_item (gi);
-        gi.connect ('clicked', Lang.bind (this, this.on_governor));
+        gi.connect ('clicked', this.on_governor.bind (this));
       }
     });
     this.add_submenu (this.activeg);
@@ -293,7 +293,7 @@ var ControlPanel = new Lang.Class({
       this.slider_min.slider.set_value (cpu.get_pos (cpu.minfreq));
       this.slider_max.slider.set_value (cpu.get_pos (cpu.maxfreq));
     }
-    this.slider_min.slider.connect('value_changed', Lang.bind (this, function (item) {
+    this.slider_min.slider.connect ('value_changed', (item) => {
       if (!cpu.installed || this.locked) return;
       this._changed ();
       if (item.get_value() > this.slider_max.slider.get_value()) {
@@ -305,8 +305,8 @@ var ControlPanel = new Lang.Class({
       if (freq_event != 0)
         GLib.source_remove (freq_event);
       freq_event = GLib.timeout_add (0, 1000, this.set_frequencies);
-    }));
-    this.slider_max.slider.connect('value_changed', Lang.bind (this, function (item) {
+    });
+    this.slider_max.slider.connect ('value_changed', (item) => {
       if (!cpu.installed || this.locked) return;
       this._changed ();
       if (item.get_value() < this.slider_min.slider.get_value()) {
@@ -318,7 +318,7 @@ var ControlPanel = new Lang.Class({
       if (freq_event != 0)
         GLib.source_remove (freq_event);
       freq_event = GLib.timeout_add (0, 1000, this.set_frequencies);
-    }));
+    });
   },
 
   set_frequencies: function () {
@@ -342,11 +342,11 @@ var ControlPanel = new Lang.Class({
     this.corewarn.get_style_context ().add_class ("warn");
     this.corewarn.xalign = 0.5;
     this.add_item (this.corewarn);
-    this.corewarn.connect ('clicked', Lang.bind (this, function () {
+    this.corewarn.connect ('clicked', () => {
       let app = Gio.AppInfo.get_default_for_type ("text/plain", false);
       app.launch_uris (["file://" + APPDIR + "/README.md"], null);
-    }));
-    this.slider_core.slider.connect('value_changed', Lang.bind (this, function (item) {
+    });
+    this.slider_core.slider.connect ('value_changed', (item) => {
       if (!cpu.installed || this.locked) return;
       this._changed ();
       var cc = Math.floor ((cpu.cpucount - 1) * item.get_value() + 1);
@@ -357,17 +357,17 @@ var ControlPanel = new Lang.Class({
       });
       this.slider_core.update_info (cc);
       this.corewarn.visible = cc == 1;
-    }));
+    });
   },
 
   add_boost: function () {
     this.boost = new Switch.Switch ("Turbo Boost", cpu.get_turbo(), "Enable processor boost");
     this.add_item (this.boost);
-    this.boost.sw.connect ('state_set', Lang.bind (this, function () {
+    this.boost.sw.connect ('state_set', () => {
       if (!cpu.installed || this.locked) return;
       this._changed ();
       cpu.set_turbo (this.boost.active);
-    }));
+    });
   },
 
   _changed: function () {
