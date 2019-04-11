@@ -650,7 +650,7 @@ function set_cores (count, callback) {
     core_event = 0;
   }
   if (count == GLib.get_num_processors ()) return;
-  core_event = GLib.timeout_add_seconds (0, 2, Lang.bind (this, function () {
+  core_event = GLib.timeout_add_seconds (0, 2, () => {
     for (let key = 1; key < cpucount; key++) {
       set_core (key, key < ccore);
     }
@@ -658,7 +658,7 @@ function set_cores (count, callback) {
     core_event = 0;
     if (callback) callback ();
     return false;
-  }));
+  });
 }
 
 function pause (ms) {
@@ -843,12 +843,12 @@ var SpawnPipe = new Lang.Class({
       GLib.io_add_watch (errchannel,100,GLib.IOCondition.IN | GLib.IOCondition.HUP, (channel, condition) => {
         return this.process_line (channel, condition, "stderr");
       });
-      let watch = GLib.child_watch_add (100, pid, Lang.bind (this, (pid, status, o) => {
+      let watch = GLib.child_watch_add (100, pid, (pid, status, o) => {
         debug ("watch handler " + pid + ":" + status + ":" + o);
         GLib.source_remove (watch);
         GLib.spawn_close_pid (pid);
         if (callback) callback (this.stdout, this.error);
-      }));
+      });
     } catch (e) {
       error (e);
     }

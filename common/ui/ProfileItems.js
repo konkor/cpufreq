@@ -38,21 +38,21 @@ var NewProfileItem = new Lang.Class({
     this.entry.no_show_all = true;
     this.pack_start (this.entry, true, true, 0);
     this.entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "edit-clear-symbolic");
-    this.entry.connect ('icon-press', Lang.bind (this, (o, pos, e)=>{
+    this.entry.connect ('icon-press', (o, pos, e) => {
       if (pos == Gtk.EntryIconPosition.SECONDARY)
       if (this.entry.text) this.entry.text = "";
       else this.toggle ();
-    }));
-    this.entry.connect ('key_press_event', Lang.bind (this, (o, e)=>{
+    });
+    this.entry.connect ('key_press_event', (o, e) => {
       var [,key] = e.get_keyval ();
       if (key == Gdk.KEY_Escape) {
         if (this.entry.text) this.entry.text = "";
         else this.toggle ();
       }
-    }));
+    });
 
-    this.entry.connect ('activate', Lang.bind (this, this.on_entry_activate));
-    this.button.connect ('clicked', Lang.bind (this, this.on_button_clicked));
+    this.entry.connect ('activate', this.on_entry_activate.bind (this));
+    this.button.connect ('clicked', this.on_button_clicked.bind (this));
 
     this.show_all ();
   },
@@ -98,16 +98,16 @@ var ProfileItem = new Lang.Class({
     this.edit_button = new MenuButton ("open-menu-symbolic", "Edit", "edit-button");
     this.pack_end (this.edit_button, false, false, 0);
 
-    this.delete_button.connect ('clicked', Lang.bind (this, (o) => {
+    this.delete_button.connect ('clicked', () => {
       this.emit ('delete');
-    }));
-    this.edit_button.connect ('clicked', Lang.bind (this, (o) => {
+    });
+    this.edit_button.connect ('clicked', () => {
       this.toggle ();
       if (this.edit_mode) {
         this.entry.text = this.button.label;
         this.emit ('edit');
       }
-    }));
+    });
   },
 
   on_button_clicked: function (o) {
@@ -151,8 +151,8 @@ var MenuButton = new Lang.Class({
     space = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
     this.pack_start (space, true, true, 0);
 
-    this.button.connect ('clicked', Lang.bind (this, (o) => {
+    this.button.connect ('clicked', () => {
       this.emit ('clicked');
-    }));
+    });
   }
 });

@@ -38,7 +38,7 @@ var SideMenu = new Lang.Class({
     this.content.add (item);
     item.id = this.submenus.length;
     this.submenus.push (item);
-    item.connect ('activate', Lang.bind (this, this.on_submenu_activate));
+    item.connect ('activate', this.on_submenu_activate.bind (this));
   },
 
   on_submenu_activate: function (item) {
@@ -76,7 +76,7 @@ var SideSubmenu = new Lang.Class({
     this.section.get_style_context ().add_class ("sidesection");
     this.add (this.section);
 
-    this.button.connect ('toggled', Lang.bind (this, this.on_toggle));
+    this.button.connect ('toggled', this.on_toggle.bind (this));
   },
 
   on_toggle: function (o) {
