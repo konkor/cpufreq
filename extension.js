@@ -177,10 +177,8 @@ const FrequencyIndicator = new Lang.Class({
     } else {
       //restoring prev state
       if (guid_battery == this.guid) return;
-      if (percentage >= eprofiles[1].percent) {
-        this.schedule_profile ('--profile=user');
-        guid_battery = this.guid;
-      }
+      this.schedule_profile ('--profile=user');
+      guid_battery = this.guid;
     }
   },
 
