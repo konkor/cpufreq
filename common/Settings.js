@@ -103,11 +103,16 @@ var Settings = new Lang.Class({
     if (_guid == val) return;
     _guid = val;
     this.set_string (PROFILE_ID_KEY, _guid);
-    let p = this.get_profile (val);
+    let p = this.get_profile (val), cores = [];
     if (p) {
+      p.core.forEach (c => {
+        let core = {g:c.g,a:c.a,b:c.b};
+        if (c.f) core.f = c.f;
+        cores.push (core);
+      });
       current = {
         name:current.name, minf:p.minf, maxf:p.maxf, turbo:p.turbo, cpu:p.cpu,
-        acpi:current.acpi, guid:current.guid, core:p.core
+        acpi:current.acpi, guid:current.guid, core:cores
       };
       this.update_user_profile ();
     }

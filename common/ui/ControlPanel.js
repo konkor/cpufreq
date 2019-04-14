@@ -218,7 +218,7 @@ var ControlPanel = new Lang.Class({
           this.userspace.add_item (u_item);
           u_item.connect ("clicked", () => {
             if (!cpu.installed || this.locked) return;
-            this._changed ();
+            //this._changed ();
             cpu.set_userspace (freq);
             this.activeg.label = "Userspace";
             this.userspace.expanded = false;

@@ -95,6 +95,7 @@ var SideSubmenu = new Lang.Class({
 
   add_item: function (item) {
     this.section.add (item);
+    item.connect ("clicked", () => {this.expanded = false;});
   }
 });
 
