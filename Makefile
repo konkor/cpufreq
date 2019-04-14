@@ -24,7 +24,8 @@ EXTRA_ICONS = \
 data/icons/application-menu-symbolic.svg \
 data/icons/cpufreq.png \
 data/icons/cpufreq.svg \
-data/icons/open-menu-symbolic.svg
+data/icons/open-menu-symbolic.svg \
+data/icons/feedcat.svg
 STYLE_CSS_DEFAULT = data/themes/default/gtk.css
 
 ifeq ($(strip $(DESTDIR)),)

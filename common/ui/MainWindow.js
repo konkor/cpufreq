@@ -104,6 +104,17 @@ var MainWindow = new Lang.Class ({
     this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
     this.hb.pack_end (this.prefs_button);
 
+    this.home_button = new Gtk.Button ({always_show_image: true, tooltip_text:_("Feed the project's 🐱")});
+    this.home_button.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/feedcat.svg");
+    //this.home_button.get_style_context ().add_class ("hb-button");
+    this.home_button.set_relief (Gtk.ReliefStyle.NONE);
+    this.hb.pack_start (this.home_button);
+    this.home_button.connect ('clicked', () => {
+      let app = Gio.AppInfo.get_default_for_type ("text/x-markdown", false);
+      if (app) app.launch_uris (["file://" + APPDIR + "/BACKERS.md"], null);
+    });
+
+
     this.cpanel = new ControlPanel.ControlPanel (this.application);
     this.cpanel.margin_right = 20;
 
