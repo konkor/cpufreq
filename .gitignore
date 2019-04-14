@@ -3,7 +3,9 @@
 *.zip
 *.orig
 *.diff
+install
 things
+releases
 data/themes
 fonts/source
 fonts/bf
