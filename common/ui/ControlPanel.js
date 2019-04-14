@@ -199,7 +199,7 @@ var ControlPanel = new Lang.Class({
   },
 
   add_governors: function () {
-    this.activeg = new SideMenu.SideSubmenu ("Governors", "Processor Governor", "");
+    this.activeg = new SideMenu.SideSubmenu ("Governors", "Governor", "");
     var mixed = cpu.is_mixed_governors ();
     if (mixed) this.activeg.label = "Mixed";
     else if (cpu.governoractual.length)
