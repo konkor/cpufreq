@@ -97,7 +97,7 @@ var InfoPanel = new Lang.Class({
     this.add (this._memory);
 
     this.swap_total = this.swap_free = 0;
-    this._swap = new InfoLevel (_("Swap"), "0%", _("Used swap memory"));
+    this._swap = new InfoLevel ("", "", _("Used swap memory"));
     this.add (this._swap);
     this._swap.visible = false;
     this._swap.levelbar.no_show_all = true;
@@ -304,25 +304,26 @@ var InfoPanel = new Lang.Class({
     this.warnmsg = "";
     this.warn_lvl = 0;
     this._load.value = this.loadavg;
-    this._load.set_info (Math.round (this._load.value * 100).toString () + "%");
+    this._load.set_info ((this._load.value * 100).toFixed (0) + "%");
     if (Helper.thermal_throttle) this.get_throttle ();
     else this.get_throttle (this.tt);
     this.get_balance ();
     if (this.mem_total) {
       this._memory.value = (this.mem_total - this.mem_available) / this.mem_total;
-      this._memory.set_info (Math.round (this._memory.value * 100).toString () + "%");
+      this._memory.set_info ((this._memory.value * 100).toFixed (1) + "%");
       this._memory.tooltip_text = "%s / %s (%s available)".format (
         GLib.format_size (this.mem_total - this.mem_available), GLib.format_size (this.mem_total), GLib.format_size (this.mem_available)
       );
     }
-    if (this.swap_total) {
+    if (this.swap_total != this.swap_free) {
       this._swap.value = (this.swap_total - this.swap_free) / this.swap_total;
-      this._swap.set_info (Math.round (this._swap.value * 100).toString () + "%");
+      this._swap.label.set_text (_("Swap"));
+      this._swap.set_info ((this._swap.value * 100).toFixed (1) + "%");
       this._swap.tooltip_text = "%s / %s (%s free)".format (
         GLib.format_size (this.swap_total - this.swap_free), GLib.format_size (this.swap_total), GLib.format_size (this.swap_free)
       );
-      this._swap.visible = this._swap.levelbar.visible = !!this._swap.value;
-    }
+      this._swap.visible = this._swap.levelbar.visible = true;
+    } else this._swap.visible = this._swap.levelbar.visible = false;
     this._warn.update (this.warn_lvl, this.warnmsg);
     if (this.wlold != this.warn_lvl) {
       this.wlold = this.warn_lvl;
