@@ -93,14 +93,12 @@ var InfoPanel = new Lang.Class({
     this.add (this._load);
 
     this.mem_total = this.mem_free = this.mem_available = 0;
-    this._memory = new InfoLevel (_("Memory"), "0%", _("Used system memory"));
+    this._memory = new InfoLevel (_("Memory"), "0.0%", _("Used system memory"));
     this.add (this._memory);
 
     this.swap_total = this.swap_free = 0;
-    this._swap = new InfoLevel ("", "", _("Used swap memory"));
+    this._swap = new InfoLevel (_("Swap"), "0.0%", _("Used swap memory"));
     this.add (this._swap);
-    this._swap.visible = false;
-    this._swap.levelbar.no_show_all = true;
 
     this._warn = new WarningInfo ();
     this.add (this._warn);
@@ -128,6 +126,7 @@ var InfoPanel = new Lang.Class({
         return true;
       });
     }
+    this._swap.visible = false;
   },
 
   throttle_events_cb: function (events) {
@@ -317,13 +316,12 @@ var InfoPanel = new Lang.Class({
     }
     if (this.swap_total != this.swap_free) {
       this._swap.value = (this.swap_total - this.swap_free) / this.swap_total;
-      this._swap.infolabel.label.set_text (_("Swap"));
       this._swap.set_info ((this._swap.value * 100).toFixed (1) + "%");
       this._swap.tooltip_text = "%s / %s (%s free)".format (
         GLib.format_size (this.swap_total - this.swap_free), GLib.format_size (this.swap_total), GLib.format_size (this.swap_free)
       );
-      this._swap.visible = this._swap.levelbar.visible = true;
-    } else this._swap.visible = this._swap.levelbar.visible = false;
+      this._swap.visible = true;
+    } else this._swap.visible = false;
     this._warn.update (this.warn_lvl, this.warnmsg);
     if (this.wlold != this.warn_lvl) {
       this.wlold = this.warn_lvl;
@@ -342,7 +340,6 @@ var InfoLabel = new Lang.Class({
     this.parent (props);
 
     this.label = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
-    this.label.no_show_all = false;
     this.add (this.label);
 
     this.info = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
