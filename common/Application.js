@@ -83,7 +83,7 @@ var CPUFreqApplication = new Lang.Class ({
       Logger.init (2);
     }
     if (options.contains ("extension")) {
-      this.extension = true;
+      this.extension = true && !cpu.is_wayland ();
     }
     if (options.contains ("no-save")) {
       this.save = false;

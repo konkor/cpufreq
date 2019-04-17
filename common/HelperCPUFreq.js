@@ -106,6 +106,13 @@ function check_extensions () {
   thermal_throttle = Gio.File.new_for_path (CPUROOT + "cpu0/thermal_throttle/core_throttle_count").query_exists (null);
 }
 
+function is_wayland () {
+  let wayland = false, session = GLib.getenv ("XDG_SESSION_TYPE");
+  if (!session) session = GLib.getenv ("WAYLAND_DISPLAY");
+  if (session && session.toLowerCase().indexOf ("wayland") > -1) wayland = true;
+  return wayland;
+}
+
 function install_components (update) {
   if (!pkexec_path) return false;
   debug (pkexec_path + " " + cpufreqctl_path);
