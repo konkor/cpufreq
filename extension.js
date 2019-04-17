@@ -114,7 +114,7 @@ const FrequencyIndicator = new Lang.Class({
         return;
       }
       this.on_power_state (proxy.State, proxy.Percentage);
-      if (save && first_boot && !guid_battery) this.launch_app ("--profile=user");
+      if (save && first_boot && !guid_battery) this.launch_app ("-p user");
       first_boot = false;
       GLib.timeout_add (0, 8000, () => {
         powerID = this.power.connect ('g-properties-changed', (o,a) => {
@@ -171,13 +171,13 @@ const FrequencyIndicator = new Lang.Class({
       //on battery
       if (id == guid_battery) return;
       if (percentage < eprofiles[1].percent) {
-        this.schedule_profile ('--no-save --profile=' + id);
+        this.schedule_profile ('--no-save -p ' + id);
         guid_battery = id;
       }
     } else {
       //restoring prev state
       if (guid_battery == this.guid) return;
-      this.schedule_profile ('--profile=user');
+      this.schedule_profile ('-p user');
       guid_battery = this.guid;
     }
   },

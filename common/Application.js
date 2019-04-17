@@ -60,7 +60,7 @@ var CPUFreqApplication = new Lang.Class ({
       "Do not remember applying profile", null
     );
     this.add_main_option (
-      'profile', 0, GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+      'profile', 'p'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
       "Enable power profile battery|balanced|performance|system|user|GUID", "GUID"
     );
     this.connect ('handle-local-options', this.on_local_options.bind (this));
