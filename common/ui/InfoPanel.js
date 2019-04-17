@@ -317,7 +317,7 @@ var InfoPanel = new Lang.Class({
     }
     if (this.swap_total != this.swap_free) {
       this._swap.value = (this.swap_total - this.swap_free) / this.swap_total;
-      this._swap.label.set_text (_("Swap"));
+      this._swap.infolabel.label.set_text (_("Swap"));
       this._swap.set_info ((this._swap.value * 100).toFixed (1) + "%");
       this._swap.tooltip_text = "%s / %s (%s free)".format (
         GLib.format_size (this.swap_total - this.swap_free), GLib.format_size (this.swap_total), GLib.format_size (this.swap_free)
