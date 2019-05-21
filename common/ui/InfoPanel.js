@@ -78,9 +78,26 @@ var InfoPanel = new Lang.Class({
       margin_top: 10,
       selection_mode: Gtk.SelectionMode.NONE
     });
+
+    if (cpucount > 16) this.corebox.min_children_per_line = this.corebox.max_children_per_line = 8;
+    let hugecpu = cpucount > 32;
+
     if (cpucount < 4) this.corebox.max_children_per_line = cpucount;
-    else if ((cpucount % 3 == 0) && (cpucount % 4 > 0)) this.corebox.max_children_per_line = 3;
-    this.pack_start (this.corebox, false, true, 0);
+    else if ((cpucount % 3 == 0) && (cpucount % 4 > 0)) {
+      this.corebox.max_children_per_line = 3;
+      if (hugecpu) this.corebox.max_children_per_line = 6;
+    }
+    if (hugecpu) {
+      this.corebox.min_children_per_line = this.corebox.max_children_per_line;
+      let rows = cpucount/this.corebox.max_children_per_line;
+      if (rows > 4) rows = 4;
+      let scroll = new Gtk.ScrolledWindow ();
+      scroll.hscrollbar_policy = Gtk.PolicyType.NEVER;
+      this.pack_start (scroll, true, true, 0);
+      scroll.set_size_request (380, 60*rows);
+      scroll.add (this.corebox);
+    } else this.pack_start (this.corebox, false, true, 0);
+
 
     this.cores = [];
     for (let i=0; i < cpucount; i++) {
