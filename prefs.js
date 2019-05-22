@@ -18,6 +18,10 @@ const Gdk = imports.gi.Gdk;
 var Format = imports.format;
 String.prototype.format = Format.format;
 
+const APPDIR = get_appdir ();
+imports.searchPath.unshift(APPDIR);
+const Logger = imports.common.Logger;
+
 const SAVE_SETTINGS_KEY = 'save-settings';
 const DARK_THEME_KEY = 'dark-theme';
 const PROFILES_KEY = 'profiles';
@@ -105,9 +109,17 @@ var CPUFreqPreferences = new Lang.Class({
         color_show_custom_critical = settings.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
 
         s = settings.get_string (EPROFILES_KEY);
-        if (s) eprofiles = JSON.parse (s);
+        if (s) try {
+          eprofiles = JSON.parse (s);
+        } catch (e) {
+          Logger.error ("%s\nPARSING DATA: %s".format (e.message, s));
+        }
         s =  settings.get_string (PROFILES_KEY);
-        if (s) profiles = JSON.parse (s);
+        if (s) try {
+          profiles = JSON.parse (s);
+        } catch (e) {
+          Logger.error ("%s\nPARSING DATA: %s".format (e.message, s));
+        }
 
         this.notebook = new Gtk.Notebook ({expand:true});
         let cssp = get_css_provider ();
@@ -474,4 +486,17 @@ function init () {
 function buildPrefsWidget () {
     let widget = new CPUFreqPreferences ();
     return widget.notebook;
+}
+
+function get_appdir () {
+    let s = getCurrentFile ()[1];
+    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    s = GLib.get_home_dir () + "/.local/share/gnome-shell/extensions/cpufreq@konkor";
+    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    s = "/usr/local/share/gnome-shell/extensions/cpufreq@konkor";
+    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    s = "/usr/share/gnome-shell/extensions/cpufreq@konkor";
+    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    throw "CPUFreq installation not found...";
+    return s;
 }
