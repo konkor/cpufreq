@@ -2,3 +2,17 @@
     font-family: cpufreq, roboto, lato, Cantarell, monospace;
     font-size: 1em;
 }
+
+.cpufreq-notify, .cpufreq-warn {
+    font-size: 1.4em;
+    color: #eeeeec;
+    background-color: #2e3436;
+    border-radius: 9px;
+    border: 1px solid #181b1c;
+    box-shadow: 0 3px 9px 1px #181b1c, 0.5;
+    padding: 1.2em;
+}
+
+.cpufreq-warn {
+    background-color: orange;
+}

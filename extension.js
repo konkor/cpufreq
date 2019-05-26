@@ -277,8 +277,8 @@ const FrequencyIndicator = new Lang.Class({
 });
 
 function show_notify (message, style) {
-  //var text = new St.Label ({text: message, style_class: style?style:'notify-label'});
-  var text = new St.Label ({text: message, style_class: "modal-dialog restart-message"});
+  //var text = new St.Label ({text: message, style_class: style?style:'cpufreq-notify'});
+  var text = new St.Label ({text: message, style_class: "modal-dialog audio-selection-content restart-message"});
   text.opacity = 255;
   Main.uiGroup.add_actor (text);
 
