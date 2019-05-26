@@ -13,6 +13,7 @@ const GLib      = imports.gi.GLib;
 const Gio       = imports.gi.Gio;
 const St        = imports.gi.St;
 const Main      = imports.ui.main;
+const Tweener   = imports.ui.tweener;
 const PanelMenu = imports.ui.panelMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -94,6 +95,7 @@ const FrequencyIndicator = new Lang.Class({
     _box.add_actor (this.statusLabel);
     this.actor.add_actor (_box);
     this.actor.connect ('button-press-event', () => {
+      if (!this.app_running) show_notify ("Power Manager Selected...");
       if (!guid_battery || (guid_battery == this.guid)) this.launch_app ();
       else this.launch_app ("--extension --no-save");
     });
@@ -204,6 +206,19 @@ const FrequencyIndicator = new Lang.Class({
     GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
   },
 
+  get app_running () {
+    let res = GLib.spawn_command_line_sync ("ps -A");
+    let o, n;
+    if (res[0]) o = Convenience.byteArrayToString (res[1]).toString().split("\n");
+    for (let i = 0; i < o.length; i++) {
+      if (o[i].indexOf ("cpufreq-app") > -1) {
+        n = parseInt (o[i].trim().split(" ")[0]);
+        if (Number.isInteger(n) && n > 0) return n;
+      }
+    }
+    return 0;
+  },
+
   get_title: function (text) {
     text = text || label_text;
     title_text = text.trim ();
@@ -260,6 +275,28 @@ const FrequencyIndicator = new Lang.Class({
     //GLib.spawn_command_line_async ("killall cpufreq-service");
   }
 });
+
+function show_notify (message, style) {
+  //var text = new St.Label ({text: message, style_class: style?style:'notify-label'});
+  var text = new St.Label ({text: message, style_class: "modal-dialog restart-message"});
+  text.opacity = 255;
+  Main.uiGroup.add_actor (text);
+
+  text.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - text.width / 2),
+    Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
+
+  Tweener.addTween (text, {
+    opacity: 196, time: 1, transition: 'easeOutQuad',
+    onComplete: () => {
+      Main.uiGroup.remove_actor (text);
+      text = null;
+    }
+  });
+}
+
+function show_warn (message) {
+    show_notify (message, "warn-label");
+}
 
 let monitor;
 Logger.init (Logger.LEVEL.ERROR, true);
