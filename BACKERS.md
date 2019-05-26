@@ -6,6 +6,7 @@ description: Here could be your name, brand, reference and logo.
 
 # People donated their **real money**
 
+* [Nick Krzemienski (USA)](https://github.com/krzemienski)
 * [Ivan Chayka](https://www.patreon.com/user/creators?u=9960302)
 * [Steffen W. (Germany)](https://www.patreon.com/user/creators?u=7405409)
 * Yoann Deferi (France)

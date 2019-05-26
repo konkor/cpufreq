@@ -286,7 +286,7 @@ function show_notify (message, style) {
     Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
 
   Tweener.addTween (text, {
-    opacity: 196, time: 1, transition: 'easeOutQuad',
+    opacity: 224, time: 1.2, transition: 'easeOut',
     onComplete: () => {
       Main.uiGroup.remove_actor (text);
       text = null;
