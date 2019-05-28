@@ -16,13 +16,24 @@ Please, consider to support the project and make it better!
 
 <p align="center">
   <big>
-    <a href="{{ "/supporters" | relative_url }}">Steffen W. (Germany)</a><br>
-    <a href="{{ "/supporters" | relative_url }}">Yoann Deferi (France)</a><br>
-    <a href="https://github.com/terencode">Térence Clastres (France)</a><br>
+    Top supporters:<br><br><b>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Jonathan Alden</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Manuel Transfeld</a><br>
+    <br></b>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Joël Dinel</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Michel Bonifert</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Patrick Strobel</a><br>
     <br>
-    <i>Also the one top will be placed in GUI like 'Sponsored by ...' while there's no one real sponsor!</i>
+    Patreons:<br><br>
+    <a href="https://github.com/krzemienski">Nick Krzemienski (USA)</a><br>
+    <a href="https://vk.com/anaumynaugames">Ivan Chayka (Russia)</a><br>
+    <a href="http://konkor.github.io/cpufreq/sponsors/">Steffen W. (Germany)</a><br>
+    <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
+    <br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">More wonderful people...</a><br>
+    <br>
+    <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference (contact me or put links in donation's messages)</i>
   </big>
-  <br><i>Top sponsors will be updated in the beginning of every month.</i>
 </p>
 
 <!--special end-->

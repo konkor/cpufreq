@@ -24,14 +24,23 @@ Please, consider to support the project and make it better!
 
 <p align="center">
   <big>
-    Top supporters:<br><br>
+    Top supporters:<br><br><b>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Jonathan Alden</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Manuel Transfeld</a><br>
+    <br></b>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Joël Dinel</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Michel Bonifert</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Patrick Strobel</a><br>
+    <br>
+    Patreons:<br><br>
     <a href="https://github.com/krzemienski">Nick Krzemienski (USA)</a><br>
-    <a href="https://www.patreon.com/user/creators?u=9960302">Ivan Chayka</a><br>
+    <a href="https://vk.com/anaumynaugames">Ivan Chayka (Russia)</a><br>
     <a href="http://konkor.github.io/cpufreq/sponsors/">Steffen W. (Germany)</a><br>
     <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
-    <a href="https://github.com/terencode">Térence Clastres (France)</a><br>
     <br>
-    <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference</i>
+    <a href="https://konkor.github.io/cpufreq/supporters/">More wonderful people...</a><br>
+    <br>
+    <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference (contact me or put links in donation's messages)</i>
   </big>
 </p>
 
