@@ -26,6 +26,8 @@ data/icons/cpufreq.png \
 data/icons/cpufreq.svg \
 data/icons/open-menu-symbolic.svg \
 data/icons/feedcat.svg
+EXTRA_DATA = \
+data/splash.png
 STYLE_CSS_DEFAULT = data/themes/default/gtk.css
 
 ifeq ($(strip $(DESTDIR)),)
@@ -71,6 +73,8 @@ _build: extension
 	cp $(BASE_MODULES) _build
 	mkdir -p _build/fonts
 	cp $(EXTRA_FONTS) _build/fonts/
+	mkdir -p _build/data
+	cp $(EXTRA_DATA) _build/data/
 	mkdir -p _build/data/icons
 	cp $(EXTRA_ICONS) _build/data/icons/
 	mkdir -p _build/data/themes/default

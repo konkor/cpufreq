@@ -95,7 +95,7 @@ const FrequencyIndicator = new Lang.Class({
     _box.add_actor (this.statusLabel);
     this.actor.add_actor (_box);
     this.actor.connect ('button-press-event', () => {
-      if (!this.app_running) show_notify ("Power Manager Selected...");
+      if (!this.app_running) this.show_splash ();
       if (!guid_battery || (guid_battery == this.guid)) this.launch_app ();
       else this.launch_app ("--extension --no-save");
     });
@@ -273,6 +273,26 @@ const FrequencyIndicator = new Lang.Class({
     event = 0; monitor_event = 0;
     settingsID = 0; powerID = 0;
     //GLib.spawn_command_line_async ("killall cpufreq-service");
+  },
+
+  show_splash: function () {
+    let width = 640 * Main.layoutManager.primaryMonitor.height / 1200;
+    if (!this.splash)
+      this.splash = Gio.icon_new_for_string (EXTENSIONDIR + "/data/splash.png");
+    let splash = new St.Icon ({gicon: this.splash, icon_size: width});
+    splash.opacity = 255;
+    Main.uiGroup.add_actor (splash);
+
+    splash.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - splash.width / 2),
+      Math.floor (Main.layoutManager.primaryMonitor.height / 2 - splash.height / 2));
+
+    Tweener.addTween (splash, {
+      opacity: 224, time: 2, transition: 'easeOut',
+      onComplete: () => {
+        Main.uiGroup.remove_actor (splash);
+        splash = null;
+      }
+    });
   }
 });
 
