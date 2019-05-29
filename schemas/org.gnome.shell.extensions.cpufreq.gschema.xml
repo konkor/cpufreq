@@ -9,6 +9,12 @@
       <description>Restore settings on startup</description>
     </key>
 
+    <key type="b" name="extension-mode">
+      <default>true</default>
+      <summary>Extension Mode</summary>
+      <description>Running main app without window decorations</description>
+    </key>
+
     <key type="b" name="dark-theme">
       <default>true</default>
       <summary>Dark theme</summary>

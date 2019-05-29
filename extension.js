@@ -25,6 +25,7 @@ const EXTENSIONDIR = Me.dir.get_path ();
 const APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
 
 const SAVE_SETTINGS_KEY = 'save-settings';
+const EXTENSION_MODE_KEY= 'extension-mode';
 const PROFILE_ID_KEY    = 'profile-id';
 const MONITOR_KEY       = 'monitor';
 const EPROFILES_KEY     = 'event-profiles';
@@ -37,6 +38,7 @@ let monitor_event = 0;
 let settingsID, powerID, scheduleID;
 
 let save = false;
+let extmode = true;
 let label_text = "";
 let title_text = "\u26A0";
 let title_style = "";
@@ -95,9 +97,10 @@ const FrequencyIndicator = new Lang.Class({
     _box.add_actor (this.statusLabel);
     this.actor.add_actor (_box);
     this.actor.connect ('button-press-event', () => {
+      var args = extmode ? "--extension" : "";
       if (!this.app_running) this.show_splash ();
-      if (!guid_battery || (guid_battery == this.guid)) this.launch_app ();
-      else this.launch_app ("--extension --no-save");
+      if (!guid_battery || (guid_battery == this.guid)) this.launch_app (args);
+      else this.launch_app (args + " --no-save");
     });
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
@@ -135,6 +138,7 @@ const FrequencyIndicator = new Lang.Class({
       this.guid =  o.get_string (PROFILE_ID_KEY);
       monitor_timeout =  o.get_int (MONITOR_KEY);
       save = o.get_boolean (SAVE_SETTINGS_KEY);
+      extmode = o.get_boolean (EXTENSION_MODE_KEY);
       label_text = o.get_string (LABEL_KEY);
       s = o.get_string (EPROFILES_KEY);
       if (s) eprofiles = JSON.parse (s);
@@ -154,6 +158,8 @@ const FrequencyIndicator = new Lang.Class({
     } else if (key == EPROFILES_KEY) {
       s = o.get_string (EPROFILES_KEY);
       if (s) eprofiles = JSON.parse (s);
+    } else if (key == EXTENSION_MODE_KEY) {
+      extmode = o.get_boolean (EXTENSION_MODE_KEY);
     }
 
     if ((key == LABEL_KEY) && !monitor_timeout) this.statusLabel.set_text (this.get_title ());

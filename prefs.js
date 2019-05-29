@@ -156,7 +156,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:6});
         this.border_width = 6;
 
-        this.add (new Gtk.Label ({label: _("<b>System</b>"), use_markup:true, xalign:0, margin_top:8}));
+        this.add (new Gtk.Label ({label: "<b>" + _("System") + ("</b>"), use_markup:true, xalign:0, margin_top:8}));
         this.cb_startup = Gtk.CheckButton.new_with_label (_("Remember settings"));
         this.cb_startup.tooltip_text = _("Check to restore settings on startup");
         this.cb_startup.margin = 6;
@@ -166,6 +166,17 @@ var PageGeneralCPUFreq = new Lang.Class({
             save = this.cb_startup.active;
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
         }));
+
+        this.add (new Gtk.Label ({label: _("<b>Extension</b>"), use_markup:true, xalign:0, margin_top:12}));
+        this.cb_mode = Gtk.CheckButton.new_with_label (_("Extension mode"));
+        this.cb_mode.tooltip_text = _("Run main application without window decorations");
+        this.cb_mode.margin = 6;
+        this.add (this.cb_mode);
+        this.cb_mode.active = settings.get_boolean ("extension-mode");;
+        this.cb_mode.connect ('toggled', Lang.bind (this, () => {
+            settings.set_boolean ("extension-mode", this.cb_mode.active);
+        }));
+
         this.add (new Gtk.Label ({label: _("<b>User Interface</b>"), use_markup:true, xalign:0, margin_top:12}));
         this.cb_dark = Gtk.CheckButton.new_with_label (_("Dark theme"));
         this.cb_dark.tooltip_text = _("Prefer dark theme");
