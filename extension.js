@@ -282,15 +282,17 @@ const FrequencyIndicator = new Lang.Class({
   },
 
   show_splash: function () {
-    let width = 640 * Main.layoutManager.primaryMonitor.height / 1200;
+    let monitor = Main.layoutManager.focusMonitor;
+    let height = monitor.height < monitor.width ? monitor.height : monitor.width;
+    let width = 640 * height / 1200;
     if (!this.splash)
       this.splash = Gio.icon_new_for_string (EXTENSIONDIR + "/data/splash.png");
     let splash = new St.Icon ({gicon: this.splash, icon_size: width});
     splash.opacity = 255;
     Main.uiGroup.add_actor (splash);
 
-    splash.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - splash.width / 2),
-      Math.floor (Main.layoutManager.primaryMonitor.height / 2 - splash.height / 2));
+    splash.set_position (Math.floor (monitor.width / 2 - splash.width / 2),
+      Math.floor (monitor.height / 2 - splash.height / 2));
 
     Tweener.addTween (splash, {
       opacity: 224, time: 2, transition: 'easeOut',
