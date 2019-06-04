@@ -15,6 +15,12 @@
       <description>Running main app without window decorations</description>
     </key>
 
+    <key type="b" name="show-splash">
+      <default>true</default>
+      <summary>Show Splash</summary>
+      <description>Enable Splash Screen on selecting</description>
+    </key>
+
     <key type="b" name="dark-theme">
       <default>true</default>
       <summary>Dark theme</summary>

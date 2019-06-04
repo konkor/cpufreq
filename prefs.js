@@ -176,6 +176,14 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.cb_mode.connect ('toggled', Lang.bind (this, () => {
             settings.set_boolean ("extension-mode", this.cb_mode.active);
         }));
+        this.cb_splash = Gtk.CheckButton.new_with_label (_("Splash Screen"));
+        this.cb_splash.tooltip_text = _("Show a splash screen on selecting main application");
+        this.cb_splash.margin = 6;
+        this.add (this.cb_splash);
+        this.cb_splash.active = settings.get_boolean ("show-splash");;
+        this.cb_splash.connect ('toggled', Lang.bind (this, () => {
+            settings.set_boolean ("show-splash", this.cb_splash.active);
+        }));
 
         this.add (new Gtk.Label ({label: _("<b>User Interface</b>"), use_markup:true, xalign:0, margin_top:12}));
         this.cb_dark = Gtk.CheckButton.new_with_label (_("Dark theme"));
