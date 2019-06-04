@@ -213,7 +213,7 @@ const FrequencyIndicator = new Lang.Class({
     let extra = "";
     /*if (Logger.debug_lvl == 2) extra = " --debug";
     else if (Logger.debug_lvl == 1) extra = " --verbose";*/
-    options = options || "--extension";
+    options = options || "";
     info ("launch_app " + options + extra);
     GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
   },

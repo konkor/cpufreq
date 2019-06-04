@@ -11,6 +11,7 @@ description: Here could be your name, brand, reference and logo.
 <br>
 
 
+* **[Roland Jungnickel](https://konkor.github.io/cpufreq/supporters/)**
 * **[Joël Dinel](https://konkor.github.io/cpufreq/supporters/)**
 * **[Michel Bonifert](https://konkor.github.io/cpufreq/supporters/)**
 * **[Patrick Strobel](https://konkor.github.io/cpufreq/supporters/)**

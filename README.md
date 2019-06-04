@@ -28,6 +28,7 @@ Please, consider to support the project and make it better!
     <a href="https://konkor.github.io/cpufreq/supporters/">Jonathan Alden</a><br>
     <a href="https://konkor.github.io/cpufreq/supporters/">Manuel Transfeld</a><br>
     <br></b>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Roland Jungnickel</a><br>
     <a href="https://konkor.github.io/cpufreq/supporters/">Joël Dinel</a><br>
     <a href="https://konkor.github.io/cpufreq/supporters/">Michel Bonifert</a><br>
     <a href="https://konkor.github.io/cpufreq/supporters/">Patrick Strobel</a><br>
@@ -51,7 +52,7 @@ Gnome is a lightweight CPU scaling monitor and powerful CPU management tool. The
 
 https://extensions.gnome.org/extension/1082/cpufreq/
 
-![SCREENSHOT](https://i.imgur.com/Qgvx7W0.png)
+![SCREENSHOT](https://i.imgur.com/3oLzUUy.png)
 
 ## Features
 * Compatible with many hardware architectures (x86, x64, arm ...);
