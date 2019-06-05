@@ -61,7 +61,8 @@ var InfoPanel = new Lang.Class({
       if (!res) return;
       if (text.toLowerCase().indexOf ("product name") > -1) return;
       let s = text.split ("\n")[0];
-      if (s.length < 22) this._board_model.label.set_text ("Model");
+      if (s.length < 10) this._board_model.label.set_text ("Model");
+      else this._board_model.tooltip_text = "Model";
       this._board_model.info.set_text (s);
     });
     this.add (this._board_model);
