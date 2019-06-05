@@ -215,6 +215,12 @@ then
     rm -rf /usr/share/fonts/truetype/cpufreq
     exit
 fi
+if [ $1 = "reset" ]
+then
+    echo 'reset to default values...'
+    dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
+    exit
+fi
 if [ $1 = "version" ]
 then
     echo $VERSION
