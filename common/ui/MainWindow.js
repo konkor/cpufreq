@@ -51,10 +51,12 @@ var MainWindow = new Lang.Class ({
     update = update || false;
     let msg = ("<b>" + _("%s required system components?") + "</b>\n").format (update ? _("Update") : _("Install"));
     let sec = _("This action will be require root permissions to complete installation. ");
-    sec += _("It could take some time depending on your system configuration.\n");
+    sec += _("It could take some time depending on your system configuration. It will try to execute the command:\n\n");
+    sec += "<i>pkexec " + APPDIR + "/cpufreqctl install</i>\n\n";
+    sec += "<i><b>" + _("Note:") + "</b> " + _("You can press \'Cancel\' button and make it manually as an administrator to complete the installation.") + "</i>\n"
     let dlg = new Gtk.MessageDialog ({
       message_type: Gtk.MessageType.WARNING, buttons: Gtk.ButtonsType.OK_CANCEL,
-      text: msg, use_markup: true, secondary_text: sec, icon: this.icon
+      text: msg, use_markup: true, secondary_text: sec, secondary_use_markup: true, icon: this.icon
     });
     let res = dlg.run ();
     dlg.hide ();
