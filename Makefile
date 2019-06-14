@@ -27,7 +27,7 @@ data/icons/cpufreq.svg \
 data/icons/open-menu-symbolic.svg \
 data/icons/feedcat.svg
 EXTRA_DATA = \
-data/splash.png
+data/splash.svg
 STYLE_CSS_DEFAULT = data/themes/default/gtk.css
 
 ifeq ($(strip $(DESTDIR)),)

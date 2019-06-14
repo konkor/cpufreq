@@ -164,6 +164,7 @@ const FrequencyIndicator = new Lang.Class({
       if (s) eprofiles = JSON.parse (s);
     } else if (key == EXTENSION_MODE_KEY) {
       extmode = o.get_boolean (EXTENSION_MODE_KEY);
+      print ("extmode:",extmode);
     } else if (key == SHOW_SPLASH_KEY) {
       splash = o.get_boolean (SHOW_SPLASH_KEY);
     }
@@ -290,9 +291,9 @@ const FrequencyIndicator = new Lang.Class({
   show_splash: function () {
     let monitor = Main.layoutManager.focusMonitor;
     let height = monitor.height < monitor.width ? monitor.height : monitor.width;
-    let width = 640 * height / 1200;
+    let width = 512 * height / 1200;
     if (!this.splash)
-      this.splash = Gio.icon_new_for_string (EXTENSIONDIR + "/data/splash.png");
+      this.splash = Gio.icon_new_for_string (EXTENSIONDIR + "/data/splash.svg");
     let splash = new St.Icon ({gicon: this.splash, icon_size: width});
     splash.opacity = 255;
     Main.uiGroup.add_actor (splash);
@@ -301,7 +302,7 @@ const FrequencyIndicator = new Lang.Class({
       Math.floor (monitor.height / 2 - splash.height / 2));
 
     Tweener.addTween (splash, {
-      opacity: 224, time: 2, transition: 'easeOut',
+      opacity: 255, time: 2, transition: 'easeOut',
       onComplete: () => {
         Main.uiGroup.remove_actor (splash);
         splash = null;
