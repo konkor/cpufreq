@@ -63,8 +63,10 @@ function init (prefs) {
   get_governors ();
   get_frequencies ();
   default_profile = get_default_profile ();
-  res = default_profile.core[0].g[0];
-  if (res && (res == res.toUpperCase ())) settings.camel = true;
+  if (governoractual[0]) {
+    res = governoractual[0][0];
+    if (res == res.toUpperCase ()) settings.camel = true;
+  }
 }
 
 function check_install () {
