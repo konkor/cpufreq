@@ -295,14 +295,13 @@ const FrequencyIndicator = new Lang.Class({
     if (!this.splash)
       this.splash = Gio.icon_new_for_string (EXTENSIONDIR + "/data/splash.svg");
     let splash = new St.Icon ({gicon: this.splash, icon_size: width});
-    splash.opacity = 255;
     Main.uiGroup.add_actor (splash);
 
     splash.set_position (Math.floor (monitor.width / 2 - splash.width / 2),
       Math.floor (monitor.height / 2 - splash.height / 2));
 
     Tweener.addTween (splash, {
-      opacity: 255, time: 2, transition: 'easeOut',
+      time: 2, transition: 'easeOut',
       onComplete: () => {
         Main.uiGroup.remove_actor (splash);
         splash = null;
