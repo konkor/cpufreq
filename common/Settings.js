@@ -50,6 +50,7 @@ var Settings = new Lang.Class({
       );
     this.parent ({ settings_schema: schemaObj });
     this.load ();
+    this.camel = false;
 
     this.connect ("changed", this.on_settings.bind (this));
   },
@@ -216,7 +217,8 @@ var Settings = new Lang.Class({
     return "";
   },
   set governor (val) {
-    if (!current) return;
+    if (!current || !val) return;
+    if (!this.camel) val = val.toLowerCase().trim();
     var equal = true;
     for (let i = 0; i < current.cpu; i++) {
       if (current.core[i].g != val) equal = false;
