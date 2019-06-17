@@ -164,7 +164,6 @@ const FrequencyIndicator = new Lang.Class({
       if (s) eprofiles = JSON.parse (s);
     } else if (key == EXTENSION_MODE_KEY) {
       extmode = o.get_boolean (EXTENSION_MODE_KEY);
-      print ("extmode:",extmode);
     } else if (key == SHOW_SPLASH_KEY) {
       splash = o.get_boolean (SHOW_SPLASH_KEY);
     }
