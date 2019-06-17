@@ -84,8 +84,8 @@ function check_install () {
   if (!pkexec_path) installed = false;
   if (installed) {
     let localctl = null, globalctl = null;
-    globalctl = get_command_line_string ("/usr/bin/cpufreqctl version");
-    localctl = get_command_line_string (APPDIR + "/cpufreqctl version");
+    globalctl = get_command_line_string ("/usr/bin/cpufreqctl --version");
+    localctl = get_command_line_string (APPDIR + "/cpufreqctl --version");
     debug ("Versions local:%s global:%s".format (localctl, globalctl));
     updated = localctl == globalctl;
   }
@@ -121,8 +121,8 @@ function install_components (update) {
   if (!pkexec_path) return false;
   debug (pkexec_path + " " + cpufreqctl_path);
   try {
-    GLib.spawn_command_line_sync ("%s %s/cpufreqctl install".format (pkexec_path, APPDIR));
-    GLib.spawn_command_line_async ("%s %s/cpufreqctl update-fonts".format (pkexec_path, APPDIR));
+    GLib.spawn_command_line_sync ("%s %s/cpufreqctl --install".format (pkexec_path, APPDIR));
+    GLib.spawn_command_line_async ("%s %s/cpufreqctl --update-fonts".format (pkexec_path, APPDIR));
   } catch (e) {
     error (e.message);
   }
@@ -351,11 +351,11 @@ function load_stage (prf) {
   debug ("Loading stage: " + stage);
   if (stage == 1) {
     if (pstate_present) {
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min 0");
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " max 100");
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --min-perf --set=0");
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --max-perf --set=100");
     } else {
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " minf " + get_freq (0));
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " maxf " + get_freq (100));
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --frequency-min --set=" + get_freq (0));
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --frequency-max --set=" + get_freq (100));
     }
   } else if (stage == 2) {
     for (let key = 0; key < cpucount; key++) {
@@ -366,7 +366,7 @@ function load_stage (prf) {
     set_turbo (prf.turbo);
   } else if (stage == 4) {
     if (pstate_present) {
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " min " + prf.minf);
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --min-perf --set=" + prf.minf);
     } else {
       for (let key = 0; key < cpucount; key++) {
         if (prf.core[key]) {
@@ -376,7 +376,7 @@ function load_stage (prf) {
     }
   } else if (stage == 5) {
     if (pstate_present) {
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " max " + prf.maxf);
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --max-perf --set=" + prf.maxf);
     } else {
       for (let key = 0; key < cpucount; key++) {
         if (prf.core[key]) {
@@ -412,12 +412,12 @@ function set_turbo (state) {
   if (!util_present) return false;
   if (pstate_present) {
     if (state)
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " turbo 0");
-    else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " turbo 1");
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --no-turbo --set=0");
+    else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --no-turbo --set=1");
   } else {
     if (state)
-      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " boost 1");
-    else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " boost 0");
+      GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --boost --set=1");
+    else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --boost --set=0");
   }
   if (settings.save) settings.turbo = state;
   return state;
@@ -448,7 +448,7 @@ function get_governors () {
 function set_governors (governor) {
   if (!util_present || !governor) return;
 
-  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov " + governor);
+  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --governor --set=" + governor);
 
   if (settings.save) settings.governor = governor;
 }
@@ -474,15 +474,15 @@ function set_governor (core, governor) {
   core = core || 0;
   if (!util_present || !governor) return;
   GLib.spawn_command_line_sync (
-    pkexec_path + " " + cpufreqctl_path + " coreg " + core + " " + governor
+    pkexec_path + " " + cpufreqctl_path + " --governor --core=" + core + " --set=" + governor
   );
 }
 
 function set_userspace (frequency) {
   if (!util_present || !frequency) return 0;
 
-  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " gov userspace");
-  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " set " + frequency);
+  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --governor --set=userspace");
+  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --frequency --set=" + frequency);
 
   settings.set_userspace (frequency.toString ());
 
@@ -559,7 +559,7 @@ function get_coremin (core) {
 function set_coremin (core, state) {
   if (!util_present) return false;
   try {
-    GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " coremin " + core + " " + state);
+    GLib.spawn_command_line_sync ("%s %s --frequency-min --core=%d --set=%s".format (pkexec_path,cpufreqctl_path,core,state));
   } catch (e) {
     error ("Set coremin" + e.message);
     return false;
@@ -577,7 +577,7 @@ function get_coremax (core) {
 function set_coremax (core, state) {
   if (!util_present) return false;
   try {
-    GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " coremax " + core + " " + state);
+    GLib.spawn_command_line_sync ("%s %s --frequency-max --core=%d --set=%s".format (pkexec_path,cpufreqctl_path,core,state));
   } catch (e) {
     error ("Set coremax" + e.message);
     return false;
@@ -595,7 +595,7 @@ function get_min () {
 function set_min (minimum) {
   if ((minimum <= 0) || !Number.isInteger (minimum)) return 0;
   if (!util_present) return 0;
-  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " minf " + minimum.toString());
+  GLib.spawn_command_line_sync ("%s %s --frequency-min --set=%s".format (pkexec_path,cpufreqctl_path,minimum));
   if (settings.save) settings.min_freq = minimum.toString ();
   return minimum;
 }
@@ -610,7 +610,7 @@ function get_max () {
 function set_max (maximum) {
   if ((maximum <= 0) || !Number.isInteger (maximum)) return 0;
   if (!util_present) return 0;
-  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " maxf " + maximum.toString());
+  GLib.spawn_command_line_sync ("%s %s --frequency-max --set=%s".format (pkexec_path,cpufreqctl_path,maximum));
   if (settings.save) settings.max_freq = maximum.toString ();
   return maximum;
 }
@@ -624,7 +624,7 @@ function get_min_pstate () {
 
 function set_min_pstate (minimum) {
   if (!util_present) return 0;
-  GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " min " + minimum.toString());
+  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --min-perf --set=" + minimum);
   if (settings.save) settings.min_freq_pstate = minimum;
   return minimum;
 }
@@ -638,7 +638,7 @@ function get_max_pstate () {
 
 function set_max_pstate (maximum) {
   if (!util_present) return 100;
-  GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " max " + maximum.toString());
+  GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --max-perf --set=" + maximum);
   if (settings.save) settings.max_freq_pstate = maximum;
   return maximum;
 }
@@ -647,9 +647,9 @@ function set_core (core, state) {
   if (!util_present) return false;
   util_present = false;
   if (state)
-    GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " on " + core);
+    GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --on --core=" + core);
   else
-    GLib.spawn_command_line_sync (pkexec_path + ' ' + cpufreqctl_path + " off " + core);
+    GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --off --core=" + core);
   util_present = true;
   return state;
 }
@@ -751,6 +751,7 @@ function get_cpu_number () {
 function get_throttle () {
   if (!thermal_throttle) return 0;
   let tc = 0, cc = GLib.get_num_processors (), s;
+  debug ("Number processes: " + cc);
   for (let i = 0; i < cc; i++) {
     s = get_content (CPUROOT + "cpu" + i + "/thermal_throttle/core_throttle_count");
     if (s) tc += parseInt (s);
@@ -760,7 +761,7 @@ function get_throttle () {
 
 function get_throttle_events (callback) {
   if (!callback) return;
-  let pipe = new SpawnPipe ([pkexec_path,cpufreqctl_path,"throttle_events"], "/", (text, e) => {
+  let pipe = new SpawnPipe ([pkexec_path,cpufreqctl_path,"--throttle-events"], "/", (text, e) => {
     let num = 0;
     if (e) debug (e);
     else if (text) num = parseInt (text[0]);
@@ -809,7 +810,7 @@ function get_content (path) {
     [success, contents, ] = file.load_contents (null);
     if (success) contents = byteArrayToString (contents).toString ().trim ();
   } catch (e) {
-    error (e.message);
+    error (e.message + "\n" + path);
   }
   return contents;
 }
@@ -826,7 +827,7 @@ function get_content_async (path, callback) {
     [success, contents] = o.load_contents_finish (res);
     if (success) try {
       contents = byteArrayToString (contents).toString ().trim ();
-    } catch (e) {error (e.message);}
+    } catch (e) {error (e.message + "\n" + path);}
     if (callback) callback (success, contents);
   });
 }

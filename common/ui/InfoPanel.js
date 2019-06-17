@@ -128,7 +128,7 @@ var InfoPanel = new Lang.Class({
 
   on_realized: function () {
     Logger.info ("InfoPanel", "realize");
-    if (Helper.get_cpufreq_info ("irqbalance"))
+    if (Helper.get_cpufreq_info ("--irqbalance"))
       this.balance = "IRQBALANCE DETECTED";
     this.get_memory ();
     info_event = GLib.timeout_add (100, 1000, () => {

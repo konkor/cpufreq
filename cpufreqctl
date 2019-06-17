@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='19'
+VERSION='20'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 DRIVER=auto
@@ -20,11 +20,6 @@ case $i in
   ;;
   -c=*|--core=*)
   CORE="${i#*=}"
-  if [ $CORE -gt $(($cpucount - 1)) ]
-  then
-    echo "Core number should be less then "$cpucount
-    exit 1
-  fi
   shift
   ;;
   --available)
