@@ -128,7 +128,7 @@ var CpufreqService = new Lang.Class ({
         this._init_streams ();
         this._update_freq ();
         this._add_event ();
-        settings.connect ("changed", Lang.bind (this, this.on_settings));
+        settings.connect ("changed", this.on_settings.bind (this));
         GLib.timeout_add (200, 8000, () => {
           let cores = GLib.get_num_processors ();
           if (cores != cpu_online) this._init_streams ();
@@ -175,10 +175,10 @@ var CpufreqService = new Lang.Class ({
             event = 0;
         }
         if (monitor_timeout > 0)
-            event = GLib.timeout_add (100, monitor_timeout, Lang.bind (this, function () {
+            event = GLib.timeout_add (100, monitor_timeout, () => {
                 this._update_freq ();
                 return true;
-            }));
+            });
         else {
           this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [""]));
           this.quit ();
@@ -366,7 +366,7 @@ var CpufreqService = new Lang.Class ({
             dis.seek (0, GLib.SeekType.SET, null);
             dis.read_line_async (100, null, this._read_done);
         } catch (e) {
-            init_event = GLib.timeout_add (0, 25, Lang.bind (this, this._init_streams ));
+            init_event = GLib.timeout_add (0, 25, this._init_streams.bind (this));
             //error (e);
         }
     },
