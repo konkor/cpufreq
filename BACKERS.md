@@ -18,6 +18,7 @@ description: Here could be your name, brand, reference and logo.
 <br><br>
 
 
+* [Felix Emmert](https://konkor.github.io/cpufreq/supporters/)
 * [Térence Clastres](https://github.com/terencode)
 * [Mark Graber](https://konkor.github.io/cpufreq/supporters/)
 * [Samir Menon](https://konkor.github.io/cpufreq/supporters/)
