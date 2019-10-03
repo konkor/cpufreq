@@ -51,6 +51,10 @@ extension: ./schemas/gschemas.compiled
 
 install: install-local
 
+uninstall:
+	rm -rf $(INSTALLBASE)/$(UUID)
+	echo done
+
 install-local: _build
 	mkdir -p $(INSTALLBASE)/$(UUID)/tmp
 	cp -r $(INSTALLBASE)/$(UUID)/tmp ./_build/.
