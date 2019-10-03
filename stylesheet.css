@@ -1,6 +1,5 @@
 .cpufreq-text {
     font-family: cpufreq, roboto, lato, Cantarell, monospace;
-    font-size: 1em;
 }
 
 .cpufreq-notify, .cpufreq-warn {
