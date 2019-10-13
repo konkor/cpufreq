@@ -508,7 +508,12 @@ function get_frequencies () {
   frequencieslist = frequencieslist.split (" ");
   frequencieslist.forEach ((freq)=> {
     if (freq.length > 0)
-      if (parseInt (freq) > 0) frequencies.unshift (freq);
+      if (parseInt (freq) > 0) frequencies.unshift (parseInt (freq));
+  });
+  frequencies.sort ((a, b) => {
+    if (a == b) return 0;
+    else if (a < b) return -1;
+    return 1;
   });
   if (frequencies.length > 0) {
     minimum_freq = frequencies[0];
