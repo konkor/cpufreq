@@ -356,7 +356,7 @@ var ControlPanel = new Lang.Class({
   },
 
   add_boost: function () {
-    this.boost = new Switch.Switch ("Turbo Boost", cpu.get_turbo(), "Enable processor boost");
+    this.boost = new Switch.Switch ("Frequency Boost", cpu.get_turbo(), "Enable processor boosting technology");
     this.add_item (this.boost);
     this.boost.sw.connect ('state_set', () => {
       if (!cpu.installed || this.locked) return;
