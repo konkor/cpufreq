@@ -818,11 +818,11 @@ function get_content (path) {
 function get_content_async (path, callback) {
   let success = false, contents = null;
   if (!callback) return;
-  if (!path) {
+  let file = Gio.file_new_for_path (path);
+  if (!path || !file.query_exists (null)) {
     callback (success, contents);
     return;
   }
-  let file = Gio.file_new_for_path (path);
   file.load_contents_async (null, (o, res) => {
     [success, contents] = o.load_contents_finish (res);
     if (success) try {
