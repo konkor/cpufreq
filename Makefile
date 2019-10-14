@@ -1,6 +1,8 @@
 # Basic Makefile
-
+PACKAGE = cpufreq
+VERSION = 34
 UUID = cpufreq@konkor
+LOCAL = FALSE
 BASEDIR = $(shell pwd)/
 BASE_MODULES = metadata.json \
   stylesheet.css \
@@ -27,15 +29,18 @@ data/icons/cpufreq.svg \
 data/icons/open-menu-symbolic.svg \
 data/icons/feedcat.svg
 EXTRA_DATA = \
-data/splash.svg
+data/splash.svg \
+data/cpufreq-manager.desktop
 STYLE_CSS_DEFAULT = data/themes/default/gtk.css
 
-ifeq ($(strip $(DESTDIR)),)
+ifneq ($(HOME),/root)
 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
 	RMTMP = echo Not deleting tmp as installation is local
+	LOCAL = TRUE
 else
 	INSTALLBASE = $(DESTDIR)/usr/share/gnome-shell/extensions
 	RMTMP = rm -rf ./_build/tmp
+	INSTALLDESK = echo Nothing to do
 endif
 
 all: zip-file
@@ -49,9 +54,10 @@ extension: ./schemas/gschemas.compiled
 ./schemas/gschemas.compiled: ./schemas/org.gnome.shell.extensions.cpufreq.gschema.xml
 	glib-compile-schemas ./schemas/
 
-install: install-local
+install: install-local install-desktop
 
-uninstall:
+
+uninstall: uninstall-desktop
 	rm -rf $(INSTALLBASE)/$(UUID)
 	echo done
 
@@ -64,6 +70,30 @@ install-local: _build
 	cp -r ./_build/* $(INSTALLBASE)/$(UUID)/
 	-rm -fR _build
 	echo done
+
+install-desktop:
+ifeq ($(LOCAL),TRUE)
+	echo 'local desktop installation...'
+	sed -i 's+cpufreq-application+$(INSTALLBASE)/$(UUID)/cpufreq-application+g' $(INSTALLBASE)/$(UUID)/data/cpufreq-manager.desktop
+	sed -i 's+cpufreq.svg+$(INSTALLBASE)/$(UUID)/data/icons/cpufreq.svg+g' $(INSTALLBASE)/$(UUID)/data/cpufreq-manager.desktop
+	cp $(INSTALLBASE)/$(UUID)/data/cpufreq-manager.desktop $(HOME)/.local/share/applications/cpufreq-manager.desktop
+else
+	echo 'system desktop installation...'
+	sed -i 's+cpufreq.svg+cpufreq+g' $(INSTALLBASE)/$(UUID)/data/cpufreq-manager.desktop
+	cp $(INSTALLBASE)/$(UUID)/data/cpufreq-manager.desktop /usr/share/applications/cpufreq-manager.desktop
+	cp $(INSTALLBASE)/$(UUID)/data/icons/cpufreq.svg /usr/share/icons/hicolor/scalable/apps/cpufreq.svg
+	cp $(INSTALLBASE)/$(UUID)/cpufreq-application /usr/bin/cpufreq-application
+	gtk-update-icon-cache -q /usr/share/icons/hicolor
+endif
+
+uninstall-desktop:
+ifeq ($(LOCAL),TRUE)
+	rm -f $(HOME)/.local/share/applications/cpufreq-manager.desktop
+else
+	rm -f /usr/share/applications/cpufreq-manager.desktop
+	rm -f /usr/share/icons/hicolor/scalable/apps/cpufreq-application.svg
+	rm -f /usr/bin/cpufreq-application
+endif
 
 zip-file: _build
 	cd _build ; \
