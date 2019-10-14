@@ -18,20 +18,27 @@ description: Here could be your name, brand, reference and logo.
 <br><br>
 
 
-* [Térence Clastres](https://github.com/terencode)
+* [Felix Emmert](https://konkor.github.io/cpufreq/supporters/)
+* [Chun-Sheng Wu](https://konkor.github.io/cpufreq/supporters/)
 * [Mark Graber](https://konkor.github.io/cpufreq/supporters/)
 * [Samir Menon](https://konkor.github.io/cpufreq/supporters/)
 * [Idan Bidani](https://konkor.github.io/cpufreq/supporters/)
 * [Arnold Schröder](https://konkor.github.io/cpufreq/supporters/)
 * [Adam Jones](https://konkor.github.io/cpufreq/supporters/)
 * [Alibek Junisbayev](https://konkor.github.io/cpufreq/supporters/)
+* [Térence Clastres](https://github.com/terencode)
 
 ## [Patreons](https://www.patreon.com/konkor)
 
 * [Nick Krzemienski](https://github.com/krzemienski)
 * [Ivan Chayka](https://vk.com/anaumynaugames)
+* [Phenix Nunlee](https://www.patreon.com/user?u=21996172)
 * [Steffen W.](https://www.patreon.com/user/creators?u=7405409)
 * [Yoann Deferi](https://konkor.github.io/cpufreq/supporters/)
+* [Tony](https://www.patreon.com/twu026)
+* [Takao Sumitomo](https://www.patreon.com/user?u=21736175)
+* [jasonium](https://www.patreon.com/user?u=711103)
+
 
 # People donated their **own time**
 
