@@ -36,6 +36,7 @@ Please, consider to support the project and make it better!
     Patreons:<br><br>
     <a href="https://github.com/krzemienski">Nick Krzemienski (USA)</a><br>
     <a href="https://vk.com/anaumynaugames">Ivan Chayka (Russia)</a><br>
+    <a href="http://konkor.github.io/cpufreq/sponsors/">Phenix Nunlee</a><br>
     <a href="http://konkor.github.io/cpufreq/sponsors/">Steffen W. (Germany)</a><br>
     <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
     <br>
