@@ -93,13 +93,15 @@ function check_install () {
 
 function check_extensions () {
   if (!util_present || !installed) return;
+  thermal_throttle = Gio.File.new_for_path (CPUROOT + "cpu0/thermal_throttle/core_throttle_count").query_exists (null);
+  if (!Gio.File.new_for_path (CPUROOT + "cpufreq/boost").query_exists (null) && !pstate_present) return;
   let save_state = settings.save;
-  let default_boost = get_turbo ();
+  let default_boost = get_turbo (true);
   settings.save = false;
   try {
     if (default_boost == false) {
-      set_turbo (true);
-      let new_state = get_turbo ();
+      set_turbo (true, true);
+      let new_state = get_turbo (true);
       if (default_boost != new_state) {
         boost_present = true;
         set_turbo (false);
@@ -107,7 +109,6 @@ function check_extensions () {
     } else boost_present = true;
   } catch (e) {error (e.message);}
   settings.save = save_state;
-  thermal_throttle = Gio.File.new_for_path (CPUROOT + "cpu0/thermal_throttle/core_throttle_count").query_exists (null);
 }
 
 function is_wayland () {
@@ -396,8 +397,8 @@ function load_stage (prf) {
   }
 }
 
-function get_turbo () {
-  if (!util_present) return false;
+function get_turbo (force) {
+  if ((!util_present || !boost_present) && !force) return false;
   var res = null;
   if (pstate_present) res = get_cpufreq_info ("turbo");
   else res = get_cpufreq_info ("boost");
@@ -408,8 +409,8 @@ function get_turbo () {
   return false;
 }
 
-function set_turbo (state) {
-  if (!util_present) return false;
+function set_turbo (state, force) {
+  if ((!util_present || !boost_present) && !force) return false;
   if (pstate_present) {
     if (state)
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --no-turbo --set=0");
@@ -700,7 +701,7 @@ function get_frequency_async (num, callback) {
       if (n >= 1000000) {
         label = (n / 1000000).toFixed(2).toString () + " \u3393";
       } else {
-        label = (m / 1000).toFixed(0).toString () + "  \u3392";
+        label = (n / 1000).toFixed(0).toString () + "  \u3392";
       }
       }
       callback (label);
