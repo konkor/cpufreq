@@ -3,10 +3,6 @@
   <a href="https://github.com/konkor/cpufreq"><img src="https://img.shields.io/github/stars/konkor/cpufreq.svg?style=social&label=Star&style=flat-square" alt="Stars"></a>
 </p>
 
-### _Note:_
-
-I decided to move `gtk` branch to the `Master` and make it as default development branch. It has been a long time ago when I decided to make Gtk port of this popular Gnome shell extension. But it's hard to split a limited resources on the project. _The fun is over_, you know. Gnome users should not worry about that moving. Actually, it will bring more possibilities and features to the project. Also it would be possible to use the project on all other kinds of Linux DE. [Blog about that moving](https://konkor.github.io/cpufreq/cpufreq/blog/news/2019/02/24/news.html)
-
 # [![CPUFREQ](/docs/assets/images/logo.png?raw=true)](https://konkor.github.io/cpufreq/)
 ### _CPU Monitor and Power Manager_.
 
