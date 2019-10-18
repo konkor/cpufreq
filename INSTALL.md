@@ -6,17 +6,34 @@ You can find more on [the project's documentation pages](http://konkor.github.io
 * supported cpufreq modules.
 
 
+### From git source
+```sh
+git clone https://github.com/konkor/cpufreq
+cd cpufreq
+
+./autogen.sh && make
+sudo make install
+```
+
+or just copy (old method)
+
+```sh
+mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
+cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
+chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
+```
+
 ## Official Gnome Extension repository [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
 
-### Install from GitHub branch (default `master`)
-1. Run [install script](https://github.com/konkor/cpufreq/raw/master/install.sh)
+### Install/Update the GNOME extension version from GitHub branch (default `master`)
+1. Run [install script](https://github.com/konkor/cpufreq/raw/master/install_extension.sh)
 ```
-./install.sh
+./install_extension.sh
 ```
-or for `info` branch to example
+or for any other branch to example
 ```
-./install.sh info
+./install_extension.sh BRANCH
 ```
 
 2. Restart Gnome to reload extensions by:
@@ -53,22 +70,6 @@ Now close _gnome-tweak-tool_ and restart _gnome-shell_ Log Out or just enter 'r'
 ```
 gnome-tweak-tool # Turn on the extension.
 cpufreq extension => ⚠ Install...
-```
-
-### From git source
-```sh
-git clone https://github.com/konkor/cpufreq
-cd cpufreq
-
-make && make install
-```
-
-or just copy (old method)
-
-```sh
-mkdir -p ~/.local/share/gnome-shell/extensions/cpufreq@konkor
-cp -r * ~/.local/share/gnome-shell/extensions/cpufreq@konkor/
-chmod 0755 ~/.local/share/gnome-shell/extensions/cpufreq@konkor/cpufreqctl
 ```
 
 #### Optionally, you can install/update global system components in a terminal
@@ -139,4 +140,4 @@ Follow [the instructions](https://wiki.archlinux.org/index.php/CPU_frequency_sca
 
 ## Troubleshooting
 ### Missing symbols
-If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu or/and Droid font packages to fix it.
+If you have missing symbols you are, probably, missing some fonts, try to install TTF Freefonts, DejaVu and Droid font packages to fix it. Also it's recommended to install Roboto and/or Lato (_sudo apt-get install fonts-roboto fonts-lato_ etc), they are using in the application's UI.

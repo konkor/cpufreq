@@ -26,7 +26,9 @@ js_SCRIPTS = cpufreq-application \
     cpufreq-service \
     cpufreqctl
 
-bin_SCRIPTS = $(js_SCRIPTS)
+bin_SCRIPTS = cpufreq-application \
+    cpufreq-preferences \
+    cpufreq-service
 
 dist_js_DATA = $(js_SCRIPTS)
 
@@ -35,9 +37,11 @@ dist_doc_DATA = \
     INSTALL.md \
     BACKERS.md
 
-policydir=$(datadir)/polkit-1/actions
-policy_DATA= \
-    konkor.cpufreq.policy
+policydir=/usr/share/polkit-1/actions
+policy_DATA = konkor.cpufreq.policy
+
+helperdir=/usr/bin
+helper_SCRIPTS = cpufreqctl
 
 EXTRA_DIST = $(js_DATA) metadata.json.in
 
