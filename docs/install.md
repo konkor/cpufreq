@@ -87,14 +87,14 @@ _Make a ZIP package for GNOME Shell:_
 
 # Installation script
 <p class="description">Installing the extension through the installation script from the GitHub repository.</p>
-1. Run [install script](https://github.com/konkor/cpufreq/raw/master/install.sh) _(default `master` branch)_
+1. Run [install script](https://github.com/konkor/cpufreq/raw/master/install_extension.sh) _(default `master` branch)_
 ``` sh
-chmod a+x install.sh
-./install.sh
+chmod a+x install_extension.sh
+./install_extension.sh
 ```
 or for `gtk` branch to example
 ``` bash
-./install.sh gtk
+./install_extension.sh gtk
 ```
 2. [Restart Gnome Shell](#restarting-gnome-shell) to reload extensions.
 
@@ -102,7 +102,7 @@ or for `gtk` branch to example
 
 # Source Archive
 
-<p class="description">Manual installation from the GitHub branch's  source archive.</p>
+<p class="description">Manual installation of GNOME Extension from the GitHub branch's source archive.</p>
 
 1. Download zip archive from GitHub page _[cpufreq-master.zip](https://github.com/konkor/cpufreq/archive/master.zip)_.
 2. Extract _cpufreq-master.zip_ archive and copy all to the _~/.local/share/gnome-shell/extensions/cpufreq@konkor_ folder.
@@ -118,10 +118,10 @@ _PS: I recommend you to install it through the [extensions.gnome.org](https://ex
 [Top](#)
 
 # Gnome Tweak Tool
-<p class="description">installation of the source archive from GitHub through Gnome Tweak Tool.</p>
+<p class="description">installation of GNOME Extension <b>cpufreq@konkor.zip</b> packages from GitHub through Gnome Tweak Tool.</p>
 
 Download zip archive from GitHub page. Run _gnome-tweak-tool_ go to extensions tab,
-click _Install Shell Extension_ from a drive and select _cpufreq-master.zip_.
+click _Install Shell Extension_ from a drive and select _cpufreq-master.zip_ or downloaded _cpufreq@konkor.zip_.
 Detailed steps below:
 ```
 wget https://github.com/konkor/cpufreq/archive/master.zip
