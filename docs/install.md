@@ -1,16 +1,18 @@
 ---
 title: Installation
 permalink: /install/
-description: List of extension dependencies, methods of installations and other manipulations.
+description: List of application dependencies, methods of installations and other manipulations.
 ---
 
 # Table of contents
 1. [Dependencies](#dependencies)
-2. [Gnome extensions repository](#gnome-extensions)
-3. [Installation script](#installation-script)
-4. [Source Archive](#source-archive)
-5. [Gnome Tweak Tool](#gnome-tweak-tool)
-6. [Git Clone](#git-clone)
+1. [Releases page](#releases-page)
+1. [Gnome extensions repository](#gnome-extensions)
+1. [Git sources](#git-sources)
+1. [Packaging](#packaging)
+1. [Installation script](#installation-script)
+1. [Source Archive](#source-archive)
+1. [Gnome Tweak Tool](#gnome-tweak-tool)
 1. [Restarting Gnome Shell](#restarting-gnome-shell)
 1. [Managing Extensions](#managing-extensions)
 1. [Finishing the installation](#finishing-the-installation)
@@ -19,16 +21,69 @@ description: List of extension dependencies, methods of installations and other 
 1. [Troubleshooting](#troubleshooting)
 
 # Dependencies
-* Gnome Shell 3.14+
-* supported cpufreq modules...
+* Gtk 3.14+
+* GJS
+* fonts-roboto fonts-lato (optionally)
+
+# Releases page
+<p class="description">A simple way to install the application from compiled <b>deb</b> packages for Debian/Ubuntu flavors. There are available GNOME Extension <b>cpufreq@konkor.zip</b> packages so.</p>
+_Releases page on_ [GitHub](https://github.com/konkor/cpufreq/releases)
+
+You can install downloaded package from GUI package managers like GDEBI or other system utilities or just using CLI.
+
+```sh
+sudo dpkg -i cpufreq_VERSION_all.deb
+sudo apt-get -f install
+```
+
 
 # Gnome extensions
-<p class="description">The official and easiest way to install the extension on the Gnome Desktop.</p>
+<p class="description">The official and easiest way to install the extension version on the Gnome Desktop.</p>
 _Official repository of the extension on_ [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 
 You have to select `Install...` or `Install Updates...` in the extension menu after installation/updating to finish the configuration.
 
 _You could try to install the extension through the Gnome Software center so. It's available in many modern distributions._
+
+
+# Git sources
+
+### Building dependencies
+* autogen automake
+* gnome-autogen
+* devscripts (for DEB packaging only)
+
+```sh
+sudo apt-get install autogen automake gnome-common
+
+## for debian packaging
+sudo apt-get install devscripts
+```
+
+### Building and installing from sources
+```sh
+git clone https://github.com/konkor/cpufreq
+cd cpufreq
+
+./autogen.sh && make
+sudo make install
+```
+
+
+# Packaging
+### Debian
+_Make a DEB package:_
+```sh
+./autogen.sh && make && make dist
+cd packaging/
+./packaging.sh
+```
+
+### GNOME Extension
+_Make a ZIP package for GNOME Shell:_
+```sh
+./autogen.sh && make && make zip-file
+```
 
 # Installation script
 <p class="description">Installing the extension through the installation script from the GitHub repository.</p>

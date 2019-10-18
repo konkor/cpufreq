@@ -9,8 +9,12 @@ You can find more on [the project's documentation pages](http://konkor.github.io
 * fonts-roboto fonts-lato (optionally)
 
 ## [Releases page](https://github.com/konkor/cpufreq/releases)
-There are the latest releases and installation packages for Debian/Ubuntu flavors and GNOME Extension zip file.
+There are the latest releases and installation packages for Debian/Ubuntu flavors and GNOME Extension zip file. You can install downloaded package from GUI package managers like GDEBI or other system utilities or just using CLI.
 
+```sh
+sudo dpkg -i cpufreq_VERSION_all.deb
+sudo apt-get -f install
+```
 
 ## GNOME Extension repository [extensions.gnome.org](https://extensions.gnome.org/extension/1082/cpufreq/)
 You should select `Install.../Install Updates...` in the extension menu after installation/updating to finish the configuration.
