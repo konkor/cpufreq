@@ -51,14 +51,18 @@ var InfoPanel = new Lang.Class({
 
     this._board_vendor = new InfoLabel ();
     Helper.get_content_async ("/sys/class/dmi/id/board_vendor", (res, text) => {
-      if (!res) return;
-      this._board_vendor.label.set_text (text.split ("\n")[0]);
+      if (res)
+        this._board_vendor.label.set_text (text.split ("\n")[0]);
+      else if (this.hardware) this._board_vendor.label.set_text (this.hardware);
     });
     this.add (this._board_vendor);
 
     this._board_model = new InfoLabel ();
     Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
-      if (!res) return;
+      if (!res) {
+        if (this.board) this._board_model.info.set_text (this.board);
+        return;
+      }
       if (text.toLowerCase().indexOf ("product name") > -1) return;
       let s = text.split ("\n")[0];
       if (s.length < 10) this._board_model.label.set_text ("Model");
@@ -161,19 +165,27 @@ var InfoPanel = new Lang.Class({
     let f = Gio.File.new_for_path ('/proc/cpuinfo');
     if (f.query_exists(null)) {
       let dis = new Gio.DataInputStream ({ base_stream: f.read (null) });
-      let line, model = "", s, i = 0;
+      let line, model = "", board = "", hw = "", s;
       try {
         [line, ] = dis.read_line (null);
         while (line != null) {
           s = byteArrayToString(line).toString();
           if (s.indexOf ("model name") > -1) {
             model = s;
-            i++;
+          } else if (s.indexOf ("Hardware") > -1) {
+            hw = s;
+          } else if ((s.indexOf ("Model") == 0) && hw) {
+            board = s;
           }
-          if (i > 0) break;
           [line, ] = dis.read_line (null);
         }
         dis.close (null);
+        if (hw) {
+          this.hardware = hw.substring (hw.indexOf (":") + 1).trim ();
+        }
+        if (board) {
+          this.board = board.substring (board.indexOf (":") + 1).trim ();
+        }
         if (model) {
           model = model.substring (model.indexOf (":") + 1).trim ();
           if (model.toLowerCase().lastIndexOf ("amd") > -1) this.amd = true;
