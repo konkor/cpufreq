@@ -60,7 +60,7 @@ var InfoPanel = new Lang.Class({
     this._board_model = new InfoLabel ();
     Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
       if (!res) {
-        if (this.board) this._board_model.info.set_text (this.board);
+        if (this.board) this._board_model.label.set_text (this.board);
         return;
       }
       if (text.toLowerCase().indexOf ("product name") > -1) return;
