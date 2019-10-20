@@ -13,7 +13,8 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          gir1.2-gtk-3.0,
          gir1.2-gdkpixbuf-2.0,
-         gjs
+         gjs,
+         gir1.2-appindicator3-0.1
 Recommends: fonts-roboto
 Description: System Monitor and Power Manager
  This is a system monitor and power management tool. Features: * Compatible with many hardware architectures; * CPU Frequency monitoring; * CPU Governor management; * CPU Frequency speed limits; * CPU Boost supporting; * CPU Core Power on/off; * Saving/Restoring settings...

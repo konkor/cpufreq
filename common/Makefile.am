@@ -8,6 +8,7 @@ common_DATA = \
     Logger.js \
     Preferences.js \
     Settings.js \
+    Indicator.js \
     $(NULL)
 
 

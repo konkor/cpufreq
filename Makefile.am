@@ -24,11 +24,13 @@ js_DATA = \
 js_SCRIPTS = cpufreq-application \
     cpufreq-preferences \
     cpufreq-service \
+    cpufreq-indicator \
     cpufreqctl
 
 bin_SCRIPTS = cpufreq-application \
     cpufreq-preferences \
-    cpufreq-service
+    cpufreq-service \
+    cpufreq-indicator
 
 dist_js_DATA = $(js_SCRIPTS)
 
