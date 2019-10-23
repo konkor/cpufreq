@@ -10,10 +10,6 @@
 
 imports.gi.versions.Gtk = '3.0';
 
-/*let d = new Date ();
-print ("\x1b[00;32m[" + d.toString().substring (0, d.toString().indexOf (" GMT")) + "." + (d.getMilliseconds() / 1000).toFixed(3).slice(2, 5) +
-  "](DD) [cpufreq][application]\x1b[0m Starting application");*/
-
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
@@ -92,11 +88,8 @@ var CPUFreqApplication = new Lang.Class ({
       let v = options.lookup_value ("profile", null);
       if (v) [v, ] = v.get_string ();
       this.process_profile (v);
-      //TODO: fix https://gitlab.gnome.org/GNOME/gjs/issues/232
       return 0;
     }
-
-    //Logger.debug ("verbose:%s debug:%s extension:%s".format (DEBUG_LVL>0, DEBUG_LVL>1, this.extension));
     return -1;
   },
 
