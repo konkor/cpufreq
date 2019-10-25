@@ -73,6 +73,9 @@ const CpufreqServiceIface = '<node> \
 <signal name="FrequencyChanged"> \
   <arg name="title" type="s"/> \
 </signal> \
+<signal name="LoadingStateChanged"> \
+  <arg name="loading" type="t"/> \
+</signal> \
 <signal name="StyleChanged"> \
   <arg name="style" type="s"/> \
 </signal> \
@@ -91,6 +94,7 @@ var CpufreqService = new Lang.Class ({
             flags: Gio.ApplicationFlags.IS_SERVICE
         });
         GLib.set_application_name ("CPUFreq Service");
+
         monitor_timeout = settings.get_int (MONITOR_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
         label_show = settings.get_boolean (LABEL_SHOW_KEY);
@@ -125,13 +129,13 @@ var CpufreqService = new Lang.Class ({
         cpu_present = Convenience.get_cpu_number ();
         this.max0 = 0;
         this.title = "-- \u3393";
-        this._init_streams ();
-        this._update_freq ();
-        this._add_event ();
+        this.init_streams ();
+        this.update_freq ();
+        this.add_event ();
         settings.connect ("changed", this.on_settings.bind (this));
         GLib.timeout_add (200, 8000, () => {
           let cores = GLib.get_num_processors ();
-          if (cores != cpu_online) this._init_streams ();
+          if (cores != cpu_online) this.init_streams ();
           if (!frequency_show) this.gov0 = "";
           return true;
         });
@@ -140,7 +144,7 @@ var CpufreqService = new Lang.Class ({
     on_settings: function (o, key) {
       if (key == MONITOR_KEY) {
         monitor_timeout =  o.get_int (MONITOR_KEY);
-        this._add_event ();
+        this.add_event ();
       } else if (key == UNITS_SHOW_KEY) {
         units_show = o.get_boolean (UNITS_SHOW_KEY);
       } else if (key == LABEL_SHOW_KEY) {
@@ -169,23 +173,23 @@ var CpufreqService = new Lang.Class ({
       this.max0 = 0;
     },
 
-     _add_event: function () {
+     add_event: function () {
         if (event != 0) {
             GLib.Source.remove (event);
             event = 0;
         }
         if (monitor_timeout > 0)
             event = GLib.timeout_add (100, monitor_timeout, () => {
-                this._update_freq ();
+                this.update_freq ();
                 return true;
             });
         else {
           this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [""]));
-          this.quit ();
+          //this.quit ();
         }
     },
 
-    _init_streams: function() {
+    init_streams: function() {
         debug ("init_streams");
         if (init_event != 0) {
             GLib.Source.remove (init_event);
@@ -210,11 +214,11 @@ var CpufreqService = new Lang.Class ({
         }
     },
 
-    _update_freq: function () {
+    update_freq: function () {
         let m = 0, units, i = 0, g, l, s = 0;
         streams.forEach (stream => {
             if (stream) {
-              if (frequency_show) this._read_line (stream);
+              if (frequency_show) this.read_line (stream);
               if (governor_show) this.get_governors (i);
             }
             i++;
@@ -360,18 +364,18 @@ var CpufreqService = new Lang.Class ({
         return s;
     },
 
-    _read_line: function (dis) {
+    read_line: function (dis) {
         if (dis == null) return;
         try {
             dis.seek (0, GLib.SeekType.SET, null);
-            dis.read_line_async (100, null, this._read_done);
+            dis.read_line_async (100, null, this.read_done);
         } catch (e) {
-            init_event = GLib.timeout_add (0, 25, this._init_streams.bind (this));
+            init_event = GLib.timeout_add (0, 25, this.init_streams.bind (this));
             //error (e);
         }
     },
 
-    _read_done: function (stream, res) {
+    read_done: function (stream, res) {
         try {
             let [line,] = stream.read_line_finish (res);
             if (line) {

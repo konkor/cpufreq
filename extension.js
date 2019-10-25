@@ -88,8 +88,8 @@ const FrequencyIndicator = new Lang.Class({
 
   _init: function () {
     this.parent (0.0, "CPU Frequency Indicator", false);
-    this._settings = Convenience.getSettings();
-    this.load_settings (null, null);
+    this.settings = Convenience.getSettings();
+    this.on_settings (null, null);
 
     this.statusLabel = new St.Label ({
       text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'
@@ -107,14 +107,14 @@ const FrequencyIndicator = new Lang.Class({
     });
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
-    this._add_event ();
+    this.add_event ();
 
     //TODO: Workaround updating title
-    this._settings.set_boolean (SAVE_SETTINGS_KEY, !save);
-    this._settings.set_boolean (SAVE_SETTINGS_KEY, save);
+    this.settings.set_boolean (SAVE_SETTINGS_KEY, !save);
+    this.settings.set_boolean (SAVE_SETTINGS_KEY, save);
 
-    if (settingsID) this._settings.disconnect (settingsID);
-    settingsID = this._settings.connect ("changed", this.load_settings.bind (this));
+    if (settingsID) this.settings.disconnect (settingsID);
+    settingsID = this.settings.connect ("changed", this.on_settings.bind (this));
 
     this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, (proxy, e) => {
       if (e) {
@@ -133,9 +133,9 @@ const FrequencyIndicator = new Lang.Class({
     });
   },
 
-  load_settings: function (o, key) {
+  on_settings: function (o, key) {
     let s;
-    o = o || this._settings;
+    o = o || this.settings;
 
     if (!key) {
       this.guid =  o.get_string (PROFILE_ID_KEY);
@@ -154,7 +154,7 @@ const FrequencyIndicator = new Lang.Class({
         GLib.source_remove (monitor_event);
         monitor_event = 0;
       }
-      monitor_event = GLib.timeout_add (100, 1000, this._add_event.bind (this));
+      monitor_event = GLib.timeout_add (100, 1000, this.add_event.bind (this));
     } else if (key == PROFILE_ID_KEY) {
       this.guid =  o.get_string (PROFILE_ID_KEY);
     } else if (key == LABEL_KEY) {
@@ -237,7 +237,7 @@ const FrequencyIndicator = new Lang.Class({
     return title_text;
   },
 
-   _add_event: function () {
+   add_event: function () {
     if (this.proxy) {
       if (event) this.proxy.disconnectSignal (event);
       if (event_style) this.proxy.disconnectSignal (event_style);
@@ -279,7 +279,7 @@ const FrequencyIndicator = new Lang.Class({
       this.proxy = null;
       event = 0;
     }
-    if (settingsID) this._settings.disconnect (settingsID);
+    if (settingsID) this.settings.disconnect (settingsID);
     if (powerID) this.power.disconnect (powerID);
     if (monitor_event) GLib.source_remove (monitor_event);
     event = 0; monitor_event = 0;
