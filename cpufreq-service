@@ -185,7 +185,7 @@ var CpufreqService = new Lang.Class ({
             });
         else {
           this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [""]));
-          //this.quit ();
+          this.quit ();
         }
     },
 

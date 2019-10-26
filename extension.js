@@ -75,6 +75,9 @@ const CpufreqServiceIface = '<node> \
 <signal name="FrequencyChanged"> \
   <arg name="title" type="s"/> \
 </signal> \
+<signal name="LoadingEvent"> \
+  <arg name="loading" type="t"/> \
+</signal> \
 <signal name="StyleChanged"> \
   <arg name="style" type="s"/> \
 </signal> \
