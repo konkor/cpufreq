@@ -240,15 +240,8 @@ const FrequencyIndicator = new Lang.Class({
     return title_text;
   },
 
-   add_event: function () {
-    if (this.proxy) {
-      if (event) this.proxy.disconnectSignal (event);
-      if (event_style) this.proxy.disconnectSignal (event_style);
-      delete this.proxy;
-      this.proxy = null;
-      event = 0;
-      event_style = 0;
-    }
+  add_event: function () {
+    this.remove_proxy ();
     if (monitor_timeout > 0) {
       if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
         //error ("Unable to start cpufreq service...");
@@ -275,13 +268,19 @@ const FrequencyIndicator = new Lang.Class({
     //else GLib.spawn_command_line_async ("killall cpufreq-service");
   },
 
-  remove_events: function () {
+  remove_proxy: function () {
     if (this.proxy) {
       if (event) this.proxy.disconnectSignal (event);
+      if (event_style) this.proxy.disconnectSignal (event_style);
       delete this.proxy;
-      this.proxy = null;
-      event = 0;
     }
+    this.proxy = null;
+    event = 0;
+    event_style = 0;
+  },
+
+  remove_events: function () {
+    this.remove_proxy ();
     if (settingsID) this.settings.disconnect (settingsID);
     if (powerID) this.power.disconnect (powerID);
     if (monitor_event) GLib.source_remove (monitor_event);
