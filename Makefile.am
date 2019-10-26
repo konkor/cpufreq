@@ -54,10 +54,12 @@ zip-file: all
 	-rm -fR $(builddir)/_build
 	-rm -fR $(builddir)/zip-files
 	$(MKDIR_P) $(builddir)/_build; \
-	$(MKDIR_P) $(builddir)/zip-files; \
+  $(MKDIR_P) $(builddir)/zip-files; \
 	$(MAKE) install DESTDIR="$(abs_builddir)/_build"; \
 	mv "$(builddir)/_build/$(jsdir)" "$(builddir)/_build/"; \
 	cp -r "$(builddir)/_build$(datadir)/locale" "$(builddir)/_build/$(APP_ID)"; \
+  mkdir -p "$(builddir)/_build/$(APP_ID)/fonts"; \
+  cp "$(builddir)/_build$(datadir)/fonts/truetype/cpufreq/cpufreq.ttf" "$(builddir)/_build/$(APP_ID)/fonts"; \
 	(cd "$(builddir)/_build/$(APP_ID)"; \
 	 zip -qr "../../zip-files/$(APP_ID).zip" .; \
 	);
