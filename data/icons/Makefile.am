@@ -3,7 +3,9 @@ iconsdir=$(datadir)/gnome-shell/extensions/cpufreq@konkor/data/icons
 icons_DATA= \
   application-menu-symbolic.svg \
   open-menu-symbolic.svg \
-  feedcat.svg
+  feedcat.svg \
+  hicolor/scalable/apps/cpufreq.svg \
+  hicolor/32x32/apps/cpufreq.png
 
 #system application icons
 icondir=$(datadir)/icons

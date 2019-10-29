@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(cpufreq, [34])
+AC_INIT(cpufreq, [42])
 
 AC_CONFIG_HEADERS([config.h])
 

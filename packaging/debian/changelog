@@ -1,3 +1,11 @@
+cpufreq (42-1) UNRELEASED; urgency=low
+
+  * Add autotools building and DEB packaging
+  * Fix issues #127, #128, #129, #130, 131
+  * Update docs, styling and more
+
+ -- konkor <kapa76@gmail.com>  Sat, 26 Oct 2019 21:00:00 +0200
+
 cpufreq (34-1) UNRELEASED; urgency=low
 
   * Initial release
