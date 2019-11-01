@@ -40,7 +40,6 @@ let profile = null;
 var camel = false;
 
 let core_event = 0;
-let save_changes = true;
 
 var profile_changed_callback = null;
 
@@ -89,9 +88,7 @@ function check_extensions () {
   if (!util_present || !installed) return;
   thermal_throttle = Gio.File.new_for_path (CPUROOT + "cpu0/thermal_throttle/core_throttle_count").query_exists (null);
   if (!Gio.File.new_for_path (CPUROOT + "cpufreq/boost").query_exists (null) && !pstate_present) return;
-  let save_state = settings.save;
   let default_boost = get_turbo (true);
-  settings.save = false;
   try {
     if (default_boost == false) {
       set_turbo (true, true);
@@ -102,7 +99,6 @@ function check_extensions () {
       }
     } else boost_present = true;
   } catch (e) {error (e.message);}
-  settings.save = save_state;
 }
 
 function is_wayland () {
@@ -121,22 +117,20 @@ function install_components (update) {
   } catch (e) {
     error (e.message);
   }
-  init (settings);
+  init ();
   return updated;
 }
 
-function power_profile (id, save) {
-  save_changes = (typeof save !== 'undefined') ?  save : true;
+function power_profile (id) {
   if (!installed) {
     if (profile_changed_callback) profile_changed_callback (id);
     return;
   }
   if ((id == "system") || (id == "default")) set_power_profile (default_profile);
-  else if (id == "user") restore_saved ();
   else if (id == "battery") set_power_profile (get_battery_profile ());
   else if (id == "balanced") set_power_profile (get_balanced_profile ());
   else if (id == "performance") set_power_profile (get_performance_profile ());
-  else set_power_profile (settings.get_profile (id));
+  else if (profile_changed_callback) profile_changed_callback (id);
 }
 
 function set_power_profile (prf) {
@@ -145,10 +139,6 @@ function set_power_profile (prf) {
     load_profile (prf);
   else if (profile_changed_callback)
     profile_changed_callback (prf);
-  if (save_changes) {
-    settings.save = prf.guid != default_profile.guid;
-    settings.guid = prf.guid;
-  }
 }
 
 function get_default_profile () {
@@ -261,17 +251,6 @@ function get_profile (name, guid) {
   };
   debug (JSON.stringify (p));
   return p;
-}
-
-function restore_saved () {
-  var prf;
-  if (settings.guid == settings.user_profile.guid) {
-    prf = settings.user_profile;
-    if (!settings_equal (prf, get_profile ()))
-      load_profile (prf);
-    else if (profile_changed_callback)
-      profile_changed_callback (prf);
-  } else power_profile (settings.guid);
 }
 
 function settings_equal (a, b) {
@@ -414,7 +393,6 @@ function set_turbo (state, force) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --boost --set=1");
     else GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --boost --set=0");
   }
-  if (settings.save) settings.turbo = state;
   return state;
 }
 
@@ -444,8 +422,6 @@ function set_governors (governor) {
   if (!util_present || !governor) return;
 
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --governor --set=" + governor);
-
-  if (settings.save) settings.governor = governor;
 }
 
 function is_mixed_governors () {
@@ -478,8 +454,6 @@ function set_userspace (frequency) {
 
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --governor --set=userspace");
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --frequency --set=" + frequency);
-
-  settings.set_userspace (frequency.toString ());
 
   return frequency;
 }
@@ -593,10 +567,8 @@ function get_min () {
 }
 
 function set_min (minimum) {
-  if ((minimum <= 0) || !Number.isInteger (minimum)) return 0;
-  if (!util_present) return 0;
+  if (!util_present || (minimum <= 0) || !Number.isInteger (minimum)) return 0;
   GLib.spawn_command_line_sync ("%s %s --frequency-min --set=%s".format (pkexec_path,cpufreqctl_path,minimum));
-  if (settings.save) settings.min_freq = minimum.toString ();
   return minimum;
 }
 
@@ -608,10 +580,8 @@ function get_max () {
 }
 
 function set_max (maximum) {
-  if ((maximum <= 0) || !Number.isInteger (maximum)) return 0;
-  if (!util_present) return 0;
+  if (!util_present || (maximum <= 0) || !Number.isInteger (maximum)) return 0;
   GLib.spawn_command_line_sync ("%s %s --frequency-max --set=%s".format (pkexec_path,cpufreqctl_path,maximum));
-  if (settings.save) settings.max_freq = maximum.toString ();
   return maximum;
 }
 
@@ -625,7 +595,6 @@ function get_min_pstate () {
 function set_min_pstate (minimum) {
   if (!util_present) return 0;
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --min-perf --set=" + minimum);
-  if (settings.save) settings.min_freq_pstate = minimum;
   return minimum;
 }
 
@@ -639,7 +608,6 @@ function get_max_pstate () {
 function set_max_pstate (maximum) {
   if (!util_present) return 100;
   GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --max-perf --set=" + maximum);
-  if (settings.save) settings.max_freq_pstate = maximum;
   return maximum;
 }
 
@@ -665,7 +633,6 @@ function set_cores (count, callback) {
     for (let key = 1; key < cpucount; key++) {
       set_core (key, key < ccore);
     }
-    if (settings.save) settings.cpu_cores = ccore;
     core_event = 0;
     if (callback) callback ();
     return false;

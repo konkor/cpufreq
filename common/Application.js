@@ -113,7 +113,7 @@ var CPUFreqApplication = new Lang.Class ({
       });
       window.show_all ();
       cpu.profile_changed_callback = this.on_profile_changed.bind (this);
-      if (this.settings.save && this.save) cpu.restore_saved ();
+      if (this.settings.save && this.save) this.settings.restore_saved ();
       if (window.cpanel) window.cpanel.post_init ();
       else this.quit ();
       window.connect ("realize", () => {
@@ -145,7 +145,7 @@ var CPUFreqApplication = new Lang.Class ({
     this.finishing = true;
     this.hold ();
     cpu.profile_changed_callback = this.quit_cb.bind (this);
-    cpu.power_profile (id, this.save);
+    this.settings.power_profile (id, this.save);
     return 0;
   },
 

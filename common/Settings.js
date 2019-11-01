@@ -52,7 +52,7 @@ var Settings = new Lang.Class({
         'Please check your installation.'
       );
     this.parent ({ settings_schema: schemaObj });
-    current = get_profile ("Saved settings", "user");
+    current = cpu.get_profile ("Saved settings", "user");
     this.load ();
 
     this.connect ("changed", this.on_settings.bind (this));
@@ -164,14 +164,33 @@ var Settings = new Lang.Class({
     this.set_string (PROFILES_KEY, JSON.stringify (profiles));
   },
 
+  power_profile: function (id, save) {
+    save = (typeof save !== 'undefined') ?  save : true;
+    let prf = this.get_profile (id);
+    if (id == "user") this.restore_saved ();
+    else if (prf) cpu.set_power_profile (prf);
+    else cpu.power_profile (id, save);
+    if (save) {
+      this.save = prf.guid != cpu.default_profile.guid;
+      this.guid = prf.guid;
+    }
+  },
+
+  restore_saved: function () {
+    if (this.guid == this.user_profile.guid)
+      cpu.set_power_profile (this.user_profile);
+    else this.power_profile (this.guid);
+  },
+
   get turbo () {
     if (current) return current.turbo;
     return true;
   },
   set turbo (val) {
     if (!current || (current.turbo == val)) return;
+    cpu.set_turbo (val);
     current.turbo = val;
-    this.update_user_profile ();
+    if (this.save) this.update_user_profile ();
   },
 
   get cpu_cores () {
@@ -181,7 +200,8 @@ var Settings = new Lang.Class({
   set cpu_cores (val) {
     if (!current || (current.cpu == val)) return;
     current.cpu = val;
-    this.update_user_profile ();
+    cpu.set_cores (val);
+    if (this.save) this.update_user_profile ();
   },
 
   get min_freq () {
@@ -196,7 +216,8 @@ var Settings = new Lang.Class({
       if (current.core[i].a != val) equal = false;
       current.core[i].a = val;
     }
-    if (!equal) this.update_user_profile ();
+    cpu.set_min (val);
+    if (!equal && this.save) this.update_user_profile ();
   },
 
   get max_freq () {
@@ -211,7 +232,8 @@ var Settings = new Lang.Class({
       if (current.core[i].b != val) equal = false;
       current.core[i].b = val;
     }
-    if (!equal) this.update_user_profile ();
+    cpu.set_max (val);
+    if (!equal && this.save) this.update_user_profile ();
   },
 
   get governor () {
@@ -227,7 +249,8 @@ var Settings = new Lang.Class({
       if (current.core[i].g != val) equal = false;
       current.core[i].g = val;
     }
-    if (!equal) this.update_user_profile ();
+    cpu.set_governors (val);
+    if (!equal && this.save) this.update_user_profile ();
   },
 
   get min_freq_pstate () {
@@ -238,7 +261,8 @@ var Settings = new Lang.Class({
   set min_freq_pstate (val) {
     if (!current || (current.minf == val)) return;
     current.minf = val;
-    this.update_user_profile ();
+    cpu.set_min_pstate (val);
+    if (this.save) this.update_user_profile ();
   },
 
   get max_freq_pstate () {
@@ -249,7 +273,8 @@ var Settings = new Lang.Class({
   set max_freq_pstate (val) {
     if (!current || (current.maxf == val)) return;
     current.maxf = val;
-    this.update_user_profile ();
+    cpu.set_max_pstate (val);
+    if (this.save) this.update_user_profile ();
   },
 
   set_userspace: function (frequency) {
@@ -261,7 +286,8 @@ var Settings = new Lang.Class({
       current.core[i].g = "userspace";
       current.core[i].f = frequency;
     }
-    if (!equal) this.update_user_profile ();
+    cpu.set_userspace (frequency);
+    if (!equal && this.save) this.update_user_profile ();
   },
 
   get window_height () { return this.get_int ("window-height"); },
