@@ -37,15 +37,14 @@ var cpucount = 1;
 var boost_present = false;
 var default_profile = null;
 let profile = null;
+var camel = false;
 
-let settings = null;
 let core_event = 0;
 let save_changes = true;
 
 var profile_changed_callback = null;
 
-function init (prefs) {
-  settings = prefs;
+function init () {
   cpucount = get_cpu_number ();
 
   let res = get_content (CPUROOT + "cpu0/cpufreq/scaling_driver");
@@ -55,17 +54,12 @@ function init (prefs) {
   }
   check_install ();
   check_extensions ();
-  if (!settings.user_profile) {
-    let p = get_profile ("Saved settings");
-    p.guid = "user";
-    settings.user_profile = p;
-  }
   get_governors ();
   get_frequencies ();
   default_profile = get_default_profile ();
   if (governoractual[0]) {
     res = governoractual[0][0];
-    if (res == res.toUpperCase ()) settings.camel = true;
+    if (res == res.toUpperCase ()) camel = true;
   }
 }
 

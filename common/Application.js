@@ -100,8 +100,8 @@ var CPUFreqApplication = new Lang.Class ({
 
   initialize: function () {
     if (this.settings) return;
-    this.settings = new Settings.Settings ();
-    cpu.init (this.settings);
+    cpu.init ();
+    this.settings = new Settings.Settings (cpu);
   },
 
   vfunc_activate: function () {

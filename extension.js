@@ -31,6 +31,24 @@ const PROFILE_ID_KEY    = 'profile-id';
 const MONITOR_KEY       = 'monitor';
 const EPROFILES_KEY     = 'event-profiles';
 const LABEL_KEY         = 'label'
+const LABEL_SHOW_KEY    = 'label-show';
+const UNITS_SHOW_KEY = 'units-show';
+
+const COLOR_SHOW_KEY = 'color-show';
+const COLOR_SHOW_CUSTOM_KEY = 'color-show-custom';
+const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
+const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
+const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
+
+let color_show = false;
+let color_show_custom = false;
+let color_show_default_normal = ''; //'#33d552';
+let color_show_default_warning = 'orange';
+let color_show_default_critical = 'red';
+let color_show_custom_normal = '#ebebeb';
+let color_show_custom_warning = '#ebebeb';
+let color_show_custom_critical = '#ff0000';
+
 //const SETTINGS_ID = 'org.gnome.shell.extensions.cpufreq';
 
 let event = 0;
@@ -42,6 +60,8 @@ let save = false;
 let extmode = true;
 let splash = true;
 let label_text = "";
+let label_show = false;
+let units_show = true;
 let title_text = "\u26A0";
 let title_style = "";
 let monitor_timeout = 500;
@@ -147,6 +167,13 @@ const FrequencyIndicator = new Lang.Class({
       extmode = o.get_boolean (EXTENSION_MODE_KEY);
       splash = o.get_boolean (SHOW_SPLASH_KEY);
       label_text = o.get_string (LABEL_KEY);
+      label_show = o.get_boolean (LABEL_SHOW_KEY);
+      units_show = o.get_boolean (UNITS_SHOW_KEY);
+      color_show = o.get_boolean (COLOR_SHOW_KEY);
+      color_show_custom = o.get_boolean (COLOR_SHOW_CUSTOM_KEY);
+      color_show_custom_normal = o.get_string (COLOR_SHOW_CUSTOM_NORMAL_KEY);
+      color_show_custom_warning = o.get_string (COLOR_SHOW_CUSTOM_WARNING_KEY);
+      color_show_custom_critical = o.get_string (COLOR_SHOW_CUSTOM_CRITICAL_KEY);
       s = o.get_string (EPROFILES_KEY);
       if (s) eprofiles = JSON.parse (s);
     }
@@ -160,8 +187,6 @@ const FrequencyIndicator = new Lang.Class({
       monitor_event = GLib.timeout_add (100, 1000, this.add_event.bind (this));
     } else if (key == PROFILE_ID_KEY) {
       this.guid =  o.get_string (PROFILE_ID_KEY);
-    } else if (key == LABEL_KEY) {
-      label_text = o.get_string (LABEL_KEY);
     } else if (key == EPROFILES_KEY) {
       s = o.get_string (EPROFILES_KEY);
       if (s) eprofiles = JSON.parse (s);
@@ -169,8 +194,15 @@ const FrequencyIndicator = new Lang.Class({
       extmode = o.get_boolean (EXTENSION_MODE_KEY);
     } else if (key == SHOW_SPLASH_KEY) {
       splash = o.get_boolean (SHOW_SPLASH_KEY);
+    } else if (key == LABEL_KEY) {
+      label_text = o.get_string (LABEL_KEY);
+    } else if (key == LABEL_SHOW_KEY) {
+      label_show = o.get_string (LABEL_SHOW_KEY);
+    } else if (key == UNITS_SHOW_KEY) {
+      units_show = o.get_string (UNITS_SHOW_KEY);
     }
 
+    //TODO: statusLabel
     if ((key == LABEL_KEY) && !monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
     /*if ((key == "power-state") || (key == "power-percentage")) {

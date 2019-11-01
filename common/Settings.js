@@ -25,11 +25,14 @@ let _guid = "balanced";
 let profiles = [];
 let current = null;
 
+let cpu = null;
+
 var Settings = new Lang.Class({
   Name: "Settings",
   Extends: Gio.Settings,
 
-  _init: function () {
+  _init: function (cpufreq) {
+    cpu = cpufreq;
     const schema = 'org.gnome.shell.extensions.cpufreq';
     const GioSSS = Gio.SettingsSchemaSource;
 
@@ -49,8 +52,8 @@ var Settings = new Lang.Class({
         'Please check your installation.'
       );
     this.parent ({ settings_schema: schemaObj });
+    current = get_profile ("Saved settings", "user");
     this.load ();
-    this.camel = false;
 
     this.connect ("changed", this.on_settings.bind (this));
   },
@@ -218,7 +221,7 @@ var Settings = new Lang.Class({
   },
   set governor (val) {
     if (!current || !val) return;
-    if (!this.camel) val = val.toLowerCase().trim();
+    if (!cpu.camel) val = val.toLowerCase().trim();
     var equal = true;
     for (let i = 0; i < current.cpu; i++) {
       if (current.core[i].g != val) equal = false;
