@@ -496,7 +496,7 @@ function set_frequencies () {
     cmin = get_min_pstate ();
     cmax = get_max_pstate ();
     debug ("%d:%d - %d:%d".format (cmin,cmax,minfreq,maxfreq));
-    if ((minfreq == cmin) && (maxfreq == cmax)) return;
+    if ((minfreq == cmin) && (maxfreq == cmax)) return false;
     if ((minfreq > cmax) && (minfreq <= maxfreq)) {
       set_max_pstate (maxfreq);
       pause (100);
@@ -510,7 +510,7 @@ function set_frequencies () {
     cmin = get_coremin (0);
     cmax = get_coremax (0);
     debug ("%d:%d - %d:%d".format (cmin,cmax,minfreq,maxfreq));
-    if ((minfreq == cmin) && (maxfreq == cmax)) return;
+    if ((minfreq == cmin) && (maxfreq == cmax)) return false;
     if ((minfreq > cmax) && (minfreq <= maxfreq)) {
       set_max (maxfreq);
       pause (100);
@@ -521,6 +521,7 @@ function set_frequencies () {
       if (maxfreq != cmax) set_max (maxfreq);
     }
   }
+  return true;
 }
 
 function get_coremin (core) {

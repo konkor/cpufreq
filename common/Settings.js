@@ -171,8 +171,8 @@ var Settings = new Lang.Class({
     else if (prf) cpu.set_power_profile (prf);
     else cpu.power_profile (id, save);
     if (save) {
-      this.save = prf.guid != cpu.default_profile.guid;
-      this.guid = prf.guid;
+      this.save = id != cpu.default_profile.guid;
+      this.guid = id;
     }
   },
 
@@ -198,9 +198,12 @@ var Settings = new Lang.Class({
     return 1;
   },
   set cpu_cores (val) {
+    this.set_cores (val);
+  },
+  set_cores: function (val, callback) {
     if (!current || (current.cpu == val)) return;
     current.cpu = val;
-    cpu.set_cores (val);
+    cpu.set_cores (val, callback);
     if (this.save) this.update_user_profile ();
   },
 
@@ -288,6 +291,20 @@ var Settings = new Lang.Class({
     }
     cpu.set_userspace (frequency);
     if (!equal && this.save) this.update_user_profile ();
+  },
+
+  set_frequencies: function () {
+    if (!cpu.set_frequencies ()) return;
+    if (cpu.pstate_present) {
+      current.minf = cpu.minfreq;
+      current.maxf = cpu.maxfreq;
+    } else {
+      for (let i = 0; i < current.cpu; i++) {
+        current.core[i].a = cpu.minfreq;
+        current.core[i].b = cpu.maxfreq;
+      }
+    }
+    if (this.save) this.update_user_profile ();
   },
 
   get window_height () { return this.get_int ("window-height"); },

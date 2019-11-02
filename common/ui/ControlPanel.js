@@ -98,21 +98,21 @@ var ControlPanel = new Lang.Class({
       this.profile_tooltip (cpu.get_balanced_profile ()));
     this.profmenu.add_item (mi);
     mi.connect ('clicked', () => {
-      cpu.power_profile ("balanced");
+      settings.power_profile ("balanced");
     });
 
     mi = new SideMenu.SideItem (_("High Performance"), _("High responsive settings for high performance\n") +
       this.profile_tooltip (cpu.get_performance_profile ()));
     this.profmenu.add_item (mi);
     mi.connect ('clicked', () => {
-      cpu.power_profile ("performance");
+      settings.power_profile ("performance");
     });
 
     mi = new SideMenu.SideItem (_("Power Saving"), _("Power saver and long battery life\n") +
       this.profile_tooltip (cpu.get_battery_profile ()));
     this.profmenu.add_item (mi);
     mi.connect ('clicked', () => {
-      cpu.power_profile ("battery");
+      settings.power_profile ("battery");
     });
 
     mi = new SideMenu.SideItem (cpu.default_profile.name, _("Reset to default system settings\n") +
@@ -120,7 +120,7 @@ var ControlPanel = new Lang.Class({
     mi.margin_top = mi.margin_bottom = 8;
     this.profmenu.add_item (mi);
     mi.connect ('clicked', () => {
-      cpu.power_profile ("system");
+      settings.power_profile ("system");
     });
 
     for (let p in settings.profiles) {
@@ -144,7 +144,7 @@ var ControlPanel = new Lang.Class({
     this.profmenu.add_item (prf);
 
     prf.connect ('clicked', (o) => {
-      cpu.set_power_profile (settings.profiles[o.ID]);
+      settings.power_profile (settings.profiles[o.ID].guid);
     });
     prf.connect ('edit', (o) => {
       if (this.edit_item && this.edit_item.edit_mode && this.edit_item.ID != o.ID) this.edit_item.toggle ();
@@ -219,7 +219,7 @@ var ControlPanel = new Lang.Class({
           u_item.connect ("clicked", () => {
             if (!cpu.installed || this.locked) return;
             //this._changed ();
-            cpu.set_userspace (freq);
+            settings.set_userspace (freq);
             this.activeg.label = "Userspace";
             this.userspace.expanded = false;
             this.check_sliders ();
@@ -238,7 +238,7 @@ var ControlPanel = new Lang.Class({
   on_governor: function (o) {
     if (!cpu.installed || this.locked) return;
     this._changed ();
-    cpu.set_governors (o.label);
+    settings.governor = o.label;
     this.activeg.label = o.label;
     this.activeg.expanded = false;
     this.check_sliders ();
@@ -251,7 +251,7 @@ var ControlPanel = new Lang.Class({
     }
     if (cpu.pstate_present) {
       if (this.boost) {
-        cpu.set_turbo (this.boost.active);
+        settings.turbo = this.boost.active;
       }
     } else if (this.slider_min) {
       this.slider_min.sensitive = true;
@@ -321,7 +321,7 @@ var ControlPanel = new Lang.Class({
       GLib.source_remove (freq_event);
       freq_event = 0;
     }
-    cpu.set_frequencies ();
+    settings.set_frequencies ();
   },
 
   pstate_build: function () {
@@ -345,7 +345,7 @@ var ControlPanel = new Lang.Class({
       if (!cpu.installed || this.locked) return;
       this._changed ();
       var cc = Math.floor ((cpu.cpucount - 1) * item.get_value() + 1);
-      cpu.set_cores (cc, () => {
+      settings.set_cores (cc, () => {
         cpu.get_governors ();
         if (cpu.is_mixed_governors ()) this.activeg.label = "Mixed";
         else this.activeg.label = cpu.governoractual[0][0].toUpperCase() + cpu.governoractual[0].substring(1);
@@ -361,7 +361,7 @@ var ControlPanel = new Lang.Class({
     this.boost.sw.connect ('state_set', () => {
       if (!cpu.installed || this.locked) return;
       this._changed ();
-      cpu.set_turbo (this.boost.active);
+      settings.turbo = this.boost.active;
     });
   },
 
