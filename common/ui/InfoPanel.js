@@ -489,8 +489,15 @@ var CoreInfo = new Lang.Class({
     Helper.get_frequency_async (this.core, this.frequency_cb.bind (this));
   },
 
-  frequency_cb: function (label) {
-    if (this.frequency_cb) this.freqlabel.set_text (label);
+  frequency_cb: function (val) {
+    let label = "---"
+    if (!this.frequency_cb) return;
+    if (val >= 1000000) {
+      label = (val / 1000000).toFixed(2).toString () + " \u3393";
+    } else {
+      label = (val / 1000).toFixed(0).toString () + "  \u3392";
+    }
+    this.freqlabel.set_text (label);
   },
 
   get_governor: function () {

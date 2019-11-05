@@ -649,7 +649,6 @@ function pause (ms) {
 
 //TODO: move it to cpufreqctl?!
 function get_frequency_async (num, callback) {
-  let label = "";
   num = num || 0;
   if (!callback) return;
   let file = Gio.File.new_for_path ("/sys/devices/system/cpu/cpu" + num + "/cpufreq/scaling_cur_freq");
@@ -659,14 +658,8 @@ function get_frequency_async (num, callback) {
     try {
       contents = byteArrayToString (contents).toString ().split ("\n")[0].trim ();
       var n = parseInt (contents);
-      if (Number.isInteger (n)) {
-      if (n >= 1000000) {
-        label = (n / 1000000).toFixed(2).toString () + " \u3393";
-      } else {
-        label = (n / 1000).toFixed(0).toString () + "  \u3392";
-      }
-      }
-      callback (label);
+      if (!Number.isInteger (n)) n = 0;
+      callback (n, num);
     } catch (e) {debug (e.message);}
   });
 }

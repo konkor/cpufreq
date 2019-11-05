@@ -1,0 +1,455 @@
+#!/usr/bin/gjs
+
+/*
+ * This is a part of CPUFreq Manager
+ * Copyright (C) 2016-2019 konkor <konkor.github.io>
+ *
+ * Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+const Gio     = imports.gi.Gio;
+const GLib    = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Lang    = imports.lang;
+const System  = imports.system;
+
+const APPDIR = get_appdir ();
+imports.searchPath.unshift(APPDIR);
+
+const Convenience   = imports.convenience;
+const CPUFreq       = imports.common.HelperCPUFreq;
+const ArrayToString = Convenience.byteArrayToString;
+
+const MONITOR_KEY   = 'monitor';
+const FREQ_SHOW_KEY = 'frequency-show';
+const GOVS_SHOW_KEY = 'governors-show';
+const LOAD_SHOW_KEY = 'load-show';
+
+
+var DEBUGING = true;
+let settings = null;
+let monitor_timeout = 1000;
+let frequency_show = true;
+let governor_show = false;
+let load_show = false;
+
+let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
+
+let streams = [];
+let freqs = [];
+let governors = [];
+let loading = 0;
+let cpu_present = 1;
+let cpu_online = 1;
+let gcc = 0;
+
+let event = 0;
+let init_event = 0;
+
+const OBJECT_PATH = '/org/konkor/cpufreq/service';
+const CpufreqServiceIface = '<node> \
+<interface name="org.konkor.cpufreq.service"> \
+<property name="Frequency" type="t" access="read"/> \
+<signal name="MonitorEvent"> \
+  <arg name="metrics" type="s"/> \
+</signal> \
+<signal name="LoadingEvent"> \
+  <arg name="loading" type="t"/> \
+</signal> \
+<signal name="StyleChanged"> \
+  <arg name="style" type="s"/> \
+</signal> \
+</interface> \
+</node>';
+const CpufreqServiceInfo  = Gio.DBusInterfaceInfo.new_for_xml (CpufreqServiceIface);
+
+var CpufreqService = new Lang.Class ({
+  Name: 'CpufreqService',
+  Extends: Gio.Application,
+
+  _init: function (args) {
+    GLib.set_prgname ("cpufreq-service");
+    this.parent ({
+      application_id: "org.konkor.cpufreq.service",
+      flags: Gio.ApplicationFlags.IS_SERVICE
+    });
+    GLib.set_application_name ("CPUFreq Service");
+
+    monitor_timeout = settings.get_int (MONITOR_KEY);
+    frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
+    governor_show = settings.get_boolean (GOVS_SHOW_KEY);
+    load_show = settings.get_boolean (LOAD_SHOW_KEY);
+  },
+
+  vfunc_startup: function() {
+    this.parent();
+    this.init ();
+    this.hold ();
+  },
+
+  vfunc_activate: function() {
+    this.connect("destroy", () => {
+      this.remove_events ();
+    });
+  },
+
+  init: function() {
+    debug ("init");
+    this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
+    this.dbus.export (Gio.DBus.session, OBJECT_PATH);
+    cpu_present = Convenience.get_cpu_number ();
+    this.max0 = 0;
+    this.init_streams ();
+    this.update_freq ();
+    this.add_event ();
+    settings.connect ("changed", this.on_settings.bind (this));
+    GLib.timeout_add (200, 8000, () => {
+      let cores = GLib.get_num_processors ();
+      if (cores != cpu_online) this.init_streams ();
+      if (!frequency_show) this.gov0 = "";
+      return true;
+    });
+  },
+
+  on_settings: function (o, key) {
+    if (key == MONITOR_KEY) {
+    monitor_timeout =  o.get_int (MONITOR_KEY);
+    this.add_event ();
+    } else if (key == LOAD_SHOW_KEY) {
+    load_show = o.get_boolean (LOAD_SHOW_KEY);
+    } else if (key == GOVS_SHOW_KEY) {
+    governor_show = o.get_boolean (GOVS_SHOW_KEY);
+    } else if (key == FREQ_SHOW_KEY) {
+    frequency_show = o.get_boolean (FREQ_SHOW_KEY);
+    }
+
+    style_state = -1;
+    this.max0 = 0;
+  },
+
+  add_event: function () {
+    if (event != 0) {
+      GLib.Source.remove (event);
+      event = 0;
+    }
+    if (monitor_timeout > 0)
+      event = GLib.timeout_add (100, monitor_timeout, () => {
+        this.update_freq ();
+        return true;
+      });
+    else {
+      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [""]));
+      //this.quit ();
+    }
+  },
+
+  init_streams: function() {
+    debug ("init_streams");
+    if (init_event != 0) {
+      GLib.Source.remove (init_event);
+      init_event = 0;
+    }
+    streams.forEach (stream => {
+      try {
+        if (stream) stream.close (null);
+      } catch (e) {}
+    });
+    cpu_online = GLib.get_num_processors ();
+    freqs = new Array (cpu_online);
+    governors = new Array (cpu_online);
+    streams = [];
+    for (let key = 0; key < cpu_present; key++) {
+      if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
+        let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
+        streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
+      } else {
+        streams.push (null);
+      }
+    }
+  },
+
+  update_freq: function () {
+    let max = 0, avg = 0, i = 0, g, l, s = 0,
+    metrics = {max:0, avg:0, governor:"",state:0};
+    streams.forEach (stream => {
+      if (stream) {
+        if (frequency_show) this.read_line (stream);
+        if (governor_show) this.get_governors (i);
+      }
+      i++;
+    });
+    this.get_loading ();
+    for (i = 0; i < cpu_online; i++) if (freqs[i]) {
+      if (freqs[i] > max) max = freqs[i];
+      avg += freqs[i] / 1000;
+    }
+    if (cpu_online) avg = parseInt (avg / cpu_online);
+    if (governor_show) g = this.governor;
+    if (load_show) l = this.loadavg;
+    s = this.stylestate;
+
+    if ((max != this.max0) || (g != this.gov0) || (s != style_state)) {
+      if (max == 0) max = this.max0;
+      if (governor_show && g) {
+        this.gov0 = g;
+      }
+      if (load_show) this.title += " " + l;
+      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [JSON.stringify (metrics)]));
+      this.max0 = max;
+      style_state = s;
+    }
+
+    gcc++;
+    if (gcc*monitor_timeout > 1000) {
+      gcc = 0;
+      System.gc ();
+    }
+  },
+
+  get_governors: function (core) {
+    core = core || 0;
+    let path = '/sys/devices/system/cpu/cpu' + core + '/cpufreq/scaling_governor';
+    let file = Gio.file_new_for_path (path);
+
+    file.load_contents_async (null, (o, res) => {
+      let [success, contents] = o.load_contents_finish (res);
+      if (!success) return;
+      try {
+        contents = ArrayToString (contents).toString ().split ("\n")[0].trim ();
+        governors.unshift (contents);
+        governors.splice (governors.length - 1, 1);
+      } catch (e) {}
+    });
+  },
+
+  remove_events: function () {
+    if (this.dbus) this.dbus.unexport ();
+    if (event != 0) GLib.Source.remove (event);
+    if (init_event != 0) GLib.Source.remove (init_event);
+    event = 0; init_event = 0;
+  }
+});
+
+var CpufreqMonitor = new Lang.Class ({
+  Name: 'CpufreqMonitor',
+
+  _init: function () {
+    // TODO: INIT CPUFREQ module
+    CPUFreq.init ();
+    // CPU INFO
+
+    //frequencies
+    this.frequencies = [];
+    this.frequency_average = 0;
+    this.frequency_minimum = 0;
+    this.frequency_maximum = 0;
+
+    //governors
+    this.governors = [];
+    this.governor = "";
+
+    //throthle
+
+    this.init ();
+    this.update ();
+  },
+
+  init: function () {
+    debug ("init_sources");
+    this.frequencies.forEach (f => {f.close ()});
+    this.frequencies = new Array (CPUFreq.cpu_present);
+    for (let i = 0; i < CPUFreq.cpu_present; i++) {
+      this.frequencies[i] = new FileStream ("/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_cur_freq");
+    }
+    this.governors.forEach (g => {g.cancel ()});
+    this.governors = new Array (CPUFreq.cpu_present);
+    for (let i = 0; i < CPUFreq.cpu_present; i++) {
+      this.governors[i] = new FileMonitor ("/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_governor");
+    }
+    this.governor = this.get_governor ();
+  },
+
+  get_governor: function () {
+    let g = this.governors[0].content, online = GLib.get_num_processors ();;
+    for (let i = 0; i < online; i++) {
+      if (this.governors[i].content && this.governors[i].content != g) g = "mixed";
+    }
+    return g;
+  },
+
+  update: function () {
+    debug ("update");
+    let fire = false, online = GLib.get_num_processors ();
+    let max = 0, min = 0, avg = 0, avg_count = 0, g;
+
+    for (let i = 0; i < online; i++) {
+      let f = this.frequencies[i].update ();
+      if (f) {
+        let n = parseInt (f.split ("\n")[0].trim ());
+        if (Number.isInteger (n)) {
+          if (n > max) max = n;
+          if ((min == 0) || (n < min)) min = n;
+          avg += Math.round (n / 1000);
+          avg_count++;
+        }
+      }
+    }
+    if (avg_count) avg = Math.round (avg / avg_count);
+    if (this.frequency_average != avg) {
+      this.frequency_average = avg;
+      this.frequency_minimum = min;
+      this.frequency_maximum = max;
+      fire = true;
+    }
+
+    g = this.get_governor ();
+    if (g != this.governor) {
+      this.governor = g;
+      fire = true;
+    }
+    if (cpu_online != online) {
+      cpu_online = online;
+      fire = true;
+    }
+    return fire;
+  }
+});
+
+var FileStream = new Lang.Class ({
+  Name: 'FileStream',
+  Extends: GObject.Object,
+  Signals: {
+    'changed': {
+      flags: GObject.SignalFlags.RUN_LAST | GObject.SignalFlags.DETAILED,
+      param_types: [GObject.TYPE_STRING]},
+  },
+
+  _init: function (path) {
+    this.filename = path;
+    this.file = Gio.File.new_for_path (this.filename);
+    this.stream = null;
+    this.content = null;
+    this.open ();
+    this.update ();
+  },
+
+  open: function () {
+    this.close ();
+    if (this.file.query_exists (null))
+      this.stream = new Gio.DataInputStream ({ base_stream: this.file.read (null) });
+  },
+
+  close: function () {
+    if (this.stream) this.stream.close (null);
+    this.stream = null;
+    this.content = null;
+  },
+
+  update: function () {
+    this.read_line ();
+    return this.content;
+  },
+
+  read_line: function () {
+    if (this.stream == null) return;
+    try {
+      this.stream.seek (0, GLib.SeekType.SET, null);
+      this.stream.read_line_async (100, null, this.read_done.bind (this));
+    } catch (e) {
+      this.open.bind (this);
+    }
+  },
+
+  read_done: function (stream, res) {
+    try {
+      let [line,] = stream.read_line_finish (res);
+      if (line) {
+        this.content = ArrayToString (line);
+      }
+    } catch (e) {}
+    this.emit ("changed", this.content);
+  }
+});
+
+var FileMonitor = new Lang.Class ({
+  Name: 'FileMonitor',
+
+  _init: function (path) {
+    this.filename = path;
+    this.file = Gio.File.new_for_path (this.filename);
+    this.init ();
+  },
+
+  init: function () {
+    this.cancel ();
+    this.monitor = this.file.monitor_file (0, null);
+    if (this.monitor) {
+      this.monitor.set_rate_limit (4000);
+      this.load_contents ();
+      this.monitor_id = this.monitor.connect ("changed", this.on_changed.bind (this));
+    }
+  },
+
+  cancel: function () {
+    if (this.monitor_id) {
+      this.monitor.disconnect (this.monitor_id);
+      this.monitor.cancel ();
+      this.monitor_id = 0;
+    }
+  },
+
+  on_changed: function (o, file, other_file, event_type) {
+    if (event_type == Gio.FileMonitorEvent.CHANGED) this.load_contents ();
+  },
+
+  load_contents: function () {
+    let [ok,contents,] = this.file.load_contents ();
+    if (ok)
+      this.content = ArrayToString (contents).toString().split ("\n")[0].trim();
+    else this.content = null;
+    return ok, this.content;
+  }
+});
+
+function getCurrentFile () {
+  let stack = (new Error()).stack;
+  let stackLine = stack.split('\n')[1];
+  if (!stackLine)
+    throw new Error ('Could not find current file');
+  let match = new RegExp ('@(.+):\\d+').exec(stackLine);
+  if (!match)
+    throw new Error ('Could not find current file');
+  let path = match[1];
+  let file = Gio.File.new_for_path (path);
+  return [file.get_path(), file.get_parent().get_path(), file.get_basename()];
+}
+
+function get_appdir () {
+  let s = getCurrentFile ()[1];
+  if (GLib.file_test (s + "/extension.js", GLib.FileTest.EXISTS)) return s;
+  s = GLib.get_home_dir () + "/.local/share/gnome-shell/extensions/cpufreq@konkor";
+  if (GLib.file_test (s + "/extension.js", GLib.FileTest.EXISTS)) return s;
+  s = "/usr/share/gnome-shell/extensions/cpufreq@konkor";
+  if (GLib.file_test (s + "/extension.js", GLib.FileTest.EXISTS)) return s;
+  throw "Installation not found...";
+  return s;
+}
+
+function debug (msg) {
+  if (msg && DEBUGING) print ("[cpufreq][service] " + msg);
+}
+
+function error (msg) {
+  print ("[cpufreq][service] (EE) " + msg);
+}
+
+settings = Convenience.getSettings ();
+try {
+  let app = new CpufreqService (ARGV);
+  app.run (ARGV);
+} catch (e) {
+  print (e.message);
+}
