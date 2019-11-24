@@ -1,5 +1,6 @@
 *~
 *.bak
+*.old
 *.zip
 *.tar.xz
 *.orig
@@ -23,6 +24,7 @@ Makefile
 Makefile.in
 aclocal.m4
 zip-files/
+_build/
 .deps/
 autom4te.cache/
 compile
