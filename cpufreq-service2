@@ -14,6 +14,7 @@ const Gio     = imports.gi.Gio;
 const GLib    = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Lang    = imports.lang;
+const Signals = imports.signals;
 const System  = imports.system;
 
 const APPDIR = get_appdir ();
@@ -38,6 +39,8 @@ let load_show = false;
 
 let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
+let monitor = null;
+
 let streams = [];
 let freqs = [];
 let governors = [];
@@ -47,7 +50,7 @@ let cpu_online = 1;
 let gcc = 0;
 
 let event = 0;
-let init_event = 0;
+let event_long = 0;
 
 const OBJECT_PATH = '/org/konkor/cpufreq/service';
 const CpufreqServiceIface = '<node> \
@@ -100,34 +103,25 @@ var CpufreqService = new Lang.Class ({
     debug ("init");
     this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
     this.dbus.export (Gio.DBus.session, OBJECT_PATH);
-    cpu_present = Convenience.get_cpu_number ();
-    this.max0 = 0;
-    this.init_streams ();
-    this.update_freq ();
+    monitor = new CpufreqMonitor ();
     this.add_event ();
+    event_long = GLib.timeout_add (100, 15000, this.longloop.bind (this));
     settings.connect ("changed", this.on_settings.bind (this));
-    GLib.timeout_add (200, 8000, () => {
-      let cores = GLib.get_num_processors ();
-      if (cores != cpu_online) this.init_streams ();
-      if (!frequency_show) this.gov0 = "";
-      return true;
-    });
   },
 
   on_settings: function (o, key) {
     if (key == MONITOR_KEY) {
-    monitor_timeout =  o.get_int (MONITOR_KEY);
-    this.add_event ();
+      monitor_timeout =  o.get_int (MONITOR_KEY);
+      this.add_event ();
     } else if (key == LOAD_SHOW_KEY) {
-    load_show = o.get_boolean (LOAD_SHOW_KEY);
+      load_show = o.get_boolean (LOAD_SHOW_KEY);
     } else if (key == GOVS_SHOW_KEY) {
-    governor_show = o.get_boolean (GOVS_SHOW_KEY);
+      governor_show = o.get_boolean (GOVS_SHOW_KEY);
     } else if (key == FREQ_SHOW_KEY) {
-    frequency_show = o.get_boolean (FREQ_SHOW_KEY);
+      frequency_show = o.get_boolean (FREQ_SHOW_KEY);
     }
 
     style_state = -1;
-    this.max0 = 0;
   },
 
   add_event: function () {
@@ -137,99 +131,37 @@ var CpufreqService = new Lang.Class ({
     }
     if (monitor_timeout > 0)
       event = GLib.timeout_add (100, monitor_timeout, () => {
-        this.update_freq ();
+        this.update ();
         return true;
       });
     else {
-      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [""]));
-      //this.quit ();
+      this.dbus.emit_signal ("FrequencyChanged", new GLib.Variant("(s)", [""]));
+      this.quit ();
     }
   },
 
-  init_streams: function() {
-    debug ("init_streams");
-    if (init_event != 0) {
-      GLib.Source.remove (init_event);
-      init_event = 0;
+  update: function () {
+    if (monitor.update ()) {
+      debug ("monitor fire...")
+      let metrics = monitor.metrics;
+      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [metrics]));
     }
-    streams.forEach (stream => {
-      try {
-        if (stream) stream.close (null);
-      } catch (e) {}
-    });
-    cpu_online = GLib.get_num_processors ();
-    freqs = new Array (cpu_online);
-    governors = new Array (cpu_online);
-    streams = [];
-    for (let key = 0; key < cpu_present; key++) {
-      if (GLib.file_test ('/sys/devices/system/cpu/cpu' + key + '/topology', GLib.FileTest.EXISTS)) {
-        let f = Gio.File.new_for_path ('/sys/devices/system/cpu/cpu' + key + '/cpufreq/scaling_cur_freq');
-        streams.push (new Gio.DataInputStream({ base_stream: f.read(null) }));
-      } else {
-        streams.push (null);
-      }
-    }
-  },
-
-  update_freq: function () {
-    let max = 0, avg = 0, i = 0, g, l, s = 0,
-    metrics = {max:0, avg:0, governor:"",state:0};
-    streams.forEach (stream => {
-      if (stream) {
-        if (frequency_show) this.read_line (stream);
-        if (governor_show) this.get_governors (i);
-      }
-      i++;
-    });
-    this.get_loading ();
-    for (i = 0; i < cpu_online; i++) if (freqs[i]) {
-      if (freqs[i] > max) max = freqs[i];
-      avg += freqs[i] / 1000;
-    }
-    if (cpu_online) avg = parseInt (avg / cpu_online);
-    if (governor_show) g = this.governor;
-    if (load_show) l = this.loadavg;
-    s = this.stylestate;
-
-    if ((max != this.max0) || (g != this.gov0) || (s != style_state)) {
-      if (max == 0) max = this.max0;
-      if (governor_show && g) {
-        this.gov0 = g;
-      }
-      if (load_show) this.title += " " + l;
-      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [JSON.stringify (metrics)]));
-      this.max0 = max;
-      style_state = s;
-    }
-
     gcc++;
-    if (gcc*monitor_timeout > 1000) {
-      gcc = 0;
-      System.gc ();
+    if (gcc > 7) {
+        gcc = 0;
+        System.gc ();
     }
   },
 
-  get_governors: function (core) {
-    core = core || 0;
-    let path = '/sys/devices/system/cpu/cpu' + core + '/cpufreq/scaling_governor';
-    let file = Gio.file_new_for_path (path);
-
-    file.load_contents_async (null, (o, res) => {
-      let [success, contents] = o.load_contents_finish (res);
-      if (!success) return;
-      try {
-        contents = ArrayToString (contents).toString ().split ("\n")[0].trim ();
-        governors.unshift (contents);
-        governors.splice (governors.length - 1, 1);
-      } catch (e) {}
-    });
+  longloop: function () {
+    monitor.update_throttle ();
+    this.update ();
   },
 
   remove_events: function () {
     if (this.dbus) this.dbus.unexport ();
     if (event != 0) GLib.Source.remove (event);
-    if (init_event != 0) GLib.Source.remove (init_event);
-    event = 0; init_event = 0;
+    event = 0;
   }
 });
 
@@ -251,29 +183,40 @@ var CpufreqMonitor = new Lang.Class ({
     this.governors = [];
     this.governor = "";
 
+    //loading
+    this.loading = new FileStream ("/proc/loadavg");
+    this.loadavg = 0;
+
     //throthle
+    this.tt = 0;
+    this.tt_old = 0;
+    this.tt_time = 0;
+
+    // WARNINGS 0 - normal, 1 - warning, 2 - critical
+    this.state = 0;
+    this.warnmsg = "";
 
     this.init ();
     this.update ();
   },
 
   init: function () {
-    debug ("init_sources");
+    debug ("init_sources " + CPUFreq.cpucount);
     this.frequencies.forEach (f => {f.close ()});
-    this.frequencies = new Array (CPUFreq.cpu_present);
-    for (let i = 0; i < CPUFreq.cpu_present; i++) {
+    this.frequencies = new Array (CPUFreq.cpucount);
+    for (let i = 0; i < CPUFreq.cpucount; i++) {
       this.frequencies[i] = new FileStream ("/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_cur_freq");
     }
     this.governors.forEach (g => {g.cancel ()});
-    this.governors = new Array (CPUFreq.cpu_present);
-    for (let i = 0; i < CPUFreq.cpu_present; i++) {
+    this.governors = new Array (CPUFreq.cpucount);
+    for (let i = 0; i < CPUFreq.cpucount; i++) {
       this.governors[i] = new FileMonitor ("/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_governor");
     }
     this.governor = this.get_governor ();
   },
 
   get_governor: function () {
-    let g = this.governors[0].content, online = GLib.get_num_processors ();;
+    let g = this.governors[0].content, online = GLib.get_num_processors ();
     for (let i = 0; i < online; i++) {
       if (this.governors[i].content && this.governors[i].content != g) g = "mixed";
     }
@@ -281,14 +224,14 @@ var CpufreqMonitor = new Lang.Class ({
   },
 
   update: function () {
-    debug ("update");
     let fire = false, online = GLib.get_num_processors ();
     let max = 0, min = 0, avg = 0, avg_count = 0, g;
 
     for (let i = 0; i < online; i++) {
       let f = this.frequencies[i].update ();
       if (f) {
-        let n = parseInt (f.split ("\n")[0].trim ());
+        //TODO: should be a string? let n = parseInt (f.split ("\n")[0].trim ());
+        let n = parseInt (f);
         if (Number.isInteger (n)) {
           if (n > max) max = n;
           if ((min == 0) || (n < min)) min = n;
@@ -304,7 +247,11 @@ var CpufreqMonitor = new Lang.Class ({
       this.frequency_maximum = max;
       fire = true;
     }
-
+    let l = this.loading.update ();
+    if (l) {
+      l = l.toString ().split ("\n")[0].split (" ")[0].trim ();
+      this.loadavg = Math.round (parseFloat (l) * 100);
+    }
     g = this.get_governor ();
     if (g != this.governor) {
       this.governor = g;
@@ -314,13 +261,63 @@ var CpufreqMonitor = new Lang.Class ({
       cpu_online = online;
       fire = true;
     }
+    g = this.get_state ();
+    if (this.state != g) {
+      this.state = g;
+      fire = true;
+    }
+
     return fire;
+  },
+
+  update_throttle: function () {
+    this.tt_old = this.tt;
+    if (!CPUFreq.thermal_throttle) {
+      CPUFreq.get_throttle_events ((events) => {
+        if (events) this.tt = events;
+      });
+    } else {
+      this.tt = CPUFreq.get_throttle ();
+    }
+  },
+
+  get_state: function () {
+    let s = 0, msg = "", online = GLib.get_num_processors ();
+    this.warnmsg = "";
+    if (this.loadavg > online * 100) {
+      s = 2;
+      this.warnmsg = "SYSTEM OVERLOAD";
+    } else if (this.loadavg > online * 75) {
+      s = 1;
+      this.warnmsg = "SYSTEM BUSY";
+    }
+    if (this.tt) {
+      msg = "CPU THROTTLED: " + this.tt;
+      if (s == 0) s = 1;
+      if (this.tt_old != this.tt) {
+        msg += "\nTHROTTLE SPEED: " + Math.round ((this.tt - this.tt_old) / 15);
+        s = 2;
+      }
+      if (this.warnmsg.length > 0) this.warnmsg += "\n" + msg;
+    }
+    return s;
+  },
+
+  get metrics () {
+    let o = {
+      frequency_average: this.frequency_average,
+      frequency_minimum: this.frequency_minimum,
+      frequency_maximum: this.frequency_maximum,
+      governor         : this.governor,
+      state            : this.state
+    }
+    return JSON.stringify (o);
   }
 });
 
 var FileStream = new Lang.Class ({
   Name: 'FileStream',
-  Extends: GObject.Object,
+  Extends: GObject.GObject,
   Signals: {
     'changed': {
       flags: GObject.SignalFlags.RUN_LAST | GObject.SignalFlags.DETAILED,
@@ -374,6 +371,8 @@ var FileStream = new Lang.Class ({
   }
 });
 
+Signals.addSignalMethods (FileStream.prototype);
+
 var FileMonitor = new Lang.Class ({
   Name: 'FileMonitor',
 
@@ -406,7 +405,7 @@ var FileMonitor = new Lang.Class ({
   },
 
   load_contents: function () {
-    let [ok,contents,] = this.file.load_contents ();
+    let [ok,contents,] = this.file.load_contents (null);
     if (ok)
       this.content = ArrayToString (contents).toString().split ("\n")[0].trim();
     else this.content = null;
