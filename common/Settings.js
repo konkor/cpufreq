@@ -167,8 +167,10 @@ var Settings = new Lang.Class({
   power_profile: function (id, save) {
     save = (typeof save !== 'undefined') ?  save : true;
     let prf = this.get_profile (id);
-    if (id == "user") this.restore_saved ();
-    else if (prf) cpu.set_power_profile (prf);
+    if (id == "user") {
+      this.restore_saved ();
+      return;
+    } else if (prf) cpu.set_power_profile (prf);
     else cpu.power_profile (id, save);
     if (save) {
       this.save = id != cpu.default_profile.guid;
