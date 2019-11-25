@@ -40,6 +40,7 @@ let load_show = false;
 let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
 let monitor = null;
+let freedesktop = null;
 
 let streams = [];
 let freqs = [];
@@ -101,6 +102,7 @@ var CpufreqService = new Lang.Class ({
 
   init: function() {
     debug ("init");
+    this.state = 0;
     this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
     this.dbus.export (Gio.DBus.session, OBJECT_PATH);
     monitor = new CpufreqMonitor ();
@@ -144,7 +146,13 @@ var CpufreqService = new Lang.Class ({
     if (monitor.update ()) {
       debug ("monitor fire...")
       let metrics = monitor.metrics;
-      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [metrics]));
+      debug ("monitor fire...")
+      this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [JSON.stringify (metrics)]));
+      if (this.state != metrics.state) {
+        // Send notification about critical states
+        if (metrics.state != 0) this.notify (monitor.warnmsg);
+        this.state = metrics.state;
+      }
     }
     gcc++;
     if (gcc > 7) {
@@ -156,6 +164,52 @@ var CpufreqService = new Lang.Class ({
   longloop: function () {
     monitor.update_throttle ();
     this.update ();
+  },
+
+  notify: function (msg) {
+    if (!msg) msg = "";
+    debug ("sending notification: " + msg);
+    /*this.withdraw_notification ("ospower-message");
+    let notification = new Gio.Notification ();
+    let icon = Gio.Icon.new_for_string ("dialog-warning");
+    notification.set_title ("OSPower critical state");
+    notification.set_body (msg);
+    if (icon) notification.set_icon (icon);
+    this.send_notification ("ospower-message", notification);*/
+
+    /*let notification =new Notify.Notification ({
+        summary: "OSPower critical state",
+        icon_name: "dialog-information",
+        body: msg
+    });
+    notification.set_app_name ("OSPower");
+    notification.add_action ("more", "More info...", this.action_callback.bind (this));
+    notification.show ();*/
+
+    if (!freedesktop) freedesktop = Gio.DBusProxy.new_for_bus_sync (
+      Gio.BusType.SESSION,0,null,"org.freedesktop.Notifications",
+      "/org/freedesktop/Notifications", "org.freedesktop.Notifications", null
+    );
+    let id = freedesktop.call_sync ("Notify", new GLib.Variant("(susssasa{sv}i)", [
+      "OSPower",
+      42,
+      "dialog-information",
+      "OSPower critical state",
+      msg,
+      [],
+      {},
+      5000
+    ]), 0,-1,null);
+    //close
+    if (id) GLib.timeout_add (100, 60000, () => {
+      freedesktop.call_sync ("CloseNotification", id, 0, -1, null);
+      return false;
+    });
+  },
+
+  action_callback: function (o, action) {
+    debug (action);
+    GLib.spawn_command_line_async (APPDIR + "/cpufreq-application");
   },
 
   remove_events: function () {
@@ -311,7 +365,7 @@ var CpufreqMonitor = new Lang.Class ({
       governor         : this.governor,
       state            : this.state
     }
-    return JSON.stringify (o);
+    return o;
   }
 });
 
