@@ -144,13 +144,12 @@ var CpufreqService = new Lang.Class ({
 
   update: function () {
     if (monitor.update ()) {
-      debug ("monitor fire...")
+      debug ("monitor fire...");
       let metrics = monitor.metrics;
-      debug ("monitor fire...")
       this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [JSON.stringify (metrics)]));
       if (this.state != metrics.state) {
         // Send notification about critical states
-        if (metrics.state != 0) this.notify (monitor.warnmsg);
+        if (metrics.state == 2) this.notify (monitor.warnmsg);
         this.state = metrics.state;
       }
     }
@@ -168,24 +167,6 @@ var CpufreqService = new Lang.Class ({
 
   notify: function (msg) {
     if (!msg) msg = "";
-    debug ("sending notification: " + msg);
-    /*this.withdraw_notification ("ospower-message");
-    let notification = new Gio.Notification ();
-    let icon = Gio.Icon.new_for_string ("dialog-warning");
-    notification.set_title ("OSPower critical state");
-    notification.set_body (msg);
-    if (icon) notification.set_icon (icon);
-    this.send_notification ("ospower-message", notification);*/
-
-    /*let notification =new Notify.Notification ({
-        summary: "OSPower critical state",
-        icon_name: "dialog-information",
-        body: msg
-    });
-    notification.set_app_name ("OSPower");
-    notification.add_action ("more", "More info...", this.action_callback.bind (this));
-    notification.show ();*/
-
     if (!freedesktop) freedesktop = Gio.DBusProxy.new_for_bus_sync (
       Gio.BusType.SESSION,0,null,"org.freedesktop.Notifications",
       "/org/freedesktop/Notifications", "org.freedesktop.Notifications", null
@@ -200,11 +181,6 @@ var CpufreqService = new Lang.Class ({
       {},
       5000
     ]), 0,-1,null);
-    //close
-    if (id) GLib.timeout_add (100, 60000, () => {
-      freedesktop.call_sync ("CloseNotification", id, 0, -1, null);
-      return false;
-    });
   },
 
   action_callback: function (o, action) {
