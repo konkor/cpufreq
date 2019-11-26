@@ -16,13 +16,12 @@ const GObject = imports.gi.GObject;
 const Lang    = imports.lang;
 const Signals = imports.signals;
 const System  = imports.system;
+const BArray  = imports.byteArray;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
-
-const Convenience   = imports.convenience;
 const CPUFreq       = imports.common.HelperCPUFreq;
-const ArrayToString = Convenience.byteArrayToString;
+const ArrayToString = CPUFreq.ArrayToString;
 
 const MONITOR_KEY   = 'monitor';
 const FREQ_SHOW_KEY = 'frequency-show';
@@ -31,7 +30,6 @@ const LOAD_SHOW_KEY = 'load-show';
 
 
 var DEBUGING = true;
-let settings = null;
 let monitor_timeout = 1000;
 let frequency_show = true;
 let governor_show = false;
@@ -42,10 +40,6 @@ let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - defaul
 let monitor = null;
 let freedesktop = null;
 
-let streams = [];
-let freqs = [];
-let governors = [];
-let loading = 0;
 let cpu_present = 1;
 let cpu_online = 1;
 let gcc = 0;
@@ -60,11 +54,8 @@ const CpufreqServiceIface = '<node> \
 <signal name="MonitorEvent"> \
   <arg name="metrics" type="s"/> \
 </signal> \
-<signal name="LoadingEvent"> \
-  <arg name="loading" type="t"/> \
-</signal> \
-<signal name="StyleChanged"> \
-  <arg name="style" type="s"/> \
+<signal name="OSPowerEvent"> \
+  <arg name="type" type="t"/> \
 </signal> \
 </interface> \
 </node>';
@@ -82,10 +73,6 @@ var CpufreqService = new Lang.Class ({
     });
     GLib.set_application_name ("CPUFreq Service");
 
-    monitor_timeout = settings.get_int (MONITOR_KEY);
-    frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
-    governor_show = settings.get_boolean (GOVS_SHOW_KEY);
-    load_show = settings.get_boolean (LOAD_SHOW_KEY);
   },
 
   vfunc_startup: function() {
@@ -108,10 +95,10 @@ var CpufreqService = new Lang.Class ({
     monitor = new CpufreqMonitor ();
     this.add_event ();
     event_long = GLib.timeout_add (100, 15000, this.longloop.bind (this));
-    settings.connect ("changed", this.on_settings.bind (this));
   },
 
   on_settings: function (o, key) {
+    //TODO: configuration
     if (key == MONITOR_KEY) {
       monitor_timeout =  o.get_int (MONITOR_KEY);
       this.add_event ();
@@ -177,10 +164,13 @@ var CpufreqService = new Lang.Class ({
       "dialog-information",
       "OSPower critical state",
       msg,
-      [],
+      ["more", "More info"],
       {},
       5000
     ]), 0,-1,null);
+    freedesktop.connectSignal ('ActionInvoked', (o, s, v) => {
+      print (v);
+    });
   },
 
   action_callback: function (o, action) {
@@ -475,7 +465,6 @@ function error (msg) {
   print ("[cpufreq][service] (EE) " + msg);
 }
 
-settings = Convenience.getSettings ();
 try {
   let app = new CpufreqService (ARGV);
   app.run (ARGV);

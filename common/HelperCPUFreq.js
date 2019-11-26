@@ -8,16 +8,14 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const Lang = imports.lang;
-
-const APPDIR = getCurrentFile ()[1];
+const Gio    = imports.gi.Gio;
+const GLib   = imports.gi.GLib;
+const Lang   = imports.lang;
+const BArray = imports.byteArray;
 
 const Logger = imports.common.Logger;
-const Convenience = imports.convenience;
-const byteArrayToString = Convenience.byteArrayToString;
 
+const APPDIR  = getCurrentFile ()[1];
 const CPUROOT = "/sys/devices/system/cpu/";
 
 var governors = [];
@@ -656,7 +654,7 @@ function get_frequency_async (num, callback) {
     let [success, contents] = o.load_contents_finish (res);
     if (!success) return;
     try {
-      contents = byteArrayToString (contents).toString ().split ("\n")[0].trim ();
+      contents = ArrayToString (contents).toString ().split ("\n")[0].trim ();
       var n = parseInt (contents);
       if (!Number.isInteger (n)) n = 0;
       callback (n, num);
@@ -671,7 +669,7 @@ function get_frequency (core) {
   try {
     let [success, contents, etag] = file.load_contents (null);
     if (!success) return 0;
-    contents = byteArrayToString (contents).toString ().split ("\n")[0].trim ();
+    contents = ArrayToString (contents).toString ().split ("\n")[0].trim ();
     n = parseInt (contents);
     if (!Number.isInteger (n)) n = 0;
   } catch (e) {
@@ -702,7 +700,7 @@ function get_cpu_number () {
   try {
     ret = GLib.spawn_command_line_sync ("cat /sys/devices/system/cpu/present");
   } catch (e) {debug (e.message);}
-  if (ret[0]) cpulist = byteArrayToString (ret[1]).toString().split("\n", 1)[0].split("-");
+  if (ret[0]) cpulist = ArrayToString (ret[1]).toString().split("\n", 1)[0].split("-");
   cpulist.forEach ((f)=> {
     if (parseInt (f) > 0) c = parseInt (f);
   });
@@ -736,7 +734,7 @@ function get_command_line (cmd) {
   try {
     cmd_out = GLib.spawn_command_line_sync (cmd);
   } catch (e) {debug (e.message);}
-  if (cmd_out[0]) info_out = byteArrayToString (cmd_out[1]).toString ();
+  if (cmd_out[0]) info_out = ArrayToString (cmd_out[1]).toString ();
   if (info_out) return info_out;
   return "";
 }
@@ -769,7 +767,7 @@ function get_content (path) {
   let file = Gio.file_new_for_path (path);
   try {
     [success, contents, ] = file.load_contents (null);
-    if (success) contents = byteArrayToString (contents).toString ().trim ();
+    if (success) contents = ArrayToString (contents).toString ().trim ();
   } catch (e) {
     error (e.message + "\n" + path);
   }
@@ -787,7 +785,7 @@ function get_content_async (path, callback) {
   file.load_contents_async (null, (o, res) => {
     [success, contents] = o.load_contents_finish (res);
     if (success) try {
-      contents = byteArrayToString (contents).toString ().trim ();
+      contents = ArrayToString (contents).toString ().trim ();
     } catch (e) {error (e.message + "\n" + path);}
     if (callback) callback (success, contents);
   });
@@ -855,6 +853,10 @@ function debug (msg) {
 
 function error (msg) {
   Logger.error ("cpu helper", msg);
+}
+
+function ArrayToString (array) {
+  return array instanceof Uint8Array ? BArray.toString (array):array;
 }
 
 function getCurrentFile () {
