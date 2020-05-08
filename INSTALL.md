@@ -65,7 +65,7 @@ It can be useful if you have saved broken settings values or to clean up previou
 You can check this values in the **dconf-editor** at `/org/gnome/shell/extensions/cpufreq/`
 ```
 dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
-sudo cpufreqctl uninstall
+sudo cpufreqctl --uninstall
 ```
 If you want reset the extension's values to defaults just run it and restart gnome-shell.
 ```
