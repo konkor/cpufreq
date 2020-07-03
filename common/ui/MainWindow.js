@@ -52,7 +52,7 @@ var MainWindow = new Lang.Class ({
     let msg = ("<b>" + _("%s required system components?") + "</b>\n").format (update ? _("Update") : _("Install"));
     let sec = _("This action will be require root permissions to complete installation. ");
     sec += _("It could take some time depending on your system configuration. It will try to execute the command:\n\n");
-    sec += "<i>pkexec " + APPDIR + "/cpufreqctl install</i>\n\n";
+    sec += "<i>pkexec " + APPDIR + "/cpufreqctl --install</i>\n\n";
     sec += "<i><b>" + _("Note:") + "</b> " + _("You can press \'Cancel\' button and make it manually as an administrator to complete the installation.") + "</i>\n"
     let dlg = new Gtk.MessageDialog ({
       message_type: Gtk.MessageType.WARNING, buttons: Gtk.ButtonsType.OK_CANCEL,
@@ -86,7 +86,7 @@ var MainWindow = new Lang.Class ({
   build: function() {
     let box;
     if (this.application.extension) this.window_position = Gtk.WindowPosition.MOUSE;
-    else this.window_position = Gtk.WindowPosition.CENTER;
+    else if (!cpu.is_wayland ()) this.window_position = Gtk.WindowPosition.CENTER;
     Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
     this.set_default_size (this.settings.window_width, this.settings.window_height);
     cssp = get_css_provider ();
