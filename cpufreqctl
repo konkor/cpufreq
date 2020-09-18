@@ -420,7 +420,14 @@ if [ $OPTION = "--on" ]
 then
   if [ -z $CORE ]
   then
-    verbose "Should be specify --core=NUMBER"
+    verbose "Turning on all cores"
+    i=1
+    p=$((`cat /sys/devices/system/cpu/present | sed 's/0-//'` + 1))
+    while [ $i -ne $p ]
+    do
+      echo "1" > $FLROOT/cpu"$i"/online
+      i=`expr $i + 1`
+    done
   else
     verbose "Power on CPU Core"$CORE
     echo "1" > $FLROOT/cpu"$CORE"/online
