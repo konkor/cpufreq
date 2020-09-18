@@ -44,18 +44,24 @@ function help () {
   echo "  --version       Package version"
   echo "  --verbose, -v   Verbose output"
   echo ""
+  echo "basic options"
   echo "  --set=VALUE     Set VALUE for selected option"
   echo "  --core=NUMBER   Apply selected option just for the core NUMBER (0 ~ N - 1)"
   echo "  --available     Get available values instand of default: current"
   echo ""
   echo "  --driver        Current processor driver"
   echo "  --governor      Scaling governor's options"
-  echo "  --frequency     Frequency options"
   echo "  --on            Turn on --core=NUMBER"
   echo "  --off           Turn off --core=NUMBER"
   echo "  --frequency-min Minimal frequency options"
   echo "  --frequency-max Maximum frequency options"
   echo "  --boost         Current cpu boost value"
+  echo ""
+  echo "Frequency options"
+  echo "  --frequency     Frequency options"
+  echo "  --max           Get a maximum value of the current frequencies"
+  echo "  --min           Get a minimum value of the current frequencies"
+  echo "  --average       Get an average value of the current frequencies"
   echo ""
   echo "intel_pstate options"
   echo "  --no-turbo      Current no_turbo value"
@@ -287,6 +293,60 @@ then
     verbose "Setting CPU"$CORE" frequency to "$VALUE
     set_frequency
   fi
+  exit
+fi
+if [ $OPTION = "--max" ]
+then
+  i=0
+  V=0
+  M=0
+  while [ $i -ne $cpucount ]
+  do
+    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+    if [[ $V > $M ]]
+    then
+      M=$V
+    fi
+    i=`expr $i + 1`
+  done
+  echo "$M"
+  exit
+fi
+if [ $OPTION = "--min" ]
+then
+  i=1
+  V=0
+  M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+  while [ $i -ne $cpucount ]
+  do
+    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+    if [[ $V < $M ]]
+    then
+      M=$V
+    fi
+    i=`expr $i + 1`
+    echo "$i"
+  done
+  echo "$M"
+  exit
+fi
+if [ $OPTION = "--average" ]
+then
+  i=1
+  N=1
+  V=0
+  M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+  while [ $i -ne $cpucount ]
+  do
+    V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
+    if [[ $V > 0 ]]
+    then
+      M=`expr $M + $V`
+      N=`expr $N + 1`
+    fi
+    i=`expr $i + 1`
+  done
+  echo `expr $M / $N`
   exit
 fi
 if [ $OPTION = "--no-turbo" ]
