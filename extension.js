@@ -13,7 +13,6 @@ const GLib      = imports.gi.GLib;
 const Gio       = imports.gi.Gio;
 const St        = imports.gi.St;
 const Main      = imports.ui.main;
-const Tweener   = imports.ui.tweener;
 const PanelMenu = imports.ui.panelMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -433,11 +432,11 @@ const FrequencyIndicator = new Lang.Class({
     splash.set_position (Math.floor (monitor.width / 2 - splash.width / 2),
       Math.floor (monitor.height / 2 - splash.height / 2));
 
-    Tweener.addTween (splash, {
-      time: 2, transition: 'easeOut',
+    splash.ease ({
+      opacity: 20, mode: 8, duration: 1200,
       onComplete: () => {
         Main.uiGroup.remove_actor (splash);
-        splash = null;
+        splash.destroy ();
       }
     });
   }
@@ -452,11 +451,11 @@ function show_notify (message, style) {
   text.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - text.width / 2),
     Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
 
-  Tweener.addTween (text, {
-    opacity: 224, time: 1.2, transition: 'easeOut',
+  text.ease ({
+    opacity: 200, mode: 8, duration: 1200,
     onComplete: () => {
       Main.uiGroup.remove_actor (text);
-      text = null;
+      text.destroy ();
     }
   });
 }
