@@ -1,5 +1,5 @@
 # The fonts files
-fontsdir = $(datadir)/fonts/truetype/cpufreq $(datadir)/gnome-shell/extensions/cpufreq@konkor/fonts
+fontsdir = $(datadir)/fonts/truetype/cpufreq
 fonts_DATA = \
     cpufreq.ttf \
     $(NULL)
