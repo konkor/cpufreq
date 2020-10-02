@@ -432,15 +432,18 @@ const FrequencyIndicator = new Lang.Class({
     splash.set_position (Math.floor (monitor.width / 2 - splash.width / 2),
       Math.floor (monitor.height / 2 - splash.height / 2));
 
-    splash.ease ({
+    if (splash.ease) splash.ease ({
       opacity: 20, mode: 8, duration: 1200,
-      onComplete: () => {
-        Main.uiGroup.remove_actor (splash);
-        splash.destroy ();
-      }
-    });
+      onComplete: remove_actor
+    }); else GLib.timeout_add (0, 1200, () => { return remove_actor (splash)});
   }
 });
+
+function remove_actor (o) {
+  Main.uiGroup.remove_actor (o);
+  o.destroy ();
+  return false;
+}
 
 function show_notify (message, style) {
   //var text = new St.Label ({text: message, style_class: style?style:'cpufreq-notify'});
@@ -451,13 +454,7 @@ function show_notify (message, style) {
   text.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - text.width / 2),
     Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
 
-  text.ease ({
-    opacity: 200, mode: 8, duration: 1200,
-    onComplete: () => {
-      Main.uiGroup.remove_actor (text);
-      text.destroy ();
-    }
-  });
+  GLib.timeout_add (0, 1200, () => { return remove_actor (text)});
 }
 
 function show_warn (message) {

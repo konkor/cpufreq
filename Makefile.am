@@ -62,4 +62,4 @@ zip-file: all
 	(cd "$(builddir)/_build/$(APP_ID)"; \
 	 zip -qr "../../zip-files/$(APP_ID).zip" .; \
 	);
-	-#rm -fR $(builddir)/_build
+	-rm -fR $(builddir)/_build

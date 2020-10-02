@@ -29,7 +29,7 @@ const GOVS_SHOW_KEY = 'governors-show';
 const LOAD_SHOW_KEY = 'load-show';
 
 
-var DEBUGING = true;
+var DEBUGING = false;
 let monitor_timeout = 1000;
 let frequency_show = true;
 let governor_show = false;
