@@ -434,7 +434,7 @@ const FrequencyIndicator = new Lang.Class({
 
     if (splash.ease) splash.ease ({
       opacity: 20, mode: 8, duration: 1200,
-      onComplete: remove_actor
+      onComplete: () => { remove_actor (splash)}
     }); else GLib.timeout_add (0, 1200, () => { return remove_actor (splash)});
   }
 });

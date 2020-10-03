@@ -8,6 +8,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+imports.gi.versions.Gtk = '3.0';
+
 const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;

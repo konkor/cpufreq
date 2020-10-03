@@ -18,7 +18,7 @@ var Switch = new Lang.Class({
   _init: function (text, state, tooltip) {
     this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:8});
     state = state || false;
-    this.margin_left = 16;
+    this.margin_start = 16;
     this.get_style_context ().add_class ("switch");
     this.tooltip_text = tooltip;
 

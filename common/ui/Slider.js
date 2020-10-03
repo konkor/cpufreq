@@ -18,7 +18,7 @@ var Slider = new Lang.Class({
 
   _init: function (text, info, tooltip) {
     this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:8});
-    this.margin_left = 16;
+    this.margin_start = 16;
     this.get_style_context ().add_class ("slider-item");
     this.tooltip_text = tooltip;
 

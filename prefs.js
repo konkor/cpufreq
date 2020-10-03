@@ -227,7 +227,7 @@ var PageMonitorCPUFreq = new Lang.Class({
 
         let cb_units = Gtk.CheckButton.new_with_label (_("Frequency"));
         cb_units.tooltip_text = _("Monitor frequency");
-        cb_units.margin_left = 32;
+        cb_units.margin_start = 32;
         cb_units.active = frequency_show;
         hbox.pack_start (cb_units, true, true, 8);
         cb_units.connect ('toggled', Lang.bind (this, (o)=>{

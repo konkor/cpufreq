@@ -335,7 +335,7 @@ var ControlPanel = new Lang.Class({
     this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
     this.corewarn = new SideMenu.SideItem ("⚠ Single Core Thread","Single core is not recommended");
     this.corewarn.get_style_context ().add_class ("warn");
-    this.corewarn.xalign = 0.5;
+    this.corewarn.halign = 3;
     this.add_item (this.corewarn);
     this.corewarn.connect ('clicked', () => {
       let app = Gio.AppInfo.get_default_for_type ("text/plain", false);
