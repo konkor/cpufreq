@@ -168,13 +168,11 @@ var CpufreqService = new Lang.Class ({
       {},
       5000
     ]), 0,-1,null);
-    freedesktop.connectSignal ('ActionInvoked', (o, s, v) => {
-      print (v);
-    });
+    freedesktop.connectSignal ('ActionInvoked', this.action_callback.bind (this));
   },
 
   action_callback: function (o, action) {
-    debug (action);
+    //print (action);
     GLib.spawn_command_line_async (APPDIR + "/cpufreq-application");
   },
 
@@ -305,7 +303,7 @@ var CpufreqMonitor = new Lang.Class ({
     let s = 0, msg = "", online = GLib.get_num_processors ();
     this.warnmsg = "";
     if (this.loadavg > online * 100) {
-      s = 2;
+      s = 1;
       this.warnmsg = "SYSTEM OVERLOAD";
     } else if (this.loadavg > online * 75) {
       s = 1;
