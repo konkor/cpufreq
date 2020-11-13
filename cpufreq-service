@@ -164,7 +164,7 @@ var CpufreqService = new Lang.Class ({
       "dialog-information",
       "OSPower critical state",
       msg,
-      ["more", "More info"],
+      [],
       {},
       5000
     ]), 0,-1,null);
