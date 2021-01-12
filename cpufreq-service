@@ -19,6 +19,7 @@ const System  = imports.system;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
+const Convenience   = imports.convenience;
 const CPUFreq       = imports.common.HelperCPUFreq;
 const ArrayToString = CPUFreq.ArrayToString;
 
@@ -61,7 +62,7 @@ var CpufreqService = new Lang.Class ({
       flags: Gio.ApplicationFlags.IS_SERVICE
     });
     GLib.set_application_name ("CPUFreq Service");
-
+    this.settings = Convenience.getSettings ();
   },
 
   vfunc_startup: function() {
@@ -81,13 +82,14 @@ var CpufreqService = new Lang.Class ({
     this.state = 0;
     this.dbus = Gio.DBusExportedObject.wrapJSObject (CpufreqServiceInfo, this);
     this.dbus.export (Gio.DBus.session, OBJECT_PATH);
+    this.on_settings ();
     monitor = new CpufreqMonitor ();
     this.add_event ();
-    event_long = GLib.timeout_add (100, 15000, this.longloop.bind (this));
+    event_long = GLib.timeout_add (100, 30000, this.longloop.bind (this));
+    this.settings.connect ("changed", this.on_settings.bind (this));
   },
 
   on_settings: function (o, key) {
-    //TODO: configuration
     if (!o) o = this.settings;
 
     if (!key) {

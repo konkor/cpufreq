@@ -213,7 +213,7 @@ var PageMonitorCPUFreq = new Lang.Class({
         this.pack_start (hbox, false, false, 0);
         hbox.add (new Gtk.Label ({label: _("Monitoring Interval (ms)")}));
         this.timeout = Gtk.SpinButton.new_with_range (0, 1000000, 50);
-        this.timeout.tooltip_text = _("500ms - default, 0 - disable");
+        this.timeout.tooltip_text = _("1000ms - default, 0 - disable");
         this.timeout.value = monitor_timeout;
         this.timeout.connect ('value_changed', Lang.bind (this, ()=>{
             monitor_timeout = this.timeout.value;
