@@ -16,7 +16,6 @@ const GObject = imports.gi.GObject;
 const Lang    = imports.lang;
 const Signals = imports.signals;
 const System  = imports.system;
-const BArray  = imports.byteArray;
 
 const APPDIR = get_appdir ();
 imports.searchPath.unshift(APPDIR);
@@ -24,23 +23,13 @@ const CPUFreq       = imports.common.HelperCPUFreq;
 const ArrayToString = CPUFreq.ArrayToString;
 
 const MONITOR_KEY   = 'monitor';
-const FREQ_SHOW_KEY = 'frequency-show';
-const GOVS_SHOW_KEY = 'governors-show';
-const LOAD_SHOW_KEY = 'load-show';
-
 
 var DEBUGING = false;
 let monitor_timeout = 1000;
-let frequency_show = true;
-let governor_show = false;
-let load_show = false;
-
-let style_state = -1;  //-1 - trigger change, 0 - no color/style, 1,2,3 - default color/style, 4,5,6 - custom color/style
 
 let monitor = null;
 let freedesktop = null;
 
-let cpu_present = 1;
 let cpu_online = 1;
 let gcc = 0;
 
@@ -99,18 +88,14 @@ var CpufreqService = new Lang.Class ({
 
   on_settings: function (o, key) {
     //TODO: configuration
-    if (key == MONITOR_KEY) {
+    if (!o) o = this.settings;
+
+    if (!key) {
+      monitor_timeout =  o.get_int (MONITOR_KEY);
+    } else if (key == MONITOR_KEY) {
       monitor_timeout =  o.get_int (MONITOR_KEY);
       this.add_event ();
-    } else if (key == LOAD_SHOW_KEY) {
-      load_show = o.get_boolean (LOAD_SHOW_KEY);
-    } else if (key == GOVS_SHOW_KEY) {
-      governor_show = o.get_boolean (GOVS_SHOW_KEY);
-    } else if (key == FREQ_SHOW_KEY) {
-      frequency_show = o.get_boolean (FREQ_SHOW_KEY);
     }
-
-    style_state = -1;
   },
 
   add_event: function () {
