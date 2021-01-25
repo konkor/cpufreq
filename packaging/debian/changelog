@@ -1,6 +1,13 @@
+cpufreq (45-1) UNRELEASED; urgency=low
+
+  * Fix critical notifications issues for overloading
+  * Fix monitoring interval settings
+
+ -- konkor <kapa76@gmail.com>  Tue, 12 Jan 2021 20:00:00 +0300
+
 cpufreq (44-1) UNRELEASED; urgency=low
 
-  * Next version
+  * Fix GNOME Shell 3.38 issues
 
  -- konkor <kapa76@gmail.com>  Sat, 17 Oct 2020 13:00:00 +0300
 
