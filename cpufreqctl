@@ -47,7 +47,7 @@ function help () {
   echo "basic options"
   echo "  --set=VALUE     Set VALUE for selected option"
   echo "  --core=NUMBER   Apply selected option just for the core NUMBER (0 ~ N - 1)"
-  echo "  --available     Get available values instand of default: current"
+  echo "  --available     Get available values instead of default: current"
   echo ""
   echo "  --driver        Current processor driver"
   echo "  --governor      Scaling governor's options"
