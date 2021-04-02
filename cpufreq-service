@@ -117,6 +117,7 @@ var CpufreqService = new Lang.Class ({
   },
 
   update: function () {
+    monitor.update_throttle ();
     if (monitor.update ()) {
       debug ("monitor fire...");
       let metrics = monitor.metrics;
@@ -135,7 +136,6 @@ var CpufreqService = new Lang.Class ({
   },
 
   longloop: function () {
-    monitor.update_throttle ();
     this.update ();
   },
 
@@ -298,11 +298,12 @@ var CpufreqMonitor = new Lang.Class ({
     }
     if (this.tt) {
       msg = "CPU THROTTLED: " + this.tt;
-      if (s == 0) s = 1;
       if (this.tt_old != this.tt) {
         msg += "\nTHROTTLE SPEED: " + Math.round ((this.tt - this.tt_old) / 15);
+        this.tt_time = Date.now ();
         s = 2;
-      }
+      } else if ((Date.now() - this.tt_time) < 30000) s = 2;
+      else if (((Date.now() - this.tt_time) < 120000) && (s == 0)) s = 1;
       if (this.warnmsg.length > 0) this.warnmsg += "\n" + msg;
     }
     return s;
