@@ -2,7 +2,7 @@
 
 /*
  * This is a part of CPUFreq Manager
- * Copyright (C) 2016-2019 konkor <konkor.github.io>
+ * Copyright (C) 2016-2021 konkor <konkor.github.io>
  *
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -24,9 +24,11 @@ const CPUFreq       = imports.common.HelperCPUFreq;
 const ArrayToString = CPUFreq.ArrayToString;
 
 const MONITOR_KEY   = 'monitor';
+const NOTIFY_KEY    = 'notifications';
 
 var DEBUGING = false;
 let monitor_timeout = 1000;
+let system_notifications = false;
 
 let monitor = null;
 let freedesktop = null;
@@ -94,9 +96,12 @@ var CpufreqService = new Lang.Class ({
 
     if (!key) {
       monitor_timeout =  o.get_int (MONITOR_KEY);
+      system_notifications = o.get_boolean (NOTIFY_KEY);
     } else if (key == MONITOR_KEY) {
       monitor_timeout =  o.get_int (MONITOR_KEY);
       this.add_event ();
+    } else if (key == NOTIFY_KEY) {
+      system_notifications = o.get_boolean (NOTIFY_KEY);
     }
   },
 
@@ -124,7 +129,7 @@ var CpufreqService = new Lang.Class ({
       this.dbus.emit_signal ("MonitorEvent", new GLib.Variant("(s)", [JSON.stringify (metrics)]));
       if (this.state != metrics.state) {
         // Send notification about critical states
-        if (metrics.state == 2) this.notify (monitor.warnmsg);
+        if ((metrics.state == 2) && system_notifications) this.notify (monitor.warnmsg);
         this.state = metrics.state;
       }
     }

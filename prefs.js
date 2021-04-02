@@ -23,6 +23,7 @@ imports.searchPath.unshift(APPDIR);
 const Logger = imports.common.Logger;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
+const NOTIFY_KEY    = 'notifications';
 const DARK_THEME_KEY = 'dark-theme';
 const PROFILES_KEY = 'profiles';
 const EPROFILES_KEY = 'event-profiles';
@@ -64,6 +65,7 @@ let frequency_show = true;
 let governor_show = false;
 let load_show = false;
 let units_show = true;
+let system_notifications = false;
 
 let auto_profiles = [
   {name:_("Battery"), guid:"battery"},
@@ -101,6 +103,7 @@ var CPUFreqPreferences = new Lang.Class({
         governor_show = settings.get_boolean (GOVS_SHOW_KEY);
         frequency_show = settings.get_boolean (FREQ_SHOW_KEY);
         units_show = settings.get_boolean (UNITS_SHOW_KEY);
+        system_notifications = settings.get_boolean (NOTIFY_KEY);
 
         color_show = settings.get_boolean (COLOR_SHOW_KEY);
         color_show_custom = settings.get_boolean (COLOR_SHOW_CUSTOM_KEY);
@@ -165,6 +168,16 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.cb_startup.connect ('toggled', Lang.bind (this, ()=>{
             save = this.cb_startup.active;
             settings.set_boolean (SAVE_SETTINGS_KEY, save);
+        }));
+
+        this.cb_notify = Gtk.CheckButton.new_with_label (_("Notifications"));
+        this.cb_notify.tooltip_text = _("Show System Notifications on Critical States");
+        this.cb_notify.margin = 6;
+        this.add (this.cb_notify);
+        this.cb_notify.active = system_notifications;
+        this.cb_notify.connect ('toggled', Lang.bind (this, ()=>{
+            save = this.cb_notify.active;
+            settings.set_boolean (NOTIFY_KEY, system_notifications);
         }));
 
         this.add (new Gtk.Label ({label: _("<b>Extension</b>"), use_markup:true, xalign:0, margin_top:12}));

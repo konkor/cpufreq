@@ -9,6 +9,12 @@
       <description>Restore settings on startup</description>
     </key>
 
+    <key type="b" name="notifications">
+      <default>true</default>
+      <summary>System Notifications</summary>
+      <description>Enable System Notifications on Critical States</description>
+    </key>
+
     <key type="b" name="extension-mode">
       <default>true</default>
       <summary>Extension Mode</summary>
