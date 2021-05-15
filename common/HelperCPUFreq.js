@@ -719,7 +719,7 @@ function get_throttle () {
 }
 
 function get_throttle_events (callback) {
-  if (!callback) return;
+  if (!callback || !installed) return;
   let pipe = new SpawnPipe ([pkexec_path,cpufreqctl_path,"--throttle-events"], "/", (text, e) => {
     let num = 0;
     if (e) debug (e);

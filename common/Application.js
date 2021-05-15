@@ -136,6 +136,11 @@ var CPUFreqApplication = new Lang.Class ({
   },
 
   process_profile: function (id) {
+    if (!cpu.installed) {
+      this.finishing = true;
+      Logger.error ("Application is not installed.\nsudo ./cpufreqctl --install");
+      return 1;
+    }
     if (!id) {
       this.finishing = true;
       Logger.error ("No profile GUID specified...");
