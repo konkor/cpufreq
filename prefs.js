@@ -176,7 +176,7 @@ var PageGeneralCPUFreq = new Lang.Class({
         this.add (this.cb_notify);
         this.cb_notify.active = system_notifications;
         this.cb_notify.connect ('toggled', Lang.bind (this, ()=>{
-            save = this.cb_notify.active;
+            system_notifications = this.cb_notify.active;
             settings.set_boolean (NOTIFY_KEY, system_notifications);
         }));
 

@@ -6,10 +6,21 @@ description: Here could be your name, brand, reference and logo.
 
 # People donated their **real money**
 
+* #### [Miriam Laurel Inc](https://konkor.github.io/cpufreq/supporters/)
+
+* #### [Julien MENNEGAND](https://konkor.github.io/cpufreq/supporters/)
 * #### [Jonathan Alden](https://konkor.github.io/cpufreq/supporters/)
 * #### [Manuel Transfeld](https://konkor.github.io/cpufreq/supporters/)
 <br>
 
+* **[Nikola Dyundev](https://konkor.github.io/cpufreq/supporters/)**
+* **[Andreas Karnahl](https://konkor.github.io/cpufreq/supporters/)**
+* **[Laurent Dumont](https://konkor.github.io/cpufreq/supporters/)**
+* **[Pavels Kartasevs](https://konkor.github.io/cpufreq/supporters/)**
+* **[Felipe Delestro Matos](https://konkor.github.io/cpufreq/supporters/)**
+* **[Nikola Dyundev](https://konkor.github.io/cpufreq/supporters/)**
+* **[Dirk Tol](https://konkor.github.io/cpufreq/supporters/)**
+* **[Jun Chen](https://konkor.github.io/cpufreq/supporters/)**
 
 * **[Roland Jungnickel](https://konkor.github.io/cpufreq/supporters/)**
 * **[Joël Dinel](https://konkor.github.io/cpufreq/supporters/)**
@@ -17,6 +28,12 @@ description: Here could be your name, brand, reference and logo.
 * **[Patrick Strobel](https://konkor.github.io/cpufreq/supporters/)**
 <br><br>
 
+* [Gerard Gos](https://konkor.github.io/cpufreq/supporters/)
+* [Raven King](https://konkor.github.io/cpufreq/supporters/)
+* [Mr W Alsafi](https://konkor.github.io/cpufreq/supporters/)
+* [Thomas Hooper](https://konkor.github.io/cpufreq/supporters/)
+* [Michele Barp](https://konkor.github.io/cpufreq/supporters/)
+* [Matthew Hoelzel](https://konkor.github.io/cpufreq/supporters/)
 
 * [Felix Emmert](https://konkor.github.io/cpufreq/supporters/)
 * [Chun-Sheng Wu](https://konkor.github.io/cpufreq/supporters/)

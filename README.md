@@ -21,6 +21,8 @@ Please, consider to support the project and make it better!
 <p align="center">
   <big>
     Top supporters:<br><br><b>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Miriam Laurel Inc</a><br>
+    <a href="https://konkor.github.io/cpufreq/supporters/">Julien Mennegand</a><br>
     <a href="https://konkor.github.io/cpufreq/supporters/">Jonathan Alden</a><br>
     <a href="https://konkor.github.io/cpufreq/supporters/">Manuel Transfeld</a><br>
     <br></b>
@@ -45,7 +47,7 @@ Please, consider to support the project and make it better!
 <!--special end-->
 # [Project website](https://konkor.github.io/cpufreq/)
 ## Introduction
-CPUFreq is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using standard cpufreq kernel modules to collect information and manage governors. It needs root permission to able changing governors.
+CPUFreq is a lightweight CPU scaling monitor and powerful CPU management tool. The extension is using Linux kernel to collect information and manage power governors, frequencies etc. It needs root permission to able changing governors.
 
 https://extensions.gnome.org/extension/1082/cpufreq/
 
