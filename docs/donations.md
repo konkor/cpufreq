@@ -12,31 +12,7 @@ CPUFREQ Power Manager is an GPLv3-licensed open source project focused on deskto
 Please, consider to support the project and make it better!
 
 <h3 align="center">Sponsors of the project</h3>
-<!--special start-->
-
-<p align="center">
-  <big>
-    Top supporters:<br><br><b>
-    <a href="https://konkor.github.io/cpufreq/supporters/">Jonathan Alden</a><br>
-    <a href="https://konkor.github.io/cpufreq/supporters/">Manuel Transfeld</a><br>
-    <br></b>
-    <a href="https://konkor.github.io/cpufreq/supporters/">Joël Dinel</a><br>
-    <a href="https://konkor.github.io/cpufreq/supporters/">Michel Bonifert</a><br>
-    <a href="https://konkor.github.io/cpufreq/supporters/">Patrick Strobel</a><br>
-    <br>
-    Patreons:<br><br>
-    <a href="https://github.com/krzemienski">Nick Krzemienski (USA)</a><br>
-    <a href="https://vk.com/anaumynaugames">Ivan Chayka (Russia)</a><br>
-    <a href="http://konkor.github.io/cpufreq/sponsors/">Steffen W. (Germany)</a><br>
-    <a href="http://konkor.github.io/cpufreq/sponsors/">Yoann Deferi (France)</a><br>
-    <br>
-    <a href="https://konkor.github.io/cpufreq/supporters/">More wonderful people...</a><br>
-    <br>
-    <i>The one top will be placed in UI like 'Sponsored by ...' you could be here with your name or logo and reference (contact me or put links in donation's messages)</i>
-  </big>
-</p>
-
-<!--special end-->
+<a href="https://konkor.github.io/cpufreq/supporters/">See supporters page</a><br>
 
 ## Donations
  I like completely open-source projects. It's why I picked GPLv3 license for my open projects. I think only such license could protect Desktop Users from Business Users. Maybe I'm a dreamer and want to believe in the pure projects but the reality is most projects and FOS organizations are sponsored by big business and founded by them.

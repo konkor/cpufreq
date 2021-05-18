@@ -1,9 +1,16 @@
+cpufreq (47-1) UNRELEASED; urgency=low
+
+  * Update fix notifications option
+  * Update documentation and supporters
+
+ -- konkor <kapa76@gmail.com>  Tue, 18 May 2021 22:54:00 +0300
+
 cpufreq (46-1) UNRELEASED; urgency=low
 
   * Add GNOME Shell 40 supporting
   * Add system notifications options
 
- -- konkor <kapa76@gmail.com>  Tue, 15 May 2021 18:18:00 +0300
+ -- konkor <kapa76@gmail.com>  Sun, 15 May 2021 18:18:00 +0300
 
 cpufreq (45-1) UNRELEASED; urgency=low
 
