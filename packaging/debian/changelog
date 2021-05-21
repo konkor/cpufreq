@@ -1,3 +1,9 @@
+cpufreq (48-1) UNRELEASED; urgency=low
+
+  * Fix open file's handlers on spawn_async_with_pipes
+
+ -- konkor <kapa76@gmail.com>  Fri, 21 May 2021 22:14:00 +0300
+
 cpufreq (47-1) UNRELEASED; urgency=low
 
   * Update fix notifications option
