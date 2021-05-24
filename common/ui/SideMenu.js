@@ -15,27 +15,28 @@ const InfoPanel = imports.common.ui.InfoPanel;
 
 var SideMenu = new Lang.Class({
   Name: "SideMenu",
-  Extends: Gtk.ScrolledWindow,
+  Extends: Gtk.Box,
 
   _init: function () {
-    this.parent ();
-    this.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
-    this.hscrollbar_policy = Gtk.PolicyType.NEVER;
-    this.shadow_type = Gtk.ShadowType.NONE;
+    this.parent ({orientation:Gtk.Orientation.VERTICAL});
+    //this.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+    //this.vscrollbar_policy = Gtk.PolicyType.NEVER;
+    //this.hscrollbar_policy = Gtk.PolicyType.NEVER;
+    //this.shadow_type = Gtk.ShadowType.NONE;
 
     this.submenus = [];
 
-    this.content = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL});
-    this.content.get_style_context ().add_class ("side-menu");
-    this.add (this.content);
+    //this.content = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL});
+    this.get_style_context ().add_class ("side-menu");
+    //this.add (this.content);
   },
 
   add_item: function (item) {
-    this.content.add (item);
+    this.add (item);
   },
 
   add_submenu: function (item) {
-    this.content.add (item);
+    this.add (item);
     item.id = this.submenus.length;
     this.submenus.push (item);
     item.connect ('activate', this.on_submenu_activate.bind (this));

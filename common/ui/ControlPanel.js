@@ -27,30 +27,6 @@ var settings = null;
 
 let freq_event = 0;
 
-//TODO: Responsive look
-var ControlPanelBoxed = new Lang.Class({
-  Name: "ControlPanelBoxed",
-  Extends: Gtk.Box,
-
-  _init: function (owner) {
-    this.parent ({orientation:Gtk.Orientation.HORIZONTAL});
-
-    //let space = new Gtk.Box ();
-    //this.pack_start (space, true, false, 0);
-
-    this.panel = new ControlPanel (owner);
-    this.pack_start (this.panel, true, true, 0);
-
-    let space = new Gtk.Box ();
-    this.pack_start (space, true, false, 0);
-  },
-
-  post_init: function () {
-    this.panel.post_init ();
-  }
-
-});
-
 var ControlPanel = new Lang.Class({
   Name: "ControlPanel",
   Extends: SideMenu.SideMenu,

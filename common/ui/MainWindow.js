@@ -88,6 +88,7 @@ var MainWindow = new Lang.Class ({
     if (this.application.extension) this.window_position = Gtk.WindowPosition.MOUSE;
     else if (!cpu.is_wayland ()) this.window_position = Gtk.WindowPosition.CENTER;
     Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
+    print (this.settings.window_width, this.settings.window_height);
     this.set_default_size (this.settings.window_width, this.settings.window_height);
     cssp = get_css_provider ();
     if (cssp) {
@@ -130,10 +131,26 @@ var MainWindow = new Lang.Class ({
     this.statebar.get_style_context ().add_class ("status-bar");
     box.add (this.statebar);
 
+    //box.pack_start (new Gtk.Box (), true, false, 0);
+    this.resbox = new ResponsiveBox ({orientation:Gtk.Orientation.HORIZONTAL, margin:2});
+    //box.margin_bottom = 12;
+    box.pack_start (this.resbox, true, true, 0);
+
+    //let space = new Gtk.Box ();
+    //box.pack_start (new Gtk.Box (), true, false, 0);
+
     this.infobar = new InfoPanel.InfoPanel ();
     this.infobar.margin_start = 22;
-    box.add (this.infobar);
-    box.pack_end (this.cpanel, true, true, 8);
+    this.resbox.content.add (this.infobar);
+    this.resbox.content.pack_end (new Gtk.Box (), true, false, 0);
+    this.resbox.content.pack_end (this.cpanel, true, true, 8);
+    //this.resbox.content.pack_end (new Gtk.Box (), true, false, 0);
+
+    GLib.timeout_add_seconds (0,2,()=>{
+      print (this.settings.window_width, this.settings.window_height);
+      //this.set_default_size (this.settings.window_width, this.settings.window_height);
+      this.width_request = this.settings.window_width;
+    });
 
     if (this.application.extension) this.connect ("focus-out-event", () => {
       this.save_geometry ();
@@ -192,6 +209,36 @@ var MainWindow = new Lang.Class ({
     if ((this.settings.window_x >= 0) && (this.settings.window_y >= 0))
       this.move (this.settings.window_x, this.settings.window_y);
   }
+});
+
+var ResponsiveBox = new Lang.Class({
+  Name: "ResponsiveBox",
+  Extends: Gtk.ScrolledWindow,
+
+  _init: function (prefs) {
+    this.parent ();
+    this.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+    this.hscrollbar_policy = Gtk.PolicyType.NEVER;
+    this.shadow_type = Gtk.ShadowType.NONE;
+
+    prefs.orientation = prefs.orientation || Gtk.Orientation.HORIZONTAL;
+    prefs.margin = prefs.margin || 8;
+    //this.parent (prefs);
+    this.content = new Gtk.Box (prefs);
+    this.add (this.content);
+
+    //this.connect ('notify', (a,b,c,d) => { print (a,b,c,d)});
+    //this.connect ('event', (a,b,c,d) => { print (a,b,c,d)});
+    this.connect ('draw', this.on_drawn.bind (this));
+  },
+
+  on_drawn: function (area, context) {
+    let [w, h] = [this.get_allocated_width (), this.get_allocated_height ()];
+    if (w < h) this.content.orientation = Gtk.Orientation.VERTICAL;
+    else this.content.orientation = Gtk.Orientation.HORIZONTAL;
+    //print ("width:", w, h);
+  }
+
 });
 
 function get_css_provider () {

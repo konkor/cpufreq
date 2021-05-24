@@ -1,3 +1,9 @@
+cpufreq (49-1) UNRELEASED; urgency=low
+
+  * Update fix GNOME Shell downloader versioning for 40.x series
+
+ -- konkor <kapa76@gmail.com>  Sat, 22 May 2021 13:44:00 +0300
+
 cpufreq (48-1) UNRELEASED; urgency=low
 
   * Fix open file's handlers on spawn_async_with_pipes
