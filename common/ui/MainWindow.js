@@ -156,6 +156,7 @@ var MainWindow = new Lang.Class ({
 
     this.connect ('unmap', this.save_geometry.bind (this));
     this.infobar.connect ("warn_level", this.on_warn_level.bind (this));
+    this.resbox.connect ("orientation", this.on_orientation.bind (this));
     if (!this.application.extension)
       this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
@@ -178,6 +179,11 @@ var MainWindow = new Lang.Class ({
     } else if (o.warn_lvl > 0) {
       style.add_class ("warning-bar");
     }
+  },
+
+  on_orientation: function (o, orientation) {
+    //TODO: add changes
+    print (o, orientation);
   },
 
   update: function () {
@@ -207,6 +213,12 @@ var MainWindow = new Lang.Class ({
 var ResponsiveBox = new Lang.Class({
   Name: "ResponsiveBox",
   Extends: Gtk.ScrolledWindow,
+  Signals: {
+    'orientation': {
+      flags: GObject.SignalFlags.RUN_LAST | GObject.SignalFlags.DETAILED,
+      param_types: [GObject.TYPE_INT]
+    },
+  },
 
   _init: function (prefs) {
     this.parent ();
@@ -214,21 +226,24 @@ var ResponsiveBox = new Lang.Class({
     this.hscrollbar_policy = Gtk.PolicyType.NEVER;
     this.shadow_type = Gtk.ShadowType.NONE;
 
-    prefs.orientation = prefs.orientation || Gtk.Orientation.VERTICAL;
+    this.old_state = prefs.orientation = prefs.orientation || Gtk.Orientation.VERTICAL;
     prefs.margin = prefs.margin || 8;
-    //this.parent (prefs);
     this.content = new Gtk.Box (prefs);
     this.add (this.content);
 
-    //this.connect ('notify', (a,b,c,d) => { print (a,b,c,d)});
-    //this.connect ('event', (a,b,c,d) => { print (a,b,c,d)});
     this.connect ('draw', this.on_drawn.bind (this));
   },
 
   on_drawn: function (area, context) {
+    let state = this.old_state;
     let [w, h] = [this.get_allocated_width (), this.get_allocated_height ()];
-    if (w < h) this.content.orientation = Gtk.Orientation.VERTICAL;
-    else this.content.orientation = Gtk.Orientation.HORIZONTAL;
+    if (w < h) state = Gtk.Orientation.VERTICAL;
+    else state = Gtk.Orientation.HORIZONTAL;
+    this.content.orientation = state;
+    if (state != this.old_state) {
+      this.old_state = state;
+      this.emit ('orientation', state);
+    }
     //print ("width:", w, h);
   }
 

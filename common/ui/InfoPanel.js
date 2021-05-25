@@ -442,13 +442,13 @@ var WarningInfo = new Lang.Class({
     style.remove_class ("status-warning");
     style.remove_class ("status-critical");
     if (level > 1) {
-      this.label.set_text ("☹");
+      //this.label.set_text ("☹");
       style.add_class ("status-critical");
     } else if (level > 0) {
-      this.label.set_text ("");
+      //this.label.set_text ("");
       style.add_class ("status-warning");
     } else {
-      this.label.set_text ("☺");
+      //this.label.set_text ("☺");
     }
   }
 });
