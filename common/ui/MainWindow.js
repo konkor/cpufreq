@@ -88,7 +88,6 @@ var MainWindow = new Lang.Class ({
     if (this.application.extension) this.window_position = Gtk.WindowPosition.MOUSE;
     else if (!cpu.is_wayland ()) this.window_position = Gtk.WindowPosition.CENTER;
     Gtk.Settings.get_default().gtk_application_prefer_dark_theme = this.settings.dark;
-    print (this.settings.window_width, this.settings.window_height);
     this.set_default_size (this.settings.window_width, this.settings.window_height);
     cssp = get_css_provider ();
     if (cssp) {
@@ -145,12 +144,6 @@ var MainWindow = new Lang.Class ({
     this.resbox.content.pack_end (new Gtk.Box (), true, false, 0);
     this.resbox.content.pack_end (this.cpanel, true, true, 8);
     //this.resbox.content.pack_end (new Gtk.Box (), true, false, 0);
-
-    GLib.timeout_add_seconds (0,2,()=>{
-      print (this.settings.window_width, this.settings.window_height);
-      //this.set_default_size (this.settings.window_width, this.settings.window_height);
-      this.width_request = this.settings.window_width;
-    });
 
     if (this.application.extension) this.connect ("focus-out-event", () => {
       this.save_geometry ();
@@ -221,7 +214,7 @@ var ResponsiveBox = new Lang.Class({
     this.hscrollbar_policy = Gtk.PolicyType.NEVER;
     this.shadow_type = Gtk.ShadowType.NONE;
 
-    prefs.orientation = prefs.orientation || Gtk.Orientation.HORIZONTAL;
+    prefs.orientation = prefs.orientation || Gtk.Orientation.VERTICAL;
     prefs.margin = prefs.margin || 8;
     //this.parent (prefs);
     this.content = new Gtk.Box (prefs);

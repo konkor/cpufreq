@@ -75,6 +75,7 @@ var InfoPanel = new Lang.Class({
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
+    let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
     this.corebox = new  Gtk.FlowBox ({
       homogeneous: true,
       activate_on_single_click: false,
@@ -83,6 +84,8 @@ var InfoPanel = new Lang.Class({
       margin_top: 10,
       selection_mode: Gtk.SelectionMode.NONE
     });
+    box.pack_start (this.corebox,true, true, 0);
+    box.pack_start (new Gtk.Box (),true, false, 0);
 
     if (cpucount > 16) this.corebox.min_children_per_line = this.corebox.max_children_per_line = 8;
     let hugecpu = cpucount > 32;
@@ -100,8 +103,8 @@ var InfoPanel = new Lang.Class({
       scroll.hscrollbar_policy = Gtk.PolicyType.NEVER;
       this.pack_start (scroll, true, true, 0);
       scroll.set_size_request (380, 60*rows);
-      scroll.add (this.corebox);
-    } else this.pack_start (this.corebox, false, true, 0);
+      scroll.add (box);
+    } else this.pack_start (box, false, true, 0);
 
 
     this.cores = [];
