@@ -75,6 +75,9 @@ var InfoPanel = new Lang.Class({
     if (this.amd) this.get_style_context ().add_class ("amd");
     this.add (this._linux);
 
+    this._warn = new WarningInfo ();
+    this.add (this._warn);
+
     let box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL});
     this.corebox = new  Gtk.FlowBox ({
       homogeneous: true,
@@ -124,9 +127,6 @@ var InfoPanel = new Lang.Class({
     this.swap_total = this.swap_free = 0;
     this._swap = new InfoLevel (_("Swap"), "0.0%", _("Used swap memory"));
     this.add (this._swap);
-
-    this._warn = new WarningInfo ();
-    this.add (this._warn);
 
     this.connect ("realize", this.on_realized.bind (this));
     this.connect ("destroy", this.on_delete.bind (this));
@@ -430,14 +430,14 @@ var WarningInfo = new Lang.Class({
   Extends: InfoLabel,
 
   _init: function () {
-    this.parent ({margin:2});
+    this.parent ();
     this.get_style_context ().add_class ("status");
-    this.margin_top = 28;
     this.update (0);
   },
 
   update: function (level, message) {
-    this.parent (message || "SYSTEM STATUS OK");
+    //this.parent (message || "SYSTEM STATUS OK");
+    this.label.set_text (message || "SYSTEM STATUS OK");
     var style = this.get_style_context ();
     style.remove_class ("status-warning");
     style.remove_class ("status-critical");
