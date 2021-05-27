@@ -726,7 +726,7 @@ function get_throttle_events (callback) {
     tt_proc = null;
   }
   tt_proc = Gio.Subprocess.new (
-    [pkexec_path,cpufreqctl_path,"--throttle-events"],
+    [cpufreqctl_path,"--throttle-events"],
     Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
   );
   tt_proc.communicate_utf8_async (null, null, (proc, res) => {

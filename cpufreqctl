@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='20'
+VERSION='21'
 cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
 FLROOT=/sys/devices/system/cpu
 DRIVER=auto
@@ -482,6 +482,8 @@ then
   echo 'installing fonts...'
   mkdir -p /usr/share/fonts/truetype/cpufreq
   cp $(dirname "$(readlink -f "$0")")/fonts/cpufreq.ttf /usr/share/fonts/truetype/cpufreq/
+  echo 'add user to systemd-journal group...'
+  usermod -a -G systemd-journal $USERNAME
   echo "done"
   exit
 fi
