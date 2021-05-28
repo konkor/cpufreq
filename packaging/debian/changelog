@@ -1,8 +1,15 @@
+cpufreq (50-1) UNRELEASED; urgency=low
+
+  * Fix pkexec spamming in the system logs on CPU without
+    thermal throttle counters (fix: #183)
+
+ -- konkor <kapa76@gmail.com>  Thu, 27 May 2021 15:47:00 +0300
+
 cpufreq (49-1) UNRELEASED; urgency=low
 
-  * Update fix GNOME Shell downloader versioning for 40.x series
+  * Fix GNOME Shell 40x versioning
 
- -- konkor <kapa76@gmail.com>  Sat, 22 May 2021 13:44:00 +0300
+ -- konkor <kapa76@gmail.com>  Sat, 22 May 2021 22:14:00 +0300
 
 cpufreq (48-1) UNRELEASED; urgency=low
 
