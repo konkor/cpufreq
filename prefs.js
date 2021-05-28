@@ -515,9 +515,26 @@ function init () {
 }
 
 function buildPrefsWidget () {
+    if (Gtk.MAJOR_VERSION > 3) {
+      GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
+      let widget = new DumpWidget ();
+      return widget;
+    }
     let widget = new CPUFreqPreferences ();
     return widget.notebook;
 }
+
+var DumpWidget = new Lang.Class({
+    Name: 'DumpWidget',
+    Extends: Gtk.Box,
+
+    _init: function () {
+        this.parent ({});
+        /*this.connect ('realize', () => {
+          this.get_parent ().get_parent ().close ();
+        });*/
+    }
+});
 
 function get_appdir () {
     let s = getCurrentFile ()[1];
