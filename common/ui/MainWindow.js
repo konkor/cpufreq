@@ -27,6 +27,7 @@ const _ = Gettext.gettext;
 
 let theme_gui = APPDIR + "/data/themes/default/gtk.css";
 let cssp = null;
+let MENU_LOCK = false;
 
 var MainWindow = new Lang.Class ({
   Name: "MainWindow",
@@ -100,11 +101,8 @@ var MainWindow = new Lang.Class ({
     this.hb.get_style_context ().add_class ("hb");
     this.set_titlebar (this.hb);
 
-    this.prefs_button = new Gtk.Button ({always_show_image: true, tooltip_text:"Preferences"});
-    this.prefs_button.image = Gtk.Image.new_from_icon_name ("application-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
-    this.prefs_button.get_style_context ().add_class ("hb-button");
-    this.prefs_button.set_relief (Gtk.ReliefStyle.NONE);
-    this.hb.pack_end (this.prefs_button);
+    this.menu_button = this.build_menu ();
+    this.hb.pack_end (this.menu_button);
 
     this.home_button = new Gtk.Button ({always_show_image: true, tooltip_text:_("Feed the project's 🐱")});
     this.home_button.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/feedcat.svg");
@@ -146,12 +144,13 @@ var MainWindow = new Lang.Class ({
     //this.resbox.content.pack_end (new Gtk.Box (), true, false, 0);
 
     if (this.application.extension) this.connect ("focus-out-event", () => {
+      if (MENU_LOCK) return;
       this.save_geometry ();
       this.application.quit();
     });
-    this.prefs_button.connect ("clicked", () => {
+    /*this.prefs_button.connect ("clicked", () => {
       GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences");
-    });
+    });*/
     this.settings.connect ("changed", this.on_settings.bind (this));
 
     this.connect ('unmap', this.save_geometry.bind (this));
@@ -160,6 +159,52 @@ var MainWindow = new Lang.Class ({
     if (!this.application.extension)
       this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
+  },
+
+  build_menu: function () {
+    let mmenu = new Gtk.Menu (), mii;
+    let menu_button = new Gtk.MenuButton ({tooltip_text:"Application Menu"});
+    menu_button.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/open-menu-symbolic.svg");
+    //menu_button.image = Gtk.Image.new_from_icon_name ("application-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
+    menu_button.set_relief (Gtk.ReliefStyle.NONE);
+
+    mii = new Gtk.MenuItem ({label:"System"});
+    this.set_accel (mii, "Home");
+    mmenu.add (mii);
+    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
+
+    mii = new Gtk.MenuItem ({label:"Sensors"});
+    this.set_accel (mii, "<Alt>S");
+    mmenu.add (mii);
+    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
+
+    mii = new Gtk.MenuItem ({label:"Benchmarks"});
+    this.set_accel (mii, "<Alt>B");
+    mmenu.add (mii);
+    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
+
+    mmenu.add (new Gtk.SeparatorMenuItem ());
+    mii = new Gtk.MenuItem ({label:"Preferences"});
+    mmenu.add (mii);
+    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
+
+    mmenu.add (new Gtk.SeparatorMenuItem ());
+    mii = new Gtk.MenuItem ({label:"About"});
+    mmenu.add (mii);
+    mii.connect ("activate", () => {this.about ()});
+
+    mmenu.show_all ();
+    menu_button.set_popup (mmenu);
+    mmenu.connect ("show", () => {MENU_LOCK = true});
+    mmenu.connect ("hide", () => {MENU_LOCK = false});
+    return menu_button;
+  },
+
+  set_accel: function (mi, accel) {
+    if (!accel || !mi) return;
+    let [key,mods] = Gtk.accelerator_parse (accel);
+    let label = mi.get_child ();
+    if (label && key) label.set_accel (key, mods);
   },
 
   on_settings: function (o, key) {
@@ -183,7 +228,7 @@ var MainWindow = new Lang.Class ({
 
   on_orientation: function (o, orientation) {
     //TODO: add changes
-    print (o, orientation);
+    print (orientation?"VERTICAL":"HORIZONTAL");
   },
 
   update: function () {
@@ -207,6 +252,21 @@ var MainWindow = new Lang.Class ({
     if (this.is_maximized) return;
     if ((this.settings.window_x >= 0) && (this.settings.window_y >= 0))
       this.move (this.settings.window_x, this.settings.window_y);
+  },
+
+  about: function () {
+    let dlg = new Gtk.AboutDialog ({
+      transient_for: this,
+      program_name: "OSPower CPUFreq",
+      copyright: "Copyright © 2016-2021 konkor <konkor.github.io>",
+      license_type: Gtk.License.GPL_3_0,
+      authors: ["konkor"],
+      website: "https://github.com/konkor/cpufreq",
+      logo: this.icon,
+      logo_icon_name: "cpufreq"
+    });
+    dlg.run ();
+    dlg.destroy ();
   }
 });
 

@@ -4,7 +4,7 @@
 @define-color ospower_warning #f0c61c;
 @define-color ospower_critical red;
 
-.hb, .hb GtkLabel, .hb label {
+.hb {
   border-width: 0;
   border-style:none;
   box-shadow:none;
@@ -12,18 +12,18 @@
   border-image:none;
   border:0;
   text-shadow:none;
-  background-image: none;
-  background-color: @theme_bg_color;
+  /*background-image: none;
+  background-color: @theme_bg_color;*/
 }
-.hb GtkButton, .hb button {
+/*.hb GtkButton, .hb button {
   color: @theme_fg_color;
   background-color: @theme_bg_color;
-}
+}*/
 .hb-button {
   /*border-color: transparent;*/
 }
 .hb-button:active {
-  border-color: transparent;
+  /*border-color: transparent;*/
 }
 .sideitem, .sidesubmenu {
   border-radius: 0;
