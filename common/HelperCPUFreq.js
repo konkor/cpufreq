@@ -25,6 +25,7 @@ var pstate_present = false;
 var thermal_throttle = false;
 var cpufreqctl_path = null;
 var pkexec_path = null;
+var sensors_path = null;
 var installed = false;
 var updated = false;
 var frequencies = [];
@@ -63,6 +64,7 @@ function init () {
 function check_install () {
   pkexec_path = GLib.find_program_in_path ("pkexec");
   cpufreqctl_path = GLib.find_program_in_path ("cpufreqctl");
+  sensors_path = GLib.find_program_in_path ("sensors");
   installed = false;
   updated = false;
   if (!cpufreqctl_path)
@@ -743,6 +745,11 @@ function get_throttle_events (callback) {
       debug (e);
     }
   });
+}
+
+function get_sensors_info () {
+  if (!sensors_path) return "";
+  return get_command_line (sensors_path);
 }
 
 let cmd_out, info_out;

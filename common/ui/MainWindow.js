@@ -1,6 +1,6 @@
 /*
  * This is a part of CPUFreq Manager
- * Copyright (C) 2016-2019 konkor <konkor.github.io>
+ * Copyright (C) 2016-2021 konkor <konkor.github.io>
  *
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -21,6 +21,7 @@ const Logger = imports.common.Logger;
 const cpu = imports.common.HelperCPUFreq;
 const InfoPanel = imports.common.ui.InfoPanel;
 const ControlPanel = imports.common.ui.ControlPanel;
+const SensorsView = imports.common.ui.SensorsView;
 
 const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
@@ -114,13 +115,32 @@ var MainWindow = new Lang.Class ({
       if (app) app.launch_uris (["file://" + APPDIR + "/BACKERS.md"], null);
     });
 
-
     this.cpanel = new ControlPanel.ControlPanel (this.application);
     this.cpanel.margin = 20;
 
-    box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:2});
-    box.margin_bottom = 12;
-    this.add (box);
+    let vbox = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL});
+    this.add (vbox);
+
+    this.topbar = new Topbar ();
+    this.hb.pack_start (this.topbar);
+    //vbox.add (this.topbar);
+
+    box = new Gtk.Box ({orientation:Gtk.Orientation.HORIZONTAL, margin:0});
+    box.margin_bottom = box.margin_end = 12;
+    //vbox.pack_start (box, true, true, 8);
+
+    let index = 1;
+    this.stack = new Gtk.Stack ();
+    this.stack.transition_type = Gtk.StackTransitionType.SLIDE_UP_DOWN;
+    vbox.pack_start (this.stack, true, true, 0);
+
+    this.stack.add_named (box, "0");
+
+    if (cpu.sensors_path) {
+      this.sensors = new SensorsView.SensorsView (this.application);
+      this.stack.add_named (this.sensors, (index++).toString ());
+    }
+    //this.stack.add_named (new ResponsiveBox ({}), (index++).toString ());
 
     this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:16});
     this.statebar.margin_start = 28; this.statebar.margin_end = 0;
@@ -156,6 +176,7 @@ var MainWindow = new Lang.Class ({
     this.connect ('unmap', this.save_geometry.bind (this));
     this.infobar.connect ("warn_level", this.on_warn_level.bind (this));
     this.resbox.connect ("orientation", this.on_orientation.bind (this));
+    this.topbar.connect ('stack_update', this.on_stack_update.bind (this));
     if (!this.application.extension)
       this.restore_position ();
     //if (this.settings.window_maximized) this.maximize ();
@@ -231,6 +252,10 @@ var MainWindow = new Lang.Class ({
     print (orientation?"VERTICAL":"HORIZONTAL");
   },
 
+  on_stack_update: function (o, index) {
+    this.stack.visible_child_name = index.toString ();
+  },
+
   update: function () {
     //TODO: name of current prf on --no-save
     let s, p = this.settings.get_profile (this.settings.guid);
@@ -267,6 +292,59 @@ var MainWindow = new Lang.Class ({
     });
     dlg.run ();
     dlg.destroy ();
+  }
+});
+
+var Topbar = new Lang.Class({
+  Name: "Topbar",
+  Extends: Gtk.Box,
+  Signals: {
+    'stack_update': {
+    flags: GObject.SignalFlags.RUN_LAST | GObject.SignalFlags.DETAILED,
+    param_types: [GObject.TYPE_INT]},
+  },
+
+  _init: function () {
+    this.parent ({orientation:Gtk.Orientation.HORIZONTAL});
+    this.get_style_context ().add_class ("sb");
+    this.buttons = [];
+
+    this.add_button ("System", "System Management", "application-menu-symbolic");
+    if (cpu.sensors_path) this.add_button ("Sensors", "Sensors View", "ac-adapter-symbolic");
+    this.add_button ("Benchmarks", "Performance Measurements", "system-run-symbolic");
+
+    this.current = 0;
+  },
+
+  add_button: function (label, tooltip, icon) {
+    let btn = new Gtk.ToggleButton ({tooltip_text:tooltip, always_show_image: true});
+    btn.text = label;
+    btn.set_relief (Gtk.ReliefStyle.NONE);
+    if (icon) {
+      btn.image = Gtk.Image.new_from_file (APPDIR + "/data/icons/" + icon + ".svg");
+      //Gtk.Image.new_from_icon_name (icon, Gtk.IconSize.SMALL_TOOLBAR);
+    }
+    btn.get_style_context ().add_class ("sb-button");
+    btn.index = this.buttons.length;
+    if (btn.index == 0) btn.active = true;
+    this.pack_start (btn, true, true, 0);
+    this.buttons.push (btn);
+    btn.connect ('toggled', this.on_toggle.bind (this));
+    btn.connect ('enter_notify_event', (o) => { o.label = o.text });
+    btn.connect ('leave_notify_event', (o) => { o.label = "" });
+  },
+
+  on_toggle: function (o) {
+    if (this.toggle_lock) return;
+    if (o.index == this.current) {
+      if (!o.active) o.active = true;
+      return;
+    }
+    this.toggle_lock = true;
+    this.buttons[this.current].active = false;
+    this.current = o.index;
+    this.emit ('stack_update', o.index);
+    this.toggle_lock = false;
   }
 });
 

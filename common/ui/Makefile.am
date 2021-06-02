@@ -8,6 +8,7 @@ common_DATA = \
     SideMenu.js \
     Slider.js \
     Switch.js \
+    SensorsView \
     $(NULL)
 
 
