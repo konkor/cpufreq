@@ -3,6 +3,8 @@ iconsdir=$(datadir)/gnome-shell/extensions/cpufreq@konkor/data/icons
 icons_DATA= \
   application-menu-symbolic.svg \
   open-menu-symbolic.svg \
+  ac-adapter-symbolic.svg \
+  system-run-symbolic.svg \
   feedcat.svg \
   hicolor/scalable/apps/cpufreq.svg \
   hicolor/32x32/apps/cpufreq.png
