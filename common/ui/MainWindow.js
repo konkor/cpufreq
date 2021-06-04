@@ -22,6 +22,7 @@ const cpu = imports.common.HelperCPUFreq;
 const InfoPanel = imports.common.ui.InfoPanel;
 const ControlPanel = imports.common.ui.ControlPanel;
 const SensorsView = imports.common.ui.SensorsView;
+const BenchmarksView = imports.common.ui.BenchmarksView;
 
 const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
@@ -140,7 +141,8 @@ var MainWindow = new Lang.Class ({
       this.sensors = new SensorsView.SensorsView (this.application);
       this.stack.add_named (this.sensors, (index++).toString ());
     }
-    //this.stack.add_named (new ResponsiveBox ({}), (index++).toString ());
+    this.benchmarks = new BenchmarksView.BenchmarksView (this.application);
+    this.stack.add_named (this.benchmarks, (index++).toString ());
 
     this.statebar = new Gtk.Box ({orientation:Gtk.Orientation.VERTICAL, margin:16});
     this.statebar.margin_start = 28; this.statebar.margin_end = 0;
@@ -189,22 +191,6 @@ var MainWindow = new Lang.Class ({
     //menu_button.image = Gtk.Image.new_from_icon_name ("application-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
     menu_button.set_relief (Gtk.ReliefStyle.NONE);
 
-    mii = new Gtk.MenuItem ({label:"System"});
-    this.set_accel (mii, "Home");
-    mmenu.add (mii);
-    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
-
-    mii = new Gtk.MenuItem ({label:"Sensors"});
-    this.set_accel (mii, "<Alt>S");
-    mmenu.add (mii);
-    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
-
-    mii = new Gtk.MenuItem ({label:"Benchmarks"});
-    this.set_accel (mii, "<Alt>B");
-    mmenu.add (mii);
-    mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
-
-    mmenu.add (new Gtk.SeparatorMenuItem ());
     mii = new Gtk.MenuItem ({label:"Preferences"});
     mmenu.add (mii);
     mii.connect ("activate", () => {GLib.spawn_command_line_async (APPDIR + "/cpufreq-preferences")});
@@ -219,13 +205,6 @@ var MainWindow = new Lang.Class ({
     mmenu.connect ("show", () => {MENU_LOCK = true});
     mmenu.connect ("hide", () => {MENU_LOCK = false});
     return menu_button;
-  },
-
-  set_accel: function (mi, accel) {
-    if (!accel || !mi) return;
-    let [key,mods] = Gtk.accelerator_parse (accel);
-    let label = mi.get_child ();
-    if (label && key) label.set_accel (key, mods);
   },
 
   on_settings: function (o, key) {
@@ -249,7 +228,6 @@ var MainWindow = new Lang.Class ({
 
   on_orientation: function (o, orientation) {
     //TODO: add changes
-    print (orientation?"VERTICAL":"HORIZONTAL");
   },
 
   on_stack_update: function (o, index) {
@@ -257,7 +235,6 @@ var MainWindow = new Lang.Class ({
   },
 
   update: function () {
-    //TODO: name of current prf on --no-save
     let s, p = this.settings.get_profile (this.settings.guid);
     if (p) s = p.name;
     else if (this.settings.guid == "default") s = cpu.get_default_profile().name;

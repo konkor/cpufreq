@@ -129,7 +129,6 @@ var InfoPanel = new Lang.Class({
     this.add (this._swap);
 
     this.connect ("realize", this.on_realized.bind (this));
-    this.connect ("destroy", this.on_delete.bind (this));
     Logger.debug ("InfoPanel", "done");
   },
 
@@ -156,12 +155,6 @@ var InfoPanel = new Lang.Class({
 
   throttle_events_cb: function (events) {
     if (events) this.tt = events;
-  },
-
-  on_delete: function () {
-    if (info_event) GLib.source_remove (info_event);
-    if (throttle_event) GLib.source_remove (throttle_event);
-    throttle_event = info_event = 0;
   },
 
   get cpu_name () {
@@ -437,6 +430,7 @@ var WarningInfo = new Lang.Class({
 
   update: function (level, message) {
     //this.parent (message || "SYSTEM STATUS OK");
+    this.parent ("");
     this.label.set_text (message || "SYSTEM STATUS OK");
     var style = this.get_style_context ();
     style.remove_class ("status-warning");
@@ -472,13 +466,12 @@ var CoreInfo = new Lang.Class({
     this.add (this.govlabel);
 
     this.update ();
-    this.connect ("destroy", () => {this.frequency_callback = null;});
   },
 
   update: function () {
     var cpu_online = GLib.get_num_processors ();
 
-    this.get_frequency ();
+    Helper.get_frequency_async (this.core, this.frequency_cb.bind (this));
     this.get_governor ();
     this.sensitive = this.core < cpu_online;
     if (this.sensitive) this.opacity = 1;
@@ -488,12 +481,8 @@ var CoreInfo = new Lang.Class({
     }
   },
 
-  get_frequency: function () {
-    Helper.get_frequency_async (this.core, this.frequency_cb.bind (this));
-  },
-
   frequency_cb: function (val) {
-    let label = "---"
+    let label = "---";
     if (!this.frequency_cb) return;
     if (val >= 1000000) {
       label = (val / 1000000).toFixed(2).toString () + " \u3393";

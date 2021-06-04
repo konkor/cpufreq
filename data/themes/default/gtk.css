@@ -12,8 +12,8 @@
   border-image:none;
   border:0;
   text-shadow:none;
-  /*background-image: none;
-  background-color: @theme_bg_color;*/
+  background-image: none;
+  background-color: @theme_bg_color;
 }
 /*.hb GtkButton, .hb button {
   color: @theme_fg_color;
