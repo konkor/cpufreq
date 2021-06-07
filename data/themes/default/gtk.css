@@ -173,3 +173,18 @@ levelbar block.low, levelbar block.high {
   background-image: none;
   background-color: transparent;
 }
+
+.rating {
+  color: @ospower_normal;
+  font-family: cpufreq;
+  font-weight: bold;
+  font-size: 2em;
+  text-shadow: none;
+}
+
+.benchmarks {
+  border-radius: 32px;
+  font-weight: bold;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}

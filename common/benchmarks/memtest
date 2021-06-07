@@ -1,0 +1,170 @@
+#!/usr/bin/gjs
+
+/*
+ * This is a part of CPUFreq Manager
+ * Copyright (C) 2016-2021 konkor <konkor.github.io>
+ *
+ * Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const Lang = imports.lang;
+
+var Format = imports.format;
+String.prototype.format = Format.format;
+
+var MemoryTestApplication = new Lang.Class ({
+  Name: "MemoryTestApplication",
+  Extends: Gio.Application,
+
+  _init: function (props={}) {
+    this.parent (props);
+    GLib.set_prgname ("memtest-application");
+    GLib.set_application_name ("Memory Test");
+    this.debug = false;
+    this.no_quiet = true;
+    this.filesize = 1073741824;
+    this.count = 1024;
+    this.bs = 1048576;
+
+    this.add_main_option (
+      'debug', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Enable debugging mode", null
+    );
+    this.add_main_option (
+      'quiet', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Disable output mode", null
+    );
+    this.add_main_option (
+      'count', 'c'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.INT64,
+      "Count of buffers to read-write tests", "1024"
+    );
+    this.add_main_option (
+      'buffer', 'b'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.INT64,
+      "Size of read-write buffer in bytes", "1048576"
+    );
+    this.connect ('handle-local-options', this.on_local_options.bind (this));
+  },
+
+  on_local_options: function (app, options) {
+    try {
+      this.register (null);
+    } catch (e) {
+      print ("Failed to register: %s".format (e.message));
+      return 1;
+    }
+
+    if (options.contains ("debug")) {
+      this.debug = true;
+    }
+    if (options.contains ("quiet")) {
+      this.no_quiet = false;
+    }
+    if (options.contains ("count")) {
+      let v = options.lookup_value ("count", null);
+      if (v) v = v.get_int64 ();
+      if (v) this.count = v;
+      debug ("block count:" + this.count);
+    }
+    if (options.contains ("buffer")) {
+      let v = options.lookup_value ("buffer", null);
+      if (v) v = v.get_int64 ();
+      if (v) this.bs = v;
+      debug ("buffer size:" + this.bs);
+    }
+    return -1;
+  },
+
+  initialize: function () {
+    let file = Gio.File.new_for_path ("/dev/shm");
+    let finfo = file.query_filesystem_info ("filesystem::free", null);
+    let fs_free = finfo.get_attribute_uint64 (Gio.FILE_ATTRIBUTE_FILESYSTEM_FREE);
+    this.filesize = this.bs * this.count;
+
+    while (fs_free < this.filesize) {
+      this.count -= 1;
+      this.filesize = this.bs * this.count;
+    }
+    if (this.count <= 0) {
+      this.count = 1;
+      this.bs = this.fs_free/2;
+      this.filesize = this.bs * this.count;
+    }
+    debug ("free memory:" + fs_free + " filesize:" + this.filesize + " block size:" + this.bs);
+    return true;
+  },
+
+  vfunc_activate: function () {
+    if (!this.initialize ()) this.quit ();
+    let r = this.test_dd ();
+    if (this.no_quiet) print ("mem_dd", r);
+    //r += this.test_array ();
+    //print ("array:", r);
+    //r /= 2;
+    //if (this.no_quiet) print ("memtest:", r);
+  },
+
+  test: function () {
+    let file = Gio.File.new_for_path ("/dev/shm/memtest.temporary");
+    if (file.query_exists (null)) file.delete (null);
+    let data = "0123456789"
+    let buf = new Array (this.bs);
+    for (let i=0; i < this.bs; i++) {
+      buf[i] = data[i % 10];
+    }
+    buf = buf.join ("");
+    //buf = new GLib.Bytes (buf.join (""));
+    let ostream = file.create_readwrite (0, null).output_stream;
+    let end, start = Date.now ();
+    for (let i = 0; i < this.count; i++) {
+      //ostream.write_bytes (buf, null);
+      //print (buf.length);
+      //let bytes = buf.new_from_bytes (0, this.bs - 1);
+      //GLib.file_set_contents ("/dev/shm/memtest.temporary", buf);
+      let bytes = new GLib.Bytes (buf);
+      //let size = bytes.get_size ();
+    }
+    end = Date.now ();
+    debug ("%d bytes in %s".format (this.filesize, end - start));
+    file.delete (null);
+  },
+
+  test_array: function (repeats = 16) {
+    let end, start, rating = 0, k = 76 * 1000, n = this.bs / 500;
+    for (let i = 0; i < repeats; i++) {
+      start = Date.now ();
+      for (let j = 0; j < this.count; j++) {
+        let x, count = 0, buf = new Array (this.bs);
+        while (count < n) buf[count++] = 0;
+      }
+      end = Date.now ();
+      //print ("%d bytes in %s".format (this.filesize, end - start));
+      rating += k / (end - start);
+    }
+    return Math.round (rating / repeats);
+  },
+
+  test_dd: function (repeats = 8) {
+    let end, start, rating = 0, k = 146 * 1000;
+    for (let i = 0; i < repeats; i++) {
+      start = Date.now ();
+      GLib.spawn_command_line_sync ("dd if=/dev/zero of=/dev/null conv=fdatasync count=" + this.count + " bs=" + this.bs);
+      end = Date.now ();
+      debug ("%d bytes in %s".format (this.filesize, end - start));
+      rating += k / (end - start);
+    }
+    return Math.round (rating / repeats);
+  }
+});
+
+function debug (text) {
+  if (app.debug) print (text);
+}
+
+let app = new MemoryTestApplication ({});
+ARGV.unshift ("memtest");
+app.run (ARGV);

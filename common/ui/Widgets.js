@@ -12,6 +12,33 @@ const Lang = imports.lang;
 const Gtk = imports.gi.Gtk;
 const GObject = imports.gi.GObject;
 
+var InfoLabel = new Lang.Class({
+  Name: "InfoLabel",
+  Extends: Gtk.Box,
+
+  _init: function (props={}) {
+    props.orientation = props.orientation || Gtk.Orientation.HORIZONTAL;
+    this.parent (props);
+
+    this.label = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
+    this.add (this.label);
+
+    this.info = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
+    this.pack_start (this.info, true, true, 8);
+    this.label.connect ("notify::label", this.on_label.bind (this));
+    this.info.connect ("notify::label", this.on_label.bind (this));
+  },
+
+  on_label: function (o) {
+    this.visible = o.visible = !!o.label;
+  },
+
+  update: function (info) {
+    info = info || "";
+    if (this.info.label != info) this.info.set_text (info);
+  }
+});
+
 var Slider = new Lang.Class({
   Name: "Slider",
   Extends: Gtk.Box,
@@ -45,4 +72,32 @@ var Slider = new Lang.Class({
   update_info: function (info) {
     this.info.set_markup ("<i>" + info + "</i>");
   }
+});
+
+var Switch = new Lang.Class({
+  Name: "Switch",
+  Extends: Gtk.Box,
+
+  _init: function (text, state, tooltip) {
+    this.parent ({orientation:Gtk.Orientation.HORIZONTAL,margin:8});
+    state = state || false;
+    this.margin_start = 16;
+    this.get_style_context ().add_class ("switch");
+    this.tooltip_text = tooltip;
+
+    this.label = new Gtk.Label ({label:"<b>"+text+"</b>", use_markup:true, xalign:0});
+    this.pack_start (this.label, true, true, 0);
+    this.sw = new Gtk.Switch ();
+    this.sw.get_style_context ().add_class ("switch-item");
+    this.sw.active = state;
+    this.pack_end (this.sw, false, false, 0);
+
+    this.show_all ();
+  },
+
+  get active () { return this.sw.active; },
+  set active (val) {
+    this.sw.active = val;
+  }
+
 });

@@ -11,7 +11,7 @@
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
-const InfoPanel = imports.common.ui.InfoPanel;
+const Widgets = imports.common.ui.Widgets;
 
 var SideMenu = new Lang.Class({
   Name: "SideMenu",
@@ -60,7 +60,7 @@ var SideSubmenu = new Lang.Class({
     this.parent ({orientation:Gtk.Orientation.VERTICAL, margin:0, spacing:0});
     this.id = 0;
 
-    this.info = new InfoPanel.InfoLabel ({no_show_all:false});
+    this.info = new Widgets.InfoLabel ({no_show_all:false});
     this.info.label.set_text (text);
     this.info.info.set_text (info);
     this.info.info.xalign = 1;

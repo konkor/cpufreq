@@ -17,6 +17,7 @@ const Logger = imports.common.Logger;
 const Convenience = imports.convenience;
 const byteArrayToString = Convenience.byteArrayToString;
 const Helper = imports.common.HelperCPUFreq;
+const Widgets = imports.common.ui.Widgets;
 
 const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
@@ -49,7 +50,7 @@ var InfoPanel = new Lang.Class({
     this._cpuname.margin_top = 12;
     this.add (this._cpuname);
 
-    this._board_vendor = new InfoLabel ();
+    this._board_vendor = new Widgets.InfoLabel ();
     Helper.get_content_async ("/sys/class/dmi/id/board_vendor", (res, text) => {
       if (res)
         this._board_vendor.label.set_text (text.split ("\n")[0]);
@@ -57,7 +58,7 @@ var InfoPanel = new Lang.Class({
     });
     this.add (this._board_vendor);
 
-    this._board_model = new InfoLabel ();
+    this._board_model = new Widgets.InfoLabel ();
     Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
       if (!res) {
         if (this.board) this._board_model.label.set_text (this.board);
@@ -357,33 +358,6 @@ var InfoPanel = new Lang.Class({
   }
 });
 
-var InfoLabel = new Lang.Class({
-  Name: "InfoLabel",
-  Extends: Gtk.Box,
-
-  _init: function (props={}) {
-    props.orientation = props.orientation || Gtk.Orientation.HORIZONTAL;
-    this.parent (props);
-
-    this.label = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
-    this.add (this.label);
-
-    this.info = new Gtk.Label ({label:"", xalign:0.0, margin_left:8});
-    this.pack_start (this.info, true, true, 8);
-    this.label.connect ("notify::label", this.on_label.bind (this));
-    this.info.connect ("notify::label", this.on_label.bind (this));
-  },
-
-  on_label: function (o) {
-    this.visible = o.visible = !!o.label;
-  },
-
-  update: function (info) {
-    info = info || "";
-    if (this.info.label != info) this.info.set_text (info);
-  }
-});
-
 var InfoLevel = new Lang.Class({
   Name: "InfoLevel",
   Extends: Gtk.Box,
@@ -394,7 +368,7 @@ var InfoLevel = new Lang.Class({
     this.parent (props);
     this.tooltip_text = tooltip || "";
 
-    this.infolabel = new InfoLabel ();
+    this.infolabel = new Widgets.InfoLabel ();
     this.infolabel.label.set_text (title);
     this.infolabel.info.xalign = 1;
     this.infolabel.info.set_text (info);
@@ -420,7 +394,7 @@ var InfoLevel = new Lang.Class({
 
 var WarningInfo = new Lang.Class({
   Name: "WarningInfo",
-  Extends: InfoLabel,
+  Extends: Widgets.InfoLabel,
 
   _init: function () {
     this.parent ();

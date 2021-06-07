@@ -15,12 +15,12 @@ const Lang = imports.lang;
 
 const SideMenu = imports.common.ui.SideMenu;
 const ProfileItems = imports.common.ui.ProfileItems;
-const Slider = imports.common.ui.Slider;
-const Switch = imports.common.ui.Switch;
-const MainWindow = imports.common.ui.MainWindow;
+const Widgets = imports.common.ui.Widgets;
 
 const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
+
+var APPDIR = imports.searchPath[0];
 
 var cpu = null;
 var settings = null;
@@ -253,9 +253,9 @@ var ControlPanel = new Lang.Class({
 
   sliders_build: function () {
     this.add_item (new Gtk.Separator ({margin:10}));
-    this.slider_min = new Slider.Slider ("Minimum", get_min_label (), "Minimum frequency");
+    this.slider_min = new Widgets.Slider ("Minimum", get_min_label (), "Minimum frequency");
     this.add_item (this.slider_min);
-    this.slider_max = new Slider.Slider ("Maximum", get_max_label (), "Maximum frequency");
+    this.slider_max = new Widgets.Slider ("Maximum", get_max_label (), "Maximum frequency");
     this.add_item (this.slider_max);
     if (cpu.pstate_present) {
       this.slider_min.slider.set_value (cpu.minfreq/100);
@@ -305,7 +305,7 @@ var ControlPanel = new Lang.Class({
   },
 
   add_cores: function () {
-    this.slider_core = new Slider.Slider ("Cores Online",
+    this.slider_core = new Widgets.Slider ("Cores Online",
       GLib.get_num_processors (), "Number of active processor cores");
     this.add_item (this.slider_core);
     this.slider_core.slider.set_value (GLib.get_num_processors () / cpu.cpucount);
@@ -332,7 +332,7 @@ var ControlPanel = new Lang.Class({
   },
 
   add_boost: function () {
-    this.boost = new Switch.Switch ("Frequency Boost", cpu.get_turbo(), "Enable processor boosting technology");
+    this.boost = new Widgets.Switch ("Frequency Boost", cpu.get_turbo(), "Enable processor boosting technology");
     this.add_item (this.boost);
     this.boost.sw.connect ('state_set', () => {
       if (!cpu.installed || this.locked) return;
