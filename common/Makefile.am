@@ -1,4 +1,4 @@
-SUBDIRS = ui
+SUBDIRS = ui benchmarks
 
 #common classes
 commondir = $(datadir)/gnome-shell/extensions/cpufreq@konkor/common

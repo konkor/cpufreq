@@ -21,6 +21,7 @@ AC_OUTPUT([
 Makefile
 common/Makefile
 common/ui/Makefile
+common/benchmarks/Makefile
 data/Makefile
 data/icons/Makefile
 data/themes/Makefile

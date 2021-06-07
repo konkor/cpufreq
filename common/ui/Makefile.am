@@ -6,9 +6,9 @@ common_DATA = \
     MainWindow.js \
     ProfileItems.js \
     SideMenu.js \
-    Slider.js \
-    Switch.js \
-    SensorsView \
+    Widgets.js \
+    BenchmarksView.js \
+    SensorsView.js \
     $(NULL)
 
 
