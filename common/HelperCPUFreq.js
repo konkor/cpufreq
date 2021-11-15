@@ -325,7 +325,7 @@ function load_stage (prf) {
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --min-perf --set=0");
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --max-perf --set=100");
-    } else {
+    } else if (frequencies.length > 0) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --frequency-min --set=" + get_freq (0));
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --frequency-max --set=" + get_freq (100));
     }
@@ -339,7 +339,7 @@ function load_stage (prf) {
   } else if (stage == 4) {
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --min-perf --set=" + prf.minf);
-    } else {
+    } else if (frequencies.length > 0) {
       for (let key = 0; key < cpucount; key++) {
         if (prf.core[key]) {
           set_coremin (key, prf.core[key].a);
@@ -349,7 +349,7 @@ function load_stage (prf) {
   } else if (stage == 5) {
     if (pstate_present) {
       GLib.spawn_command_line_sync (pkexec_path + " " + cpufreqctl_path + " --max-perf --set=" + prf.maxf);
-    } else {
+    } else if (frequencies.length > 0) {
       for (let key = 0; key < cpucount; key++) {
         if (prf.core[key]) {
           set_coremax (key, prf.core[key].b);
