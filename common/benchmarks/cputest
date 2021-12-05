@@ -1,0 +1,194 @@
+#!/usr/bin/gjs
+
+/*
+ * This is a part of CPUFreq Manager
+ * Copyright (C) 2016-2021 konkor <konkor.github.io>
+ *
+ * Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const Lang = imports.lang;
+
+var Format = imports.format;
+String.prototype.format = Format.format;
+
+var TestApplication = new Lang.Class ({
+  Name: "TestApplication",
+  Extends: Gio.Application,
+
+  _init: function (props={}) {
+    this.parent (props);
+    GLib.set_prgname ("test-application");
+    GLib.set_application_name ("CPU Test");
+    this.debug = false;
+    this.no_quiet = true;
+    this.test = -1;
+
+    this.add_main_option (
+      'debug', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Enable debugging mode", null
+    );
+    this.add_main_option (
+      'quiet', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+      "Disable output mode", null
+    );
+    this.add_main_option (
+      'test', 't'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+      "Performing test(s)", "all|mandelbrot|btree"
+    );
+    this.connect ('handle-local-options', this.on_local_options.bind (this));
+  },
+
+  on_local_options: function (app, options) {
+    try {
+      this.register (null);
+    } catch (e) {
+      print ("Failed to register: %s".format (e.message));
+      return 1;
+    }
+
+    if (options.contains ("debug")) {
+      this.debug = true;
+    }
+    if (options.contains ("quiet")) {
+      this.no_quiet = false;
+    }
+    if (options.contains ("test")) {
+      let v = options.lookup_value ("test", null);
+      if (v) v = v.get_string ();
+      if (v) this.test = v;
+      debug ("testing:" + this.test);
+    }
+    return -1;
+  },
+
+  vfunc_activate: function () {
+    let r = this.test_mandelbrot (800);
+    if (this.no_quiet) print ("cpu_mandelbrot", r);
+    //r += this.test_array ();
+    //print ("array:", r);
+    //r /= 2;
+    //if (this.no_quiet) print ("memtest:", r);
+  },
+
+  test_mandelbrot: function (size) {
+    let d = size || 200;
+    d = (d + 7) & ~7;
+    let i, buf = [], end, start, rating = 0, rk = 13200 * 1000;
+    let r0 = new Array (d), i0 = new Array (d), k = 2.0 / d;
+
+    start = Date.now ();
+
+    for (i = 0; i < d; i++) {
+      r0[i] = k * i - 1.5;
+      i0[i] = k * i - 1;
+    }
+
+    for (let y = 0; y < d; y++) {
+      let init_i = [i0[y], i0[y]];
+      for (let x = 0; x < d; x += 8)
+        buf.push (mand8 (r0.slice (x), init_i));
+    }
+
+    end = Date.now ();
+
+    //print ("mandelbrot: " + (end - start) + "ms");
+
+    if (this.debug) {
+      let stream = new Gio.UnixOutputStream ({ fd: 1,});
+      stream.write ("P4\n" + d + " " + d + "\n", null);
+      stream.write (buf, null);
+      stream.close (null);
+      //print (Date.now() - start);
+    }
+
+    return Math.round (rk / (end - start));
+  }
+});
+
+//
+// mandelbrot section
+//
+
+const ZEROS = [.0,.0,.0,.0,.0,.0,.0,.0];
+
+function vec_new () {
+  return [.0,.0,.0,.0,.0,.0,.0,.0];
+}
+
+function vec_sum (a, b) {
+  let r = vec_new ();
+  for (let i = 0; i < 8; i++) r[i] = a[i] + b[i];
+  return r;
+}
+
+function vec_sum2 (a, b) {
+  let r = vec_new ();
+  for (let i = 0; i < 8; i+=2) {
+    r[i] = a[i] + b[0];
+    r[i+1] = a[i+1] + b[1];
+  }
+  return r;
+}
+
+function vec_nle (v, f) {
+  return (v[0]<=f || v[1]<=f || v[2]<=f || v[3]<=f || v[4]<=f || v[5]<=f || v[6]<=f || v[7] <= f) ? false : true;
+}
+
+function clr_pixels_nle (v, f, pix8) {
+  if(!(v[0] <= f)) pix8 &= 0x7f;
+  if(!(v[1] <= f)) pix8 &= 0xbf;
+  if(!(v[2] <= f)) pix8 &= 0xdf;
+  if(!(v[3] <= f)) pix8 &= 0xef;
+  if(!(v[4] <= f)) pix8 &= 0xf7;
+  if(!(v[5] <= f)) pix8 &= 0xfb;
+  if(!(v[6] <= f)) pix8 &= 0xfd;
+  if(!(v[7] <= f)) pix8 &= 0xfe;
+  return pix8;
+}
+
+function calc_sum (r, i, ir, ii) {
+  let r2 = [r[0]*r[0],r[1]*r[1],r[2]*r[2],r[3]*r[3],r[4]*r[4],r[5]*r[5],r[6]*r[6],r[7]*r[7]];
+  let i2 = [i[0]*i[0],i[1]*i[1],i[2]*i[2],i[3]*i[3],i[4]*i[4],i[5]*i[5],i[6]*i[6],i[7]*i[7]];
+  let ri = [r[0]*i[0],r[1]*i[1],r[2]*i[2],r[3]*i[3],r[4]*i[4],r[5]*i[5],r[6]*i[6],r[7]*i[7]];
+
+  r = [ir[0]+r2[0]-i2[0],ir[1]+r2[1]-i2[1],ir[2]+r2[2]-i2[2],ir[3]+r2[3]-i2[3],ir[4]+r2[4]-i2[4],ir[5]+r2[5]-i2[5],ir[6]+r2[6]-i2[6],ir[7]+r2[7]-i2[7]];
+  i = [ri[0]*2,ri[1]*2,ri[2]*2,ri[3]*2,ri[4]*2,ri[5]*2,ri[6]*2,ri[7]*2];
+  i = vec_sum2 (i, ii);
+  let s = [r2[0]+i2[0],r2[1]+i2[1],r2[2]+i2[2],r2[3]+i2[3],r2[4]+i2[4],r2[5]+i2[5],r2[6]+i2[6],r2[7]+i2[7]];
+  return [r, i, s];
+}
+
+function mand8 (init_r, init_i) {
+  let r, i, sum;
+  let pix8 = 0xff;
+  r = vec_sum (init_r, ZEROS);
+  i = vec_sum2 (ZEROS, init_i);
+  for (let j = 0; j < 6; j++) {
+    for (let k=0; k<8; k++)
+      [r, i, sum] = calc_sum (r, i, init_r, init_i);
+    if (vec_nle (sum, 4.0)) {
+      pix8 = 0;
+      break;
+    }
+    if (pix8) {
+      [r, i, sum] = calc_sum (r, i, init_r, init_i);
+      [r, i, sum] = calc_sum (r, i, init_r, init_i);
+      pix8 = clr_pixels_nle (sum, 4.0, pix8);
+    }
+  }
+  return pix8;
+}
+
+function debug (text) {
+  if (app.debug) print (text);
+}
+
+let app = new TestApplication ({});
+ARGV.unshift ("cputest");
+app.run (ARGV);

@@ -18,10 +18,11 @@ var APPDIR = imports.searchPath[0];
 const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
 const _ = Gettext.gettext;
 
-var Utils;
+const Logger = imports.common.Logger;
 const SideMenu = imports.common.ui.SideMenu;
 const Widgets = imports.common.ui.Widgets;
 
+var Utils, app;
 var results = {};
 
 var BenchmarksView = new Lang.Class({
@@ -30,6 +31,7 @@ var BenchmarksView = new Lang.Class({
 
   _init: function (owner) {
     this.parent ();
+    app = owner;
     Utils = owner.cpufreq;
     this.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
     this.hscrollbar_policy = Gtk.PolicyType.NEVER;
@@ -66,7 +68,8 @@ var BenchmarksView = new Lang.Class({
     this.testmenu.add_submenu (this.memtest);
     this.memtest.add_test ("memtest", APPDIR + "/common/benchmarks/memtest");
 
-    this.cputest = new SideMenu.SideSubmenu ("CPU", "RATING", _("CPU Benchmarks"));
+    this.cputest = new BenchmarksMenu ("CPU", _("CPU Benchmarks"));
+    this.cputest.add_test ("cputest", APPDIR + "/common/benchmarks/cputest");
     this.testmenu.add_submenu (this.cputest);
 
     this.iotest = new SideMenu.SideSubmenu ("IO", "RATING", _("IO Benchmarks"));
@@ -78,10 +81,11 @@ var BenchmarksView = new Lang.Class({
     this.show_all ();
 
     this.memtest.connect ("results", this.on_results.bind (this));
+    this.cputest.connect ("results", this.on_results.bind (this));
   },
 
   on_results: function (o, res) {
-    print ("results:", res);
+    Logger.debug ("results: " + res);
     let rating = 0, r = res.split (" ");
     if (r[0] && r[1]) {
       results[r[0]] = parseInt (r[1]);
@@ -93,10 +97,14 @@ var BenchmarksView = new Lang.Class({
   },
 
   on_button_start: function (o) {
+    app.active_window.spinner.start ();
+    app.active_window.spinner.show_all ();
     this.testmenu.submenus.forEach ((p) => {
+      app.active_window.spinner.start ();
       this.run_category (p);
       p.expanded = false;
     });
+    app.active_window.spinner.stop ();
   },
 
   run_category: function (o) {
@@ -130,7 +138,7 @@ var BenchmarksMenu = new Lang.Class({
   },
 
   run_test: function (o) {
-    print ("run_test:", o.cmd);
+    Logger.debug ("run_test: " + o.cmd);
     if (!o.cmd) return;
     let text = Utils.get_command_line_string (o.cmd);
     if (text) this.emit ("results", text);

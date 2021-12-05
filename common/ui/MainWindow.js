@@ -116,6 +116,9 @@ var MainWindow = new Lang.Class ({
       if (app) app.launch_uris (["file://" + APPDIR + "/BACKERS.md"], null);
     });
 
+    this.spinner = new Gtk.Spinner ();
+    this.hb.pack_end (this.spinner);
+
     this.cpanel = new ControlPanel.ControlPanel (this.application);
     this.cpanel.margin = 20;
 
