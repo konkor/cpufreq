@@ -1,3 +1,9 @@
+cpufreq (51-1) UNRELEASED; urgency=low
+
+  * Add GNOME Shell 41 supporting (close: #191, #199)
+
+ -- konkor <kapa76@gmail.com>  Sat, 15 Jan 2022 20:39:00 +0300
+
 cpufreq (50-1) UNRELEASED; urgency=low
 
   * Fix pkexec spamming in the system logs on CPU without
