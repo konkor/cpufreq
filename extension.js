@@ -9,6 +9,7 @@
  */
 
 const Lang      = imports.lang;
+const GObject   = imports.gi.GObject;
 const GLib      = imports.gi.GLib;
 const Gio       = imports.gi.Gio;
 const St        = imports.gi.St;
@@ -110,12 +111,10 @@ const CpufreqServiceIface = '<node> \
 </node>';
 const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
-const FrequencyIndicator = new Lang.Class({
-  Name: 'Cpufreq',
-  Extends: PanelMenu.Button,
+var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMenu.Button {
 
-  _init: function () {
-    this.parent (0.0, "CPU Frequency Indicator", false);
+  _init() {
+    super._init (0.0, "CPU Frequency Indicator", false);
     this.settings = Convenience.getSettings();
     this.on_settings (null, null);
 
@@ -159,9 +158,9 @@ const FrequencyIndicator = new Lang.Class({
         });
       });
     });
-  },
+  }
 
-  on_settings: function (o, key) {
+  on_settings(o, key) {
     let s;
     o = o || this.settings;
 
@@ -233,9 +232,9 @@ const FrequencyIndicator = new Lang.Class({
       debug ("power-state changed...");
       this.on_power_state (o.get_uint ("power-state"), o.get_double ("power-percentage"));
     }*/
-  },
+  }
 
-  on_power_state: function (state, percentage) {
+  on_power_state(state, percentage) {
     let id = eprofiles[1].guid;
     //debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
     debug ("on_power_state: %s %s%%".format (state, percentage));
@@ -253,31 +252,31 @@ const FrequencyIndicator = new Lang.Class({
       this.schedule_profile ('-p user');
       guid_battery = this.guid;
     }
-  },
+  }
 
-  unschedule_profile: function () {
+  unschedule_profile() {
     GLib.source_remove (scheduleID);
     scheduleID = 0;
-  },
+  }
 
-  schedule_profile: function (options) {
+  schedule_profile(options) {
     if (scheduleID) this.unschedule_profile ();
     scheduleID = GLib.timeout_add (0, 5000, () => {
       this.launch_app (options);
       scheduleID = 0;
     });
-  },
+  }
 
-  launch_app: function (options) {
+  launch_app(options) {
     let extra = "";
     /*if (Logger.debug_lvl == 2) extra = " --debug";
     else if (Logger.debug_lvl == 1) extra = " --verbose";*/
     options = options || "";
     info ("launch_app " + options + extra);
     GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
-  },
+  }
 
-  get app_running () {
+  get app_running() {
     let res = GLib.spawn_command_line_sync ("ps -A");
     let o, n;
     if (res[0]) o = Convenience.byteArrayToString (res[1]).toString().split("\n");
@@ -288,9 +287,9 @@ const FrequencyIndicator = new Lang.Class({
       }
     }
     return 0;
-  },
+  }
 
-  get_title: function (text) {
+  get_title(text) {
     if (!text) return title_text;
     let metrics = JSON.parse (text), s = "", f = 0, units;
     if (frequency_show) {
@@ -321,9 +320,9 @@ const FrequencyIndicator = new Lang.Class({
       this.statusLabel.style = title_style;
     }
     return title_text;
-  },
+  }
 
-  get_governor_symbolyc: function (name) {
+  get_governor_symbolyc(name) {
     let g = name;
     if (g == "mixed") g = "\u25cd";
     else if (g == "powersave") g = "\uf06c";
@@ -334,16 +333,16 @@ const FrequencyIndicator = new Lang.Class({
     else if (g == "userspace") g = "\uf007";
     else g = "\uf0e7";
     return g;
-  },
+  }
 
-  get_state_symbolyc: function (state) {
+  get_state_symbolyc(state) {
     let g = "☺";
     if (state == 1) g = "";
     else if (state == 2) g = "☹";
     return g;
-  },
+  }
 
-  get_stylestring: function (state) {
+  get_stylestring(state) {
     let s;
     if (color_show_custom) state += 3;
     switch (state) {
@@ -369,9 +368,9 @@ const FrequencyIndicator = new Lang.Class({
         s = "";
     }
     return s;
-  },
+  }
 
-  add_event: function () {
+  add_event() {
     this.remove_proxy ();
     if (monitor_timeout > 0) {
       if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
@@ -397,9 +396,9 @@ const FrequencyIndicator = new Lang.Class({
     monitor_event = 0;
     // cpufreq-service should stop auto on disabled monitors
     //else GLib.spawn_command_line_async ("killall cpufreq-service");
-  },
+  }
 
-  remove_proxy: function () {
+  remove_proxy() {
     if (this.proxy) {
       if (event) this.proxy.disconnectSignal (event);
       if (event_style) this.proxy.disconnectSignal (event_style);
@@ -408,9 +407,9 @@ const FrequencyIndicator = new Lang.Class({
     this.proxy = null;
     event = 0;
     event_style = 0;
-  },
+  }
 
-  remove_events: function () {
+  remove_events() {
     this.remove_proxy ();
     if (settingsID) this.settings.disconnect (settingsID);
     if (powerID) this.power.disconnect (powerID);
@@ -418,9 +417,9 @@ const FrequencyIndicator = new Lang.Class({
     event = 0; monitor_event = 0;
     settingsID = 0; powerID = 0;
     //GLib.spawn_command_line_async ("killall cpufreq-service");
-  },
+  }
 
-  show_splash: function () {
+  show_splash() {
     let monitor = Main.layoutManager.focusMonitor;
     let height = monitor.height < monitor.width ? monitor.height : monitor.width;
     let width = 512 * height / 1200;
@@ -480,7 +479,7 @@ function init () {
 }
 
 function enable () {
-  monitor = new FrequencyIndicator;
+  monitor = new FrequencyIndicator();
   Main.panel.addToStatusArea ('cpufreq-indicator', monitor);
 }
 
