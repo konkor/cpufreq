@@ -15,6 +15,7 @@ const Gio       = imports.gi.Gio;
 const St        = imports.gi.St;
 const Main      = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
+const Config    = imports.misc.config;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -23,6 +24,7 @@ const Logger       = Me.imports.common.Logger;
 const Convenience  = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path ();
 const APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
+const IS_3_XX_SHELL_VERSION = Config.PACKAGE_VERSION.startsWith("3");
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const EXTENSION_MODE_KEY= 'extension-mode';
@@ -111,10 +113,8 @@ const CpufreqServiceIface = '<node> \
 </node>';
 const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
-var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMenu.Button {
-
-  _init() {
-    super._init (0.0, "CPU Frequency Indicator", false);
+var Cpufreq = {
+  init: function () {
     this.settings = Convenience.getSettings();
     this.on_settings (null, null);
 
@@ -158,9 +158,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
         });
       });
     });
-  }
+  },
 
-  on_settings(o, key) {
+  on_settings: function (o, key) {
     let s;
     o = o || this.settings;
 
@@ -232,9 +232,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
       debug ("power-state changed...");
       this.on_power_state (o.get_uint ("power-state"), o.get_double ("power-percentage"));
     }*/
-  }
+  },
 
-  on_power_state(state, percentage) {
+  on_power_state: function (state, percentage) {
     let id = eprofiles[1].guid;
     //debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
     debug ("on_power_state: %s %s%%".format (state, percentage));
@@ -252,31 +252,31 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
       this.schedule_profile ('-p user');
       guid_battery = this.guid;
     }
-  }
+  },
 
-  unschedule_profile() {
+  unschedule_profile: function () {
     GLib.source_remove (scheduleID);
     scheduleID = 0;
-  }
+  },
 
-  schedule_profile(options) {
+  schedule_profile: function (options) {
     if (scheduleID) this.unschedule_profile ();
     scheduleID = GLib.timeout_add (0, 5000, () => {
       this.launch_app (options);
       scheduleID = 0;
     });
-  }
+  },
 
-  launch_app(options) {
+  launch_app: function (options) {
     let extra = "";
     /*if (Logger.debug_lvl == 2) extra = " --debug";
     else if (Logger.debug_lvl == 1) extra = " --verbose";*/
     options = options || "";
     info ("launch_app " + options + extra);
     GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
-  }
+  },
 
-  get app_running() {
+  get app_running () {
     let res = GLib.spawn_command_line_sync ("ps -A");
     let o, n;
     if (res[0]) o = Convenience.byteArrayToString (res[1]).toString().split("\n");
@@ -287,9 +287,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
       }
     }
     return 0;
-  }
+  },
 
-  get_title(text) {
+  get_title: function (text) {
     if (!text) return title_text;
     let metrics = JSON.parse (text), s = "", f = 0, units;
     if (frequency_show) {
@@ -320,9 +320,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
       this.statusLabel.style = title_style;
     }
     return title_text;
-  }
+  },
 
-  get_governor_symbolyc(name) {
+  get_governor_symbolyc: function (name) {
     let g = name;
     if (g == "mixed") g = "\u25cd";
     else if (g == "powersave") g = "\uf06c";
@@ -333,16 +333,16 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
     else if (g == "userspace") g = "\uf007";
     else g = "\uf0e7";
     return g;
-  }
+  },
 
-  get_state_symbolyc(state) {
+  get_state_symbolyc: function (state) {
     let g = "☺";
     if (state == 1) g = "";
     else if (state == 2) g = "☹";
     return g;
-  }
+  },
 
-  get_stylestring(state) {
+  get_stylestring: function (state) {
     let s;
     if (color_show_custom) state += 3;
     switch (state) {
@@ -368,9 +368,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
         s = "";
     }
     return s;
-  }
+  },
 
-  add_event() {
+  add_event: function () {
     this.remove_proxy ();
     if (monitor_timeout > 0) {
       if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
@@ -396,9 +396,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
     monitor_event = 0;
     // cpufreq-service should stop auto on disabled monitors
     //else GLib.spawn_command_line_async ("killall cpufreq-service");
-  }
+  },
 
-  remove_proxy() {
+  remove_proxy: function () {
     if (this.proxy) {
       if (event) this.proxy.disconnectSignal (event);
       if (event_style) this.proxy.disconnectSignal (event_style);
@@ -407,9 +407,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
     this.proxy = null;
     event = 0;
     event_style = 0;
-  }
+  },
 
-  remove_events() {
+  remove_events: function () {
     this.remove_proxy ();
     if (settingsID) this.settings.disconnect (settingsID);
     if (powerID) this.power.disconnect (powerID);
@@ -417,9 +417,9 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
     event = 0; monitor_event = 0;
     settingsID = 0; powerID = 0;
     //GLib.spawn_command_line_async ("killall cpufreq-service");
-  }
+  },
 
-  show_splash() {
+  show_splash: function () {
     let monitor = Main.layoutManager.focusMonitor;
     let height = monitor.height < monitor.width ? monitor.height : monitor.width;
     let width = 512 * height / 1200;
@@ -436,7 +436,55 @@ var FrequencyIndicator = GObject.registerClass({}, class Cpufreq extends PanelMe
       onComplete: () => { remove_actor (splash)}
     }); else GLib.timeout_add (0, 1200, () => { return remove_actor (splash)});
   }
-});
+};
+
+var FrequencyIndicator = null;
+if (IS_3_XX_SHELL_VERSION) {
+  FrequencyIndicator = new Lang.Class({
+    Name: 'Cpufreq',
+    Extends: PanelMenu.Button,
+
+    _init: function() {
+      this.parent (0.0, "CPU Frequency Indicator", false);
+  
+      this.on_settings = Cpufreq.on_settings.bind(this);
+      this.on_power_state = Cpufreq.on_power_state.bind(this);
+      this.unschedule_profile = Cpufreq.unschedule_profile.bind(this);
+      this.launch_app = Cpufreq.launch_app.bind(this);
+      this.get_title = Cpufreq.get_title.bind(this);
+      this.get_governor_symbolyc = Cpufreq.get_governor_symbolyc.bind(this);
+      this.get_state_symbolyc = Cpufreq.get_state_symbolyc.bind(this);
+      this.get_stylestring = Cpufreq.get_stylestring.bind(this);
+      this.add_event = Cpufreq.add_event.bind(this);
+      this.remove_proxy = Cpufreq.remove_proxy.bind(this);
+      this.remove_events = Cpufreq.remove_events.bind(this);
+      this.show_splash = Cpufreq.show_splash.bind(this);
+
+      Cpufreq.init.bind(this)();
+    }
+  });
+} else {
+  FrequencyIndicator = GObject.registerClass({}, class FrequencyIndicator extends PanelMenu.Button {
+    _init() {
+      super._init (0.0, "CPU Frequency Indicator", false);
+
+      this.on_settings = Cpufreq.on_settings.bind(this);
+      this.on_power_state = Cpufreq.on_power_state.bind(this);
+      this.unschedule_profile = Cpufreq.unschedule_profile.bind(this);
+      this.launch_app = Cpufreq.launch_app.bind(this);
+      this.get_title = Cpufreq.get_title.bind(this);
+      this.get_governor_symbolyc = Cpufreq.get_governor_symbolyc.bind(this);
+      this.get_state_symbolyc = Cpufreq.get_state_symbolyc.bind(this);
+      this.get_stylestring = Cpufreq.get_stylestring.bind(this);
+      this.add_event = Cpufreq.add_event.bind(this);
+      this.remove_proxy = Cpufreq.remove_proxy.bind(this);
+      this.remove_events = Cpufreq.remove_events.bind(this);
+      this.show_splash = Cpufreq.show_splash.bind(this);
+
+      Cpufreq.init.bind(this)();
+    }
+  });
+}
 
 function remove_actor (o) {
   Main.uiGroup.remove_actor (o);
