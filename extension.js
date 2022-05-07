@@ -124,8 +124,8 @@ var Cpufreq = {
     this.statusLabel.style = title_style;
     let _box = new St.BoxLayout();
     _box.add_actor (this.statusLabel);
-    this.actor.add_actor (_box);
-    this.actor.connect ('button-press-event', () => {
+    (IS_3_XX_SHELL_VERSION ? this.actor : this).add_actor (_box);
+    (IS_3_XX_SHELL_VERSION ? this.actor : this).connect ('button-press-event', () => {
       var args = extmode ? "--extension" : "";
       if (splash)
         if (!this.app_running) this.show_splash ();
