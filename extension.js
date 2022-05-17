@@ -461,7 +461,7 @@ try {
     }
   });
 } catch (error) {
-  console.log ('Gnome Shell version < 42!', error);
+  log ('Gnome Shell version < 40!', error);
 
   FrequencyIndicator = new Lang.Class({
     Name: 'CpuFreq',
