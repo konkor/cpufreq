@@ -67,6 +67,7 @@ description: Here could be your name, brand, reference and logo.
 * [Ricardo Rodrigues](https://github.com/RicardoEPRodrigues)
 * [Térence Clastres](https://github.com/terencode)
 * [Derek W. Stavis](https://github.com/derekstavis)
+* [Andre Breier](https://github.com/breier)
 
 ## Documentation
 
