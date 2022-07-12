@@ -9,6 +9,7 @@
  */
 
 const Lang      = imports.lang;
+const GObject   = imports.gi.GObject;
 const GLib      = imports.gi.GLib;
 const Gio       = imports.gi.Gio;
 const St        = imports.gi.St;
@@ -110,12 +111,8 @@ const CpufreqServiceIface = '<node> \
 </node>';
 const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
-const FrequencyIndicator = new Lang.Class({
-  Name: 'Cpufreq',
-  Extends: PanelMenu.Button,
-
-  _init: function () {
-    this.parent (0.0, "CPU Frequency Indicator", false);
+const CpuFreq = {
+  init: function () {
     this.settings = Convenience.getSettings();
     this.on_settings (null, null);
 
@@ -437,7 +434,60 @@ const FrequencyIndicator = new Lang.Class({
       onComplete: () => { remove_actor (splash)}
     }); else GLib.timeout_add (0, 1200, () => { return remove_actor (splash)});
   }
-});
+};
+
+let FrequencyIndicator = null;
+
+try {
+  FrequencyIndicator = GObject.registerClass({}, class FrequencyIndicator extends PanelMenu.Button {
+    _init() {
+      super._init (0.0, "CPU Frequency Indicator", false);
+
+      this.on_settings = CpuFreq.on_settings.bind (this);
+      this.on_power_state = CpuFreq.on_power_state.bind (this);
+      this.unschedule_profile = CpuFreq.unschedule_profile.bind (this);
+      this.schedule_profile = CpuFreq.schedule_profile.bind (this);
+      this.launch_app = CpuFreq.launch_app.bind (this);
+      this.get_title = CpuFreq.get_title.bind (this);
+      this.get_governor_symbolyc = CpuFreq.get_governor_symbolyc.bind (this);
+      this.get_state_symbolyc = CpuFreq.get_state_symbolyc.bind (this);
+      this.get_stylestring = CpuFreq.get_stylestring.bind (this);
+      this.add_event = CpuFreq.add_event.bind (this);
+      this.remove_proxy = CpuFreq.remove_proxy.bind (this);
+      this.remove_events = CpuFreq.remove_events.bind (this);
+      this.show_splash = CpuFreq.show_splash.bind (this);
+
+      CpuFreq.init.bind (this) ();
+    }
+  });
+} catch (error) {
+  log ('Gnome Shell version < 40!', error);
+
+  FrequencyIndicator = new Lang.Class({
+    Name: 'CpuFreq',
+    Extends: PanelMenu.Button,
+
+    _init: function() {
+      this.parent (0.0, "CPU Frequency Indicator", false);
+
+      this.on_settings = CpuFreq.on_settings.bind (this);
+      this.on_power_state = CpuFreq.on_power_state.bind (this);
+      this.unschedule_profile = CpuFreq.unschedule_profile.bind (this);
+      this.schedule_profile = CpuFreq.schedule_profile.bind (this);
+      this.launch_app = CpuFreq.launch_app.bind (this);
+      this.get_title = CpuFreq.get_title.bind (this);
+      this.get_governor_symbolyc = CpuFreq.get_governor_symbolyc.bind (this);
+      this.get_state_symbolyc = CpuFreq.get_state_symbolyc.bind (this);
+      this.get_stylestring = CpuFreq.get_stylestring.bind (this);
+      this.add_event = CpuFreq.add_event.bind (this);
+      this.remove_proxy = CpuFreq.remove_proxy.bind (this);
+      this.remove_events = CpuFreq.remove_events.bind (this);
+      this.show_splash = CpuFreq.show_splash.bind (this);
+
+      CpuFreq.init.bind (this) ();
+    }
+  });
+}
 
 function remove_actor (o) {
   Main.uiGroup.remove_actor (o);
@@ -480,7 +530,7 @@ function init () {
 }
 
 function enable () {
-  monitor = new FrequencyIndicator;
+  monitor = new FrequencyIndicator ();
   Main.panel.addToStatusArea ('cpufreq-indicator', monitor);
 }
 
