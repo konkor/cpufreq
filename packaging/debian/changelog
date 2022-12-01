@@ -1,3 +1,15 @@
+cpufreq (53-1) UNRELEASED; urgency=low
+
+  * Next release
+
+ -- konkor <kapa76@gmail.com>  Thu, 1 Dec 2022 09:20:00 +0300
+
+cpufreq (52-1) UNRELEASED; urgency=low
+
+  * Add GNOME Shell 42 supporting (close: #201)
+
+ -- konkor <kapa76@gmail.com>  Tue, 12 Jul 2022 12:39:00 +0300
+
 cpufreq (51-1) UNRELEASED; urgency=low
 
   * Add GNOME Shell 41 supporting (close: #191, #199)
