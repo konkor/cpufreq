@@ -1,3 +1,6 @@
+cpufreq (54-1) UNRELEASED; urgency=low
+  * Add GNOME Shell 44 support (close: #218)
+
 cpufreq (53-1) UNRELEASED; urgency=low
 
   * Next release
