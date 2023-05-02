@@ -1,6 +1,6 @@
 /*
  * This is a part of CPUFreq Manager
- * Copyright (C) 2016-2019 konkor <konkor.github.io>
+ * Copyright (C) 2016-2023 konkor <konkor.github.io>
  *
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -122,8 +122,8 @@ const CpuFreq = {
     this.statusLabel.style = title_style;
     let _box = new St.BoxLayout();
     _box.add_actor (this.statusLabel);
-    this.actor.add_actor (_box);
-    this.actor.connect ('button-press-event', () => {
+    this.add_actor (_box);
+    this.connect ('button-press-event', () => {
       var args = extmode ? "--extension" : "";
       if (splash)
         if (!this.app_running) this.show_splash ();

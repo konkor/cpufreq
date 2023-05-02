@@ -1,6 +1,6 @@
 /*
  * This is a part of CPUFreq Manager
- * Copyright (C) 2016-2019 konkor <konkor.github.io>
+ * Copyright (C) 2016-2023 konkor <konkor.github.io>
  *
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -57,17 +57,25 @@ var InfoPanel = new Lang.Class({
     });
     this.add (this._board_vendor);
 
+    let rs = "/sys/class/dmi/id/board_name";
     this._board_model = new InfoLabel ();
-    Helper.get_content_async ("/sys/class/dmi/id/board_name", (res, text) => {
+    this.chassis_type = Helper.get_content_string ("/sys/class/dmi/id/chassis_type");
+    if (this.chassis_type == "10")
+      rs = "/sys/class/dmi/id/chassis_version";
+    Helper.get_content_async (rs, (res, text) => {
       if (!res) {
         if (this.board) this._board_model.label.set_text (this.board);
         return;
       }
       if (text.toLowerCase().indexOf ("product name") > -1) return;
       let s = text.split ("\n")[0];
-      if (s.length < 10) this._board_model.label.set_text ("Model");
-      else this._board_model.tooltip_text = "Model";
-      this._board_model.info.set_text (s);
+      if (s.length < 32) {
+        this._board_model.label.set_text ("Model");
+        this._board_model.info.set_text (s);
+      } else {
+        this._board_model.tooltip_text = "Model";
+        this._board_model.label.set_text (s);
+      }
     });
     this.add (this._board_model);
 
