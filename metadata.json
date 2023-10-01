@@ -7,5 +7,6 @@
   ],
   "url": "https://github.com/konkor/cpufreq",
   "uuid": "cpufreq@konkor",
+  "gettext-domain": "org-konkor-cpufreq",
   "version": 55
 }
