@@ -33,13 +33,13 @@ function getCurrentFile () {
 
 function get_appdir () {
     let s = getCurrentFile ()[1];
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     s = GLib.get_home_dir () + "/.local/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     s = "/usr/local/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     s = "/usr/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     throw "CPUFreq installation not found...";
     return s;
 }

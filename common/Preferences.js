@@ -17,7 +17,7 @@ const Lang = imports.lang;
 
 const APPDIR = getCurrentFile ()[1];
 
-const Prefs = imports.prefs;
+const Prefs = imports.prefs_gjs;
 
 var Preferences = new Lang.Class ({
   Name: 'Preferences',

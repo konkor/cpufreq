@@ -8,17 +8,19 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+const Lang = imports.lang;
+const GObject = imports.gi.GObject;
+const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+const Gdk = imports.gi.Gdk;
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
-import Gdk from 'gi://Gdk';
+var Format = imports.format;
+String.prototype.format = Format.format;
 
-//const APPDIR = get_appdir ();
-const APPDIR = './';
-
-import * as Logger from './common/Logger.esm.js';
+const APPDIR = get_appdir ();
+imports.searchPath.unshift(APPDIR);
+const Logger = imports.common.Logger;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const NOTIFY_KEY    = 'notifications';
@@ -39,8 +41,12 @@ const COLOR_SHOW_CUSTOM_NORMAL_KEY = 'color-show-custom-normal';
 const COLOR_SHOW_CUSTOM_WARNING_KEY = 'color-show-custom-warning';
 const COLOR_SHOW_CUSTOM_CRITICAL_KEY = 'color-show-custom-critical';
 
+const Gettext = imports.gettext.domain ('org-konkor-cpufreq');
+const _ = Gettext.gettext;
 
-import * as Convenience from './convenience.esm.js';
+const EXTENSIONDIR = getCurrentFile ()[1];
+imports.searchPath.unshift (EXTENSIONDIR);
+const Convenience = imports.convenience;
 
 var EventType = {
 CHARGING:     0,
@@ -80,8 +86,10 @@ let eprofiles = [
 
 let settings = false;
 
-var CPUFreqPreferences =GObject.registerClass({}, class CPUFreqPreferences{
-    constructor() {
+var CPUFreqPreferences = new Lang.Class({
+    Name: 'CPUFreqPreferences',
+
+    _init: function () {
         this.parent (0.0, "CPUFreq Preferences", false);
         let label, s;
 
@@ -530,13 +538,13 @@ var DumpWidget = new Lang.Class({
 
 function get_appdir () {
     let s = getCurrentFile ()[1];
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     s = GLib.get_home_dir () + "/.local/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     s = "/usr/local/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     s = "/usr/share/gnome-shell/extensions/cpufreq@konkor";
-    if (GLib.file_test (s + "/prefs.js", GLib.FileTest.EXISTS)) return s;
+    if (GLib.file_test (s + "/prefs_gjs.js", GLib.FileTest.EXISTS)) return s;
     throw "CPUFreq installation not found...";
     return s;
 }

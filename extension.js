@@ -8,21 +8,21 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Lang      = imports.lang;
-const GObject   = imports.gi.GObject;
-const GLib      = imports.gi.GLib;
-const Gio       = imports.gi.Gio;
-const St        = imports.gi.St;
-const Main      = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
+import * as Logger from './common/Logger.esm.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import St from 'gi://St';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as Convenience from './convenience.esm.js';
 
-const Me = ExtensionUtils.getCurrentExtension ();
-const Logger       = Me.imports.common.Logger;
-const Convenience  = Me.imports.convenience;
-const EXTENSIONDIR = Me.dir.get_path ();
-const APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
+
+//const EXTENSIONDIR = Me.dir.get_path ();
+let EXTENSIONDIR;
+let APP_PATH;
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const EXTENSION_MODE_KEY= 'extension-mode';
@@ -111,54 +111,42 @@ const CpufreqServiceIface = '<node> \
 </node>';
 const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
-const CpuFreq = {
-  init: function () {
-    this.settings = Convenience.getSettings();
-    this.on_settings (null, null);
 
-    this.statusLabel = new St.Label ({
-      text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'
-    });
-    this.statusLabel.style = title_style;
-    let _box = new St.BoxLayout();
-    _box.add_actor (this.statusLabel);
-    this.add_actor (_box);
-    this.connect ('button-press-event', () => {
-      var args = extmode ? "--extension" : "";
-      if (splash)
-        if (!this.app_running) this.show_splash ();
-      if (!guid_battery || (guid_battery == this.guid)) this.launch_app (args);
-      else this.launch_app (args + " --no-save");
-    });
-    if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
+const FrequencyIndicator = GObject.registerClass({
+}, class FrequencyIndicator extends PanelMenu.Button { 
+  settings;
+  proxy;
 
-    this.add_event ();
+  constructor(settings_input) {
+    super(0.0, "CPU Frequency Indicator", false);
 
-    //TODO: Workaround updating title
-    this.settings.set_boolean (SAVE_SETTINGS_KEY, !save);
-    this.settings.set_boolean (SAVE_SETTINGS_KEY, save);
+    this.settings = settings_input;
+    if (settings_input == undefined){
+      console.error('settings_input is undefined');
+    }
+  }
 
-    if (settingsID) this.settings.disconnect (settingsID);
-    settingsID = this.settings.connect ("changed", this.on_settings.bind (this));
-
-    this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, (proxy, e) => {
-      if (e) {
-        error (e.message);
-        return;
+  on_power_state (state, percentage) {
+    let id = eprofiles[1].guid;
+    //debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
+    debug ("on_power_state: %s %s%%".format (state, percentage));
+    if (!id) return;
+    if (state == 2) {
+      //on battery
+      if (id == guid_battery) return;
+      if (percentage < eprofiles[1].percent) {
+        this.schedule_profile ('--no-save -p ' + id);
+        guid_battery = id;
       }
-      this.on_power_state (proxy.State, proxy.Percentage);
-      if (save && first_boot && !guid_battery) this.launch_app ("-p user");
-      first_boot = false;
-      GLib.timeout_add (0, 8000, () => {
-        powerID = this.power.connect ('g-properties-changed', (o,a) => {
-          //a = a{sv}
-          this.on_power_state (this.power.State, this.power.Percentage);
-        });
-      });
-    });
-  },
+    } else {
+      //restoring prev state
+      if (guid_battery == this.guid) return;
+      this.schedule_profile ('-p user');
+      guid_battery = this.guid;
+    }
+  }
 
-  on_settings: function (o, key) {
+  on_settings(o, key) {
     let s;
     o = o || this.settings;
 
@@ -226,68 +214,103 @@ const CpuFreq = {
     //TODO: statusLabel
     if ((key == LABEL_KEY) && !monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
-    /*if ((key == "power-state") || (key == "power-percentage")) {
-      debug ("power-state changed...");
-      this.on_power_state (o.get_uint ("power-state"), o.get_double ("power-percentage"));
-    }*/
-  },
+  }
 
-  on_power_state: function (state, percentage) {
-    let id = eprofiles[1].guid;
-    //debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
-    debug ("on_power_state: %s %s%%".format (state, percentage));
-    if (!id) return;
-    if (state == 2) {
-      //on battery
-      if (id == guid_battery) return;
-      if (percentage < eprofiles[1].percent) {
-        this.schedule_profile ('--no-save -p ' + id);
-        guid_battery = id;
-      }
-    } else {
-      //restoring prev state
-      if (guid_battery == this.guid) return;
-      this.schedule_profile ('-p user');
-      guid_battery = this.guid;
-    }
-  },
+  init () {
+    this.on_settings (null, null);
 
-  unschedule_profile: function () {
-    GLib.source_remove (scheduleID);
-    scheduleID = 0;
-  },
-
-  schedule_profile: function (options) {
-    if (scheduleID) this.unschedule_profile ();
-    scheduleID = GLib.timeout_add (0, 5000, () => {
-      this.launch_app (options);
-      scheduleID = 0;
+    this.statusLabel = new St.Label ({
+      text: title_text, y_expand: true, y_align: 2, style_class:'cpufreq-text'
     });
-  },
+    this.statusLabel.style = title_style;
+    let _box = new St.BoxLayout();
+    _box.add_actor (this.statusLabel);
+    this.add_actor (_box);
+    this.connect ('button-press-event', () => {
+      var args = extmode ? "--extension" : "";
+      if (splash)
+        if (!this.app_running) this.show_splash ();
+      if (!guid_battery || (guid_battery == this.guid)) this.launch_app (args);
+      else this.launch_app (args + " --no-save");
+    });
+    if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
-  launch_app: function (options) {
-    let extra = "";
-    /*if (Logger.debug_lvl == 2) extra = " --debug";
-    else if (Logger.debug_lvl == 1) extra = " --verbose";*/
-    options = options || "";
-    info ("launch_app " + options + extra);
-    GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
-  },
+    this.add_event ();
 
-  get app_running () {
-    let res = GLib.spawn_command_line_sync ("ps -A");
-    let o, n;
-    if (res[0]) o = Convenience.byteArrayToString (res[1]).toString().split("\n");
-    for (let i = 0; i < o.length; i++) {
-      if (o[i].indexOf ("cpufreq-app") > -1) {
-        n = parseInt (o[i].trim().split(" ")[0]);
-        if (Number.isInteger(n) && n > 0) return n;
+    //TODO: Workaround updating title
+    this.settings.set_boolean (SAVE_SETTINGS_KEY, !save);
+    this.settings.set_boolean (SAVE_SETTINGS_KEY, save);
+
+    if (settingsID) {this.settings.disconnect (settingsID);}
+    settingsID = this.settings.connect ("changed", this.on_settings.bind (this));
+
+    this.power = new PowerManagerProxy (Gio.DBus.system, UP_BUS_NAME, UP_OBJECT_PATH, (proxy, e) => {
+      if (e) {
+        error (e.message);
+        return;
       }
-    }
-    return 0;
-  },
+      this.on_power_state (proxy.State, proxy.Percentage);
+      if (save && first_boot && !guid_battery) this.launch_app ("-p user");
+      first_boot = false;
+      GLib.timeout_add (0, 8000, () => {
+        powerID = this.power.connect ('g-properties-changed', (o,a) => {
+          //a = a{sv}
+          this.on_power_state (this.power.State, this.power.Percentage);
+        });
+      });
+    });
+  }
 
-  get_title: function (text) {
+  remove_proxy() {
+    if (this.proxy) {
+      if (event) this.proxy.disconnectSignal (event);
+      if (event_style) this.proxy.disconnectSignal (event_style);
+      delete this.proxy;
+    }
+    this.proxy = null;
+    event = 0;
+    event_style = 0;
+  }
+
+  remove_events () {
+    this.remove_proxy ();
+    if (settingsID) this.settings.disconnect (settingsID);
+    if (powerID) this.power.disconnect (powerID);
+    if (monitor_event) GLib.source_remove (monitor_event);
+    event = 0; monitor_event = 0;
+    settingsID = 0; powerID = 0;
+    //GLib.spawn_command_line_async ("killall cpufreq-service");
+  }
+
+  add_event () {
+    this.remove_proxy ();
+    if (monitor_timeout > 0) {
+      if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
+        console.error ("Unable to start cpufreq service...");
+        return;
+      }
+      this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, (proxy, e) => {
+        if (e) {
+          error (e.message);
+          return;
+        }
+        event = this.proxy.connectSignal ('MonitorEvent', (o, s, metrics) => {
+          if (metrics) this.statusLabel.set_text (this.get_title (metrics.toString ()));
+        });
+        event_style = this.proxy.connectSignal ('StyleChanged', (o, s, style) => {
+          if (style) {
+            title_style = style.toString ();
+            this.statusLabel.style = title_style;
+          }
+        });
+      });
+    }
+    monitor_event = 0;
+    // cpufreq-service should stop auto on disabled monitors
+    //else GLib.spawn_command_line_async ("killall cpufreq-service");
+  }
+
+  get_title (text) {
     if (!text) return title_text;
     let metrics = JSON.parse (text), s = "", f = 0, units;
     if (frequency_show) {
@@ -318,9 +341,42 @@ const CpuFreq = {
       this.statusLabel.style = title_style;
     }
     return title_text;
-  },
+  }
 
-  get_governor_symbolyc: function (name) {
+  launch_app (options) {
+    let extra = "";
+    options = options || "";
+    info ("launch_app " + options + extra);
+    GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
+  }
+
+  unschedule_profile() {
+    GLib.source_remove (scheduleID);
+    scheduleID = 0;
+  }
+
+  schedule_profile (options) {
+    if (scheduleID) {this.unschedule_profile ();}
+    scheduleID = GLib.timeout_add (0, 5000, () => {
+      this.launch_app (options);
+      scheduleID = 0;
+    });
+  }
+
+  get app_running () {
+    let res = GLib.spawn_command_line_sync ("ps -A");
+    let o, n;
+    if (res[0]) o = Convenience.byteArrayToString (res[1]).toString().split("\n");
+    for (let i = 0; i < o.length; i++) {
+      if (o[i].indexOf ("cpufreq-app") > -1) {
+        n = parseInt (o[i].trim().split(" ")[0]);
+        if (Number.isInteger(n) && n > 0) return n;
+      }
+    }
+    return 0;
+  }
+
+  get_governor_symbolyc (name) {
     let g = name;
     if (g == "mixed") g = "\u25cd";
     else if (g == "powersave") g = "\uf06c";
@@ -331,16 +387,16 @@ const CpuFreq = {
     else if (g == "userspace") g = "\uf007";
     else g = "\uf0e7";
     return g;
-  },
+  }
 
-  get_state_symbolyc: function (state) {
+  get_state_symbolyc (state) {
     let g = "☺";
     if (state == 1) g = "";
     else if (state == 2) g = "☹";
     return g;
-  },
+  }
 
-  get_stylestring: function (state) {
+  get_stylestring (state) {
     let s;
     if (color_show_custom) state += 3;
     switch (state) {
@@ -366,58 +422,9 @@ const CpuFreq = {
         s = "";
     }
     return s;
-  },
+  }
 
-  add_event: function () {
-    this.remove_proxy ();
-    if (monitor_timeout > 0) {
-      if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
-        //error ("Unable to start cpufreq service...");
-        return;
-      }
-      this.proxy = new CpufreqServiceProxy (Gio.DBus.session, BUS_NAME, OBJECT_PATH, (proxy, e) => {
-        if (e) {
-          error (e.message);
-          return;
-        }
-        event = this.proxy.connectSignal ('MonitorEvent', (o, s, metrics) => {
-          if (metrics) this.statusLabel.set_text (this.get_title (metrics.toString ()));
-        });
-        event_style = this.proxy.connectSignal ('StyleChanged', (o, s, style) => {
-          if (style) {
-            title_style = style.toString ();
-            this.statusLabel.style = title_style;
-          }
-        });
-      });
-    }
-    monitor_event = 0;
-    // cpufreq-service should stop auto on disabled monitors
-    //else GLib.spawn_command_line_async ("killall cpufreq-service");
-  },
-
-  remove_proxy: function () {
-    if (this.proxy) {
-      if (event) this.proxy.disconnectSignal (event);
-      if (event_style) this.proxy.disconnectSignal (event_style);
-      delete this.proxy;
-    }
-    this.proxy = null;
-    event = 0;
-    event_style = 0;
-  },
-
-  remove_events: function () {
-    this.remove_proxy ();
-    if (settingsID) this.settings.disconnect (settingsID);
-    if (powerID) this.power.disconnect (powerID);
-    if (monitor_event) GLib.source_remove (monitor_event);
-    event = 0; monitor_event = 0;
-    settingsID = 0; powerID = 0;
-    //GLib.spawn_command_line_async ("killall cpufreq-service");
-  },
-
-  show_splash: function () {
+  show_splash () {
     let monitor = Main.layoutManager.focusMonitor;
     let height = monitor.height < monitor.width ? monitor.height : monitor.width;
     let width = 512 * height / 1200;
@@ -434,84 +441,57 @@ const CpuFreq = {
       onComplete: () => { remove_actor (splash)}
     }); else GLib.timeout_add (0, 1200, () => { return remove_actor (splash)});
   }
-};
 
-let FrequencyIndicator = null;
+  remove_actor (o) {
+    Main.uiGroup.remove_actor (o);
+    o.destroy ();
+    return false;
+  }
+  
+  show_notify (message, style) {
+    //var text = new St.Label ({text: message, style_class: style?style:'cpufreq-notify'});
+    var text = new St.Label ({text: message, style_class: "modal-dialog audio-selection-content restart-message"});
+    text.opacity = 255;
+    Main.uiGroup.add_actor (text);
+  
+    text.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - text.width / 2),
+      Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
+  
+    GLib.timeout_add (0, 1200, () => { return remove_actor (text)});
+  }
+  
+  show_warn (message) {
+      show_notify (message, "warn-label");
+  }
+}
+);
 
-try {
-  FrequencyIndicator = GObject.registerClass({}, class FrequencyIndicator extends PanelMenu.Button {
-    _init() {
-      super._init (0.0, "CPU Frequency Indicator", false);
+export default class CpuFreq extends Extension {
+  constructor(metadata) {
+      super(metadata);
 
-      this.on_settings = CpuFreq.on_settings.bind (this);
-      this.on_power_state = CpuFreq.on_power_state.bind (this);
-      this.unschedule_profile = CpuFreq.unschedule_profile.bind (this);
-      this.schedule_profile = CpuFreq.schedule_profile.bind (this);
-      this.launch_app = CpuFreq.launch_app.bind (this);
-      this.get_title = CpuFreq.get_title.bind (this);
-      this.get_governor_symbolyc = CpuFreq.get_governor_symbolyc.bind (this);
-      this.get_state_symbolyc = CpuFreq.get_state_symbolyc.bind (this);
-      this.get_stylestring = CpuFreq.get_stylestring.bind (this);
-      this.add_event = CpuFreq.add_event.bind (this);
-      this.remove_proxy = CpuFreq.remove_proxy.bind (this);
-      this.remove_events = CpuFreq.remove_events.bind (this);
-      this.show_splash = CpuFreq.show_splash.bind (this);
+      this.initTranslations();
+  }
 
-      CpuFreq.init.bind (this) ();
-    }
-  });
-} catch (error) {
-  log ('Gnome Shell version < 40!', error);
+  enable() {
+    EXTENSIONDIR = this.path;
+    APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
+      console.log(_('Enabling "%s" dir: "%s"').format(this.metadata.name, EXTENSIONDIR));
+      this.monitor = new FrequencyIndicator(this.getSettings());
+      this.monitor.init();
+      Main.panel.addToStatusArea ('cpufreq-indicator'/*this.uuid*/, this.monitor);
+  }
 
-  FrequencyIndicator = new Lang.Class({
-    Name: 'CpuFreq',
-    Extends: PanelMenu.Button,
+  disable() {
+      console.log(_('Disabling %s').format(this.metadata.name));
+      this.monitor?.remove_events ();
+      this.monitor?.destroy ();
+      this.monitor = null;
+  }
 
-    _init: function() {
-      this.parent (0.0, "CPU Frequency Indicator", false);
-
-      this.on_settings = CpuFreq.on_settings.bind (this);
-      this.on_power_state = CpuFreq.on_power_state.bind (this);
-      this.unschedule_profile = CpuFreq.unschedule_profile.bind (this);
-      this.schedule_profile = CpuFreq.schedule_profile.bind (this);
-      this.launch_app = CpuFreq.launch_app.bind (this);
-      this.get_title = CpuFreq.get_title.bind (this);
-      this.get_governor_symbolyc = CpuFreq.get_governor_symbolyc.bind (this);
-      this.get_state_symbolyc = CpuFreq.get_state_symbolyc.bind (this);
-      this.get_stylestring = CpuFreq.get_stylestring.bind (this);
-      this.add_event = CpuFreq.add_event.bind (this);
-      this.remove_proxy = CpuFreq.remove_proxy.bind (this);
-      this.remove_events = CpuFreq.remove_events.bind (this);
-      this.show_splash = CpuFreq.show_splash.bind (this);
-
-      CpuFreq.init.bind (this) ();
-    }
-  });
 }
 
-function remove_actor (o) {
-  Main.uiGroup.remove_actor (o);
-  o.destroy ();
-  return false;
-}
 
-function show_notify (message, style) {
-  //var text = new St.Label ({text: message, style_class: style?style:'cpufreq-notify'});
-  var text = new St.Label ({text: message, style_class: "modal-dialog audio-selection-content restart-message"});
-  text.opacity = 255;
-  Main.uiGroup.add_actor (text);
-
-  text.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - text.width / 2),
-    Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
-
-  GLib.timeout_add (0, 1200, () => { return remove_actor (text)});
-}
-
-function show_warn (message) {
-    show_notify (message, "warn-label");
-}
-
-let monitor;
 Logger.init (Logger.LEVEL.ERROR, true);
 
 function info (msg) {
@@ -524,18 +504,4 @@ function debug (msg) {
 
 function error (msg) {
   Logger.error ("extension", msg);
-}
-
-function init () {
-}
-
-function enable () {
-  monitor = new FrequencyIndicator ();
-  Main.panel.addToStatusArea ('cpufreq-indicator', monitor);
-}
-
-function disable () {
-  monitor.remove_events ();
-  monitor.destroy ();
-  monitor = null;
 }
