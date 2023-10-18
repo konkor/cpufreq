@@ -435,11 +435,16 @@ const FrequencyIndicator = GObject.registerClass({
 
     splash.set_position (Math.floor (monitor.width / 2 - splash.width / 2),
       Math.floor (monitor.height / 2 - splash.height / 2));
-
-    if (splash.ease) splash.ease ({
+    var that = this;
+    if (splash.ease) {
+      splash.ease ({
       opacity: 20, mode: 8, duration: 1200,
-      onComplete: () => { remove_actor (splash)}
-    }); else GLib.timeout_add (0, 1200, () => { return remove_actor (splash)});
+      onComplete: function () { that.remove_actor (splash);}
+    }); 
+  }else 
+    {
+      GLib.timeout_add (0, 1200, function () { return that.remove_actor (splash)});
+    }
   }
 
   remove_actor (o) {

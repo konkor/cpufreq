@@ -48,7 +48,7 @@ export  function getCurrentFile () {
 }
 
 export function byteArrayToString (array) {
-  return array instanceof Uint8Array ? /*ByteArray.toString*/TextDecoder.decode(array):array;
+  return array instanceof Uint8Array ? new TextDecoder().decode(array):array;
 }
 
 export function get_cpu_number () {
