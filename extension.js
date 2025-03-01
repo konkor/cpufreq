@@ -123,13 +123,16 @@ const CpuFreq = {
     let _box = new St.BoxLayout();
     _box.add_actor (this.statusLabel);
     this.add_actor (_box);
-    this.connect ('button-press-event', () => {
-      var args = extmode ? "--extension" : "";
-      if (splash)
-        if (!this.app_running) this.show_splash ();
-      if (!guid_battery || (guid_battery == this.guid)) this.launch_app (args);
-      else this.launch_app (args + " --no-save");
-    });
+    var eventList = ['button-press-event', 'touch-event'];
+      for(event of eventList) {
+        this.actor.connect (event, () => {
+          var args = extmode ? "--extension" : "";
+          if (splash)
+            if (!this.app_running) this.show_splash ();
+          if (!guid_battery || (guid_battery == this.guid)) this.launch_app (args);
+          else this.launch_app (args + " --no-save");
+      });
+    }
     if (!monitor_timeout) this.statusLabel.set_text (this.get_title ());
 
     this.add_event ();
