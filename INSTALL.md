@@ -59,6 +59,29 @@ _Make a ZIP package for GNOME Shell:_
 ./autogen.sh && make && make zip-file
 ```
 
+### Local development (GNOME Shell 45+)
+_Run the extension directly from a local checkout:_
+```sh
+mkdir -p ~/.local/share/gnome-shell/extensions
+ln -snf "$(pwd)" ~/.local/share/gnome-shell/extensions/cpufreq@konkor
+```
+Then enable it:
+```sh
+gnome-extensions enable cpufreq@konkor
+```
+If GNOME Shell doesn't pick up changes, log out/in (Wayland) or restart GNOME Shell.
+
+_Alternatively, install a fresh bundle:_
+```sh
+gnome-extensions pack . --force
+# installs into ~/.local/share/gnome-shell/extensions
+gnome-extensions install --force ./cpufreq@konkor.shell-extension.zip
+```
+If settings are missing, rebuild schemas:
+```sh
+glib-compile-schemas schemas/
+```
+
 
 ## Complete uninstall and removing of stored settings.
 It can be useful if you have saved broken settings values or to clean up previous installation.

@@ -16,6 +16,7 @@ js_DATA = \
     convenience.js \
     extension.js \
     prefs.js \
+    prefs_legacy.js \
     metadata.json \
     stylesheet.css \
     konkor.cpufreq.policy \
