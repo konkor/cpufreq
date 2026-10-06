@@ -79,6 +79,16 @@ https://extensions.gnome.org/extension/1082/cpufreq/
 
 ## Installation
 
+This version targets GNOME Shell 50. Older Shell versions require an earlier release.
+Preferences still open in the existing standalone GTK3 application.
+
+The minimal compatibility port follows the [GNOME 45–50 upgrade notes](https://gjs.guide/extensions/upgrading/gnome-shell-50.html)
+and [GNOME Shell changelog](https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/50.0/NEWS):
+GNOME 45 requires ES modules and the new extension entry points; GNOME 46
+removed the old actor `add_actor`/`remove_actor` aliases. GNOME 50 panel buttons
+use a menu click gesture, so this application-launching indicator disables the
+unused menu to keep receiving clicks.
+
 - [See more about compilation and installation...](/INSTALL.md)
 - [The project's documentation pages](http://konkor.github.io/cpufreq/install/)
 

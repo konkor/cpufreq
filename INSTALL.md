@@ -3,7 +3,9 @@ You can find more on [the project's documentation pages](http://konkor.github.io
 
 ## Dependencies
 
-* Gtk 3.14+
+* GNOME Shell 50 (for the extension)
+* Gtk 3.14+ (for the standalone application and preferences)
+* Gtk 4 (for the GNOME Shell preferences launcher)
 * GJS
 * supported hardware.
 * fonts-roboto fonts-lato (optionally)

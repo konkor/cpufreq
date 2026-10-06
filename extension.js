@@ -8,21 +8,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Lang      = imports.lang;
-const GObject   = imports.gi.GObject;
-const GLib      = imports.gi.GLib;
-const Gio       = imports.gi.Gio;
-const St        = imports.gi.St;
-const Main      = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-
-const Me = ExtensionUtils.getCurrentExtension ();
-const Logger       = Me.imports.common.Logger;
-const Convenience  = Me.imports.convenience;
-const EXTENSIONDIR = Me.dir.get_path ();
-const APP_PATH     = EXTENSIONDIR + "/cpufreq-application";
+import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import St from 'gi://St';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 const SAVE_SETTINGS_KEY = 'save-settings';
 const EXTENSION_MODE_KEY= 'extension-mode';
@@ -112,8 +104,9 @@ const CpufreqServiceIface = '<node> \
 const CpufreqServiceProxy = Gio.DBusProxy.makeProxyWrapper (CpufreqServiceIface);
 
 const CpuFreq = {
-  init: function () {
-    this.settings = Convenience.getSettings();
+  init: function (extension) {
+    this.extension = extension;
+    this.settings = extension.getSettings();
     this.on_settings (null, null);
 
     this.statusLabel = new St.Label ({
@@ -121,8 +114,8 @@ const CpuFreq = {
     });
     this.statusLabel.style = title_style;
     let _box = new St.BoxLayout();
-    _box.add_actor (this.statusLabel);
-    this.add_actor (_box);
+    _box.add_child (this.statusLabel);
+    this.add_child (_box);
     this.connect ('button-press-event', () => {
       var args = extmode ? "--extension" : "";
       if (splash)
@@ -235,7 +228,6 @@ const CpuFreq = {
   on_power_state: function (state, percentage) {
     let id = eprofiles[1].guid;
     //debug ("on_power_state: %s %s%%".format (this.power.State, this.power.Percentage));
-    debug ("on_power_state: %s %s%%".format (state, percentage));
     if (!id) return;
     if (state == 2) {
       //on battery
@@ -270,14 +262,13 @@ const CpuFreq = {
     /*if (Logger.debug_lvl == 2) extra = " --debug";
     else if (Logger.debug_lvl == 1) extra = " --verbose";*/
     options = options || "";
-    info ("launch_app " + options + extra);
-    GLib.spawn_command_line_async ("%s %s".format (APP_PATH, options + extra));
+    GLib.spawn_command_line_async (`${GLib.shell_quote(this.extension.path + '/cpufreq-application')} ${options + extra}`);
   },
 
   get app_running () {
     let res = GLib.spawn_command_line_sync ("ps -A");
     let o, n;
-    if (res[0]) o = Convenience.byteArrayToString (res[1]).toString().split("\n");
+    if (res[0]) o = new TextDecoder().decode(res[1]).split("\n");
     for (let i = 0; i < o.length; i++) {
       if (o[i].indexOf ("cpufreq-app") > -1) {
         n = parseInt (o[i].trim().split(" ")[0]);
@@ -371,7 +362,7 @@ const CpuFreq = {
   add_event: function () {
     this.remove_proxy ();
     if (monitor_timeout > 0) {
-      if (!GLib.spawn_command_line_async (EXTENSIONDIR + "/cpufreq-service")) {
+      if (!GLib.spawn_command_line_async (GLib.shell_quote(this.extension.path + '/cpufreq-service'))) {
         //error ("Unable to start cpufreq service...");
         return;
       }
@@ -422,9 +413,9 @@ const CpuFreq = {
     let height = monitor.height < monitor.width ? monitor.height : monitor.width;
     let width = 512 * height / 1200;
     if (!this.splash)
-      this.splash = Gio.icon_new_for_string (EXTENSIONDIR + "/data/splash.svg");
+      this.splash = Gio.icon_new_for_string (this.extension.path + "/data/splash.svg");
     let splash = new St.Icon ({gicon: this.splash, icon_size: width});
-    Main.uiGroup.add_actor (splash);
+    Main.uiGroup.add_child (splash);
 
     splash.set_position (Math.floor (monitor.width / 2 - splash.width / 2),
       Math.floor (monitor.height / 2 - splash.height / 2));
@@ -436,12 +427,13 @@ const CpuFreq = {
   }
 };
 
-let FrequencyIndicator = null;
+const FrequencyIndicator = GObject.registerClass({}, class FrequencyIndicator extends PanelMenu.Button {
+    get app_running () {
+      return CpuFreq.app_running;
+    }
 
-try {
-  FrequencyIndicator = GObject.registerClass({}, class FrequencyIndicator extends PanelMenu.Button {
-    _init() {
-      super._init (0.0, "CPU Frequency Indicator", false);
+    _init(extension) {
+      super._init (0.0, "CPU Frequency Indicator", true);
 
       this.on_settings = CpuFreq.on_settings.bind (this);
       this.on_power_state = CpuFreq.on_power_state.bind (this);
@@ -457,40 +449,12 @@ try {
       this.remove_events = CpuFreq.remove_events.bind (this);
       this.show_splash = CpuFreq.show_splash.bind (this);
 
-      CpuFreq.init.bind (this) ();
+      CpuFreq.init.call (this, extension);
     }
-  });
-} catch (error) {
-  log ('Gnome Shell version < 40!', error);
-
-  FrequencyIndicator = new Lang.Class({
-    Name: 'CpuFreq',
-    Extends: PanelMenu.Button,
-
-    _init: function() {
-      this.parent (0.0, "CPU Frequency Indicator", false);
-
-      this.on_settings = CpuFreq.on_settings.bind (this);
-      this.on_power_state = CpuFreq.on_power_state.bind (this);
-      this.unschedule_profile = CpuFreq.unschedule_profile.bind (this);
-      this.schedule_profile = CpuFreq.schedule_profile.bind (this);
-      this.launch_app = CpuFreq.launch_app.bind (this);
-      this.get_title = CpuFreq.get_title.bind (this);
-      this.get_governor_symbolyc = CpuFreq.get_governor_symbolyc.bind (this);
-      this.get_state_symbolyc = CpuFreq.get_state_symbolyc.bind (this);
-      this.get_stylestring = CpuFreq.get_stylestring.bind (this);
-      this.add_event = CpuFreq.add_event.bind (this);
-      this.remove_proxy = CpuFreq.remove_proxy.bind (this);
-      this.remove_events = CpuFreq.remove_events.bind (this);
-      this.show_splash = CpuFreq.show_splash.bind (this);
-
-      CpuFreq.init.bind (this) ();
-    }
-  });
-}
+});
 
 function remove_actor (o) {
-  Main.uiGroup.remove_actor (o);
+  Main.uiGroup.remove_child (o);
   o.destroy ();
   return false;
 }
@@ -499,7 +463,7 @@ function show_notify (message, style) {
   //var text = new St.Label ({text: message, style_class: style?style:'cpufreq-notify'});
   var text = new St.Label ({text: message, style_class: "modal-dialog audio-selection-content restart-message"});
   text.opacity = 255;
-  Main.uiGroup.add_actor (text);
+  Main.uiGroup.add_child (text);
 
   text.set_position (Math.floor (Main.layoutManager.primaryMonitor.width / 2 - text.width / 2),
     Math.floor (Main.layoutManager.primaryMonitor.height / 2 - text.height / 2));
@@ -511,31 +475,19 @@ function show_warn (message) {
     show_notify (message, "warn-label");
 }
 
-let monitor;
-Logger.init (Logger.LEVEL.ERROR, true);
-
-function info (msg) {
-  Logger.info ("extension", msg);
-}
-
-function debug (msg) {
-  Logger.debug ("extension", msg);
-}
-
 function error (msg) {
-  Logger.error ("extension", msg);
+  console.error (`[cpufreq] ${msg}`);
 }
 
-function init () {
-}
+export default class CpuFreqExtension extends Extension {
+  enable () {
+    this.monitor = new FrequencyIndicator (this);
+    Main.panel.addToStatusArea ('cpufreq-indicator', this.monitor);
+  }
 
-function enable () {
-  monitor = new FrequencyIndicator ();
-  Main.panel.addToStatusArea ('cpufreq-indicator', monitor);
-}
-
-function disable () {
-  monitor.remove_events ();
-  monitor.destroy ();
-  monitor = null;
+  disable () {
+    this.monitor.remove_events ();
+    this.monitor.destroy ();
+    this.monitor = null;
+  }
 }
